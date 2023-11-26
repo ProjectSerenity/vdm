@@ -1,0 +1,38 @@
+# Copyright 2023 The Firefly Authors.
+#
+# Use of this source code is governed by a BSD 3-clause
+# license that can be found in the LICENSE file.
+
+load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
+
+go_library(
+    name = "update",
+    srcs = [
+        "main.go",
+        "vendored.go",
+    ],
+    importpath = "github.com/ProjectSerenity/vdm/cmd/update",
+    visibility = ["//:__subpackages__"],
+    deps = [
+        "//internal/simplehttp",
+        "//internal/vendeps",
+        "//vendor/github.com/bazelbuild/buildtools/build",
+        "//vendor/golang.org/x/mod/semver",
+    ],
+)
+
+go_test(
+    name = "update_test",
+    size = "small",
+    srcs = [
+        "fields_test.go",
+        "vendored_test.go",
+    ],
+    data = glob(["testdata/*"]),
+    embed = [":update"],
+    deps = [
+        "//vendor/github.com/bazelbuild/buildtools/build",
+        "//vendor/golang.org/x/time/rate",
+        "//vendor/rsc.io/diff",
+    ],
+)
