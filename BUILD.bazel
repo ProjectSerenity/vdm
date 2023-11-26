@@ -1,0 +1,27 @@
+# Copyright 2023 The Firefly Authors.
+#
+# Use of this source code is governed by a BSD 3-clause
+# license that can be found in the LICENSE file.
+
+load("@io_bazel_rules_go//go:def.bzl", "go_binary", "go_library")
+
+go_library(
+    name = "vdm_lib",
+    srcs = [
+        "main.go",
+    ],
+    importpath = "github.com/ProjectSerenity/vdm",
+    visibility = ["//visibility:private"],
+    deps = [
+        "//cmd/check",
+        "//cmd/update",
+        "//cmd/vendor",
+        "//internal/simplehttp",
+    ],
+)
+
+go_binary(
+    name = "vdm",
+    embed = [":vdm_lib"],
+    visibility = ["//visibility:public"],
+)
