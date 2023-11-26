@@ -6,7 +6,7 @@
 go = [
     module(
         name = "github.com/bazelbuild/buildtools",
-        version = "v0.0.0-20230713145820-b31f2c13c407",
+        version = "v0.0.0-20231115204819-d4c9dccdfbb1",
         packages = [
             package(
                 name = "github.com/bazelbuild/buildtools/build",
@@ -23,7 +23,7 @@ go = [
     ),
     module(
         name = "github.com/google/go-cmp",
-        version = "v0.5.9",
+        version = "v0.6.0",
         packages = [
             package(
                 name = "github.com/google/go-cmp/cmp",
@@ -88,7 +88,7 @@ go = [
     ),
     module(
         name = "github.com/google/osv-scanner",
-        version = "v1.3.6",
+        version = "v1.4.3",
         packages = [
             package(
                 name = "github.com/google/osv-scanner/pkg/models",
@@ -114,7 +114,7 @@ go = [
     ),
     module(
         name = "github.com/package-url/packageurl-go",
-        version = "v0.1.1",
+        version = "v0.1.2",
         packages = [
             package(
                 name = "github.com/package-url/packageurl-go",
@@ -124,7 +124,7 @@ go = [
     ),
     module(
         name = "golang.org/x/crypto",
-        version = "v0.11.0",
+        version = "v0.15.0",
         packages = [
             package(
                 name = "golang.org/x/crypto/ed25519",
@@ -133,7 +133,7 @@ go = [
     ),
     module(
         name = "golang.org/x/exp",
-        version = "v0.0.0-20230801115018-d63ba01acd4b",
+        version = "v0.0.0-20231110203233-9a3e6036ecaa",
         packages = [
             package(
                 name = "golang.org/x/exp/constraints",
@@ -148,7 +148,7 @@ go = [
     ),
     module(
         name = "golang.org/x/mod",
-        version = "v0.12.0",
+        version = "v0.14.0",
         packages = [
             package(
                 name = "golang.org/x/mod/internal/lazyregexp",
@@ -208,7 +208,7 @@ go = [
     ),
     module(
         name = "golang.org/x/sync",
-        version = "v0.3.0",
+        version = "v0.5.0",
         packages = [
             package(
                 name = "golang.org/x/sync/errgroup",
@@ -223,7 +223,7 @@ go = [
     ),
     module(
         name = "golang.org/x/time",
-        version = "v0.3.0",
+        version = "v0.4.0",
         packages = [
             package(
                 name = "golang.org/x/time/rate",
@@ -232,7 +232,7 @@ go = [
     ),
     module(
         name = "golang.org/x/tools",
-        version = "v0.11.1",
+        version = "v0.15.0",
         packages = [
             package(
                 name = "golang.org/x/tools/txtar",
@@ -241,7 +241,7 @@ go = [
     ),
     module(
         name = "golang.org/x/xerrors",
-        version = "v0.0.0-20220907171357-04be3eba64a2",
+        version = "v0.0.0-20231012003039-104605ab7028",
         packages = [
             package(
                 name = "golang.org/x/xerrors",

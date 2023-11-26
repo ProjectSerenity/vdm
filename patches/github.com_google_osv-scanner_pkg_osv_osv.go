@@ -1,28 +1,36 @@
 diff --git a/pkg/osv/osv.go b/pkg/osv/osv.go
-index c28708a..4c52481 100644
+index 6fe7443..5bc8234 100644
 --- a/pkg/osv/osv.go
 +++ b/pkg/osv/osv.go
-@@ -8,7 +8,6 @@ import (
+@@ -10,7 +10,6 @@ import (
  	"net/http"
  	"time"
- 
+
 -	"github.com/google/osv-scanner/pkg/lockfile"
  	"github.com/google/osv-scanner/pkg/models"
+ 	"golang.org/x/sync/semaphore"
  )
- 
-@@ -85,18 +84,6 @@ func MakePURLRequest(purl string) *Query {
+@@ -118,26 +117,6 @@ func MakePURLRequest(purl string) *Query {
  	}
  }
- 
+
 -func MakePkgRequest(pkgDetails lockfile.PackageDetails) *Query {
--	return &Query{
--		Version: pkgDetails.Version,
--		// API has trouble parsing requests with both commit and Package details filled ins
--		// Commit:  pkgDetails.Commit,
--		Package: Package{
--			Name:      pkgDetails.Name,
--			Ecosystem: string(pkgDetails.Ecosystem),
--		},
+-	// API has trouble parsing requests with both commit and Package details filled in
+-	if pkgDetails.Ecosystem == "" && pkgDetails.Commit != "" {
+-		return &Query{
+-			Metadata: models.Metadata{
+-				RepoURL: pkgDetails.Name,
+-			},
+-			Commit: pkgDetails.Commit,
+-		}
+-	} else {
+-		return &Query{
+-			Version: pkgDetails.Version,
+-			Package: Package{
+-				Name:      pkgDetails.Name,
+-				Ecosystem: string(pkgDetails.Ecosystem),
+-			},
+-		}
 -	}
 -}
 -
