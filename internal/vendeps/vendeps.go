@@ -99,5 +99,5 @@ type UpdateDep struct {
 }
 
 func init() {
-	simplehttp.UserAgent = "Firefly-dependency-vendoring/1 (github.com/ProjectSerenity/firefly)"
+	simplehttp.UserAgent = "vendoring-dependency-manager/1 (github.com/ProjectSerenity/vdm)"
 }
