@@ -10,7 +10,7 @@ load("@io_bazel_rules_go//go:def.bzl", {{ if .Binary }}"go_binary", {{ end }}"go
 go_library(
     name = "{{ packageName . }}",
     srcs = glob(
-        include = ["*.go"],
+        include = ["*.go", "*.s"],
         exclude = ["*_test.go"],
     ),{{ if or .Embed .EmbedGlobs }}
     embedsrcs = {{ if .EmbedGlobs }}glob([{{ range .EmbedGlobs }}

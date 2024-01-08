@@ -10,7 +10,10 @@ load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
 go_library(
     name = "value",
     srcs = glob(
-        include = ["*.go"],
+        include = [
+            "*.go",
+            "*.s",
+        ],
         exclude = ["*_test.go"],
     ),
     importpath = "github.com/google/go-cmp/cmp/internal/value",

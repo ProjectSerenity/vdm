@@ -10,7 +10,10 @@ load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
 go_library(
     name = "xerrors",
     srcs = glob(
-        include = ["*.go"],
+        include = [
+            "*.go",
+            "*.s",
+        ],
         exclude = ["*_test.go"],
     ),
     importpath = "golang.org/x/xerrors",

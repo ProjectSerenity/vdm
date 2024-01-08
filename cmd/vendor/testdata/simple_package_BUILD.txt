@@ -10,7 +10,7 @@ load("@io_bazel_rules_go//go:def.bzl", "go_library")
 go_library(
     name = "quote",
     srcs = glob(
-        include = ["*.go"],
+        include = ["*.go", "*.s"],
         exclude = ["*_test.go"],
     ),
     importpath = "rsc.io/quote",
