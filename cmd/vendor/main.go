@@ -24,7 +24,7 @@ func Main(ctx context.Context, w io.Writer, args []string) error {
 
 	var help, noCache, dryRun, bzlmod bool
 	flags.BoolVar(&help, "h", false, "Show this message and exit.")
-	flags.BoolVar(&bzlmod, "bzlmod", false, "Use module names as used with bzlmod (eg rules_go, rather than io_bazel_rules_go)")
+	flags.BoolVar(&bzlmod, "bzlmod", true, "Use module names as used with bzlmod (eg rules_go, rather than io_bazel_rules_go)")
 	flags.BoolVar(&noCache, "no-cache", false, "Ignore any locally cached dependency data.")
 	flags.BoolVar(&dryRun, "dry-run", false, "Print the set of actions that would be performed, without performing them.")
 	flags.Usage = func() {
