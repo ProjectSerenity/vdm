@@ -1,0 +1,17 @@
+# Copyright 2023 The Firefly Authors.
+#
+# Use of this source code is governed by a BSD 3-clause
+# license that can be found in the LICENSE file.
+
+module(name = "vdm")
+
+bazel_dep(name = "rules_go", version = "0.45.1", repo_name = "io_bazel_rules_go")
+bazel_dep(name = "gazelle", version = "0.35.0")
+
+go_sdk = use_extension("@io_bazel_rules_go//go:extension.bzl", "go_sdk")
+
+go_sdk.download(version = "1.21.5")
+
+go_deps = use_extension("@gazelle//:extensions.bzl", "go_deps")
+
+use_repo(go_deps, "org_golang_x_tools")  # Used by //vendor/github.com/bazelbuild/buildtools/build for __go_yacc.
