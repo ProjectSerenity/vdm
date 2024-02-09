@@ -9,7 +9,14 @@ go = [
     module(
         name = "github.com/bazelbuild/buildtools",
         version = "v0.0.0-20231115204819-d4c9dccdfbb1",
-        digest = "sha256:2bf701b01df5a0470e0ba4e55b4a3e00ba7d0ff40fcc1c23f29404a30ff6b272",
+        digest = "sha256:d2579ee382ce11ad8168225c6627ee40acf4d9fb65b62c437d285f93f312ecdf",
+        patch_args = [
+            "-p1",
+        ],
+        patches = [
+            "patches/github.com_bazelbuild_buildtools_build_build_defs.bzl",
+        ],
+        patch_digest = "sha256:f1c7a20883fdb0441258c62cbf97a208179f14e1f157ce814db3124eb1a4f177",
     ),
     module(
         name = "github.com/google/go-cmp",

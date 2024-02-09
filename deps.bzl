@@ -20,6 +20,10 @@ go = [
                 name = "github.com/bazelbuild/buildtools/testutils",
             ),
         ],
+        patches = [
+            "patches/github.com_bazelbuild_buildtools_build_build_defs.bzl",
+        ],
+        patch_args = ["-p1"],
     ),
     module(
         name = "github.com/google/go-cmp",
