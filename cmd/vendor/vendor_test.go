@@ -254,7 +254,7 @@ func TestVendor(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.Name, func(t *testing.T) {
-			got, err := Vendor(test.Fsys)
+			got, err := Vendor(test.Fsys, false)
 			if err != nil {
 				t.Fatalf("Vendor(): %v", err)
 			}

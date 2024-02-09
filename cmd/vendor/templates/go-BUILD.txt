@@ -5,7 +5,7 @@
 # Use of this source code is governed by a BSD 3-clause
 # license that can be found in the LICENSE file.
 
-load("@io_bazel_rules_go//go:def.bzl", {{ if .Binary }}"go_binary", {{ end }}"go_library"{{ if not .NoTests }}, "go_test"{{ end }})
+load("@{{ if not .Bzlmod }}io_bazel_{{ end }}rules_go//go:def.bzl", {{ if .Binary }}"go_binary", {{ end }}"go_library"{{ if not .NoTests }}, "go_test"{{ end }})
 
 go_library(
     name = "{{ packageName . }}",

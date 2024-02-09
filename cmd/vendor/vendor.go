@@ -25,7 +25,7 @@ import (
 //
 // Note that Vendor does not perform any of these actions;
 // it only reads data from fsys.
-func Vendor(fsys fs.FS) (actions []vendeps.Action, err error) {
+func Vendor(fsys fs.FS, bzlmod bool) (actions []vendeps.Action, err error) {
 	data, err := fs.ReadFile(fsys, vendeps.DepsBzl)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read %s: %v", vendeps.DepsBzl, err)
@@ -108,7 +108,7 @@ func Vendor(fsys fs.FS) (actions []vendeps.Action, err error) {
 	// some of these actions out if it can prove that
 	// they are unnecessary.
 	if len(deps.Go) > 0 {
-		actions, err = vendorGo(fsys, actions, deps.Go)
+		actions, err = vendorGo(fsys, actions, deps.Go, bzlmod)
 		if err != nil {
 			return nil, err
 		}
@@ -119,7 +119,7 @@ func Vendor(fsys fs.FS) (actions []vendeps.Action, err error) {
 	return actions, nil
 }
 
-func vendorGo(fsys fs.FS, actions []vendeps.Action, modules []*vendeps.GoModule) ([]vendeps.Action, error) {
+func vendorGo(fsys fs.FS, actions []vendeps.Action, modules []*vendeps.GoModule, bzlmod bool) ([]vendeps.Action, error) {
 	// Sanity-check each module and make
 	// a mapping of module names to modules
 	// to simplify looking up module paths.
@@ -215,6 +215,7 @@ func vendorGo(fsys fs.FS, actions []vendeps.Action, modules []*vendeps.GoModule)
 		full := path.Join(vendeps.Vendor, module.Name)
 		actions = append(actions, vendeps.DownloadGoModule{Module: module, Path: full})
 		for _, pkg := range module.Packages {
+			pkg.Bzlmod = bzlmod
 			full = path.Join(vendeps.Vendor, pkg.Name)
 			if pkg.BuildFile != "" {
 				actions = append(actions, vendeps.CopyBUILD{Source: pkg.BuildFile, Path: path.Join(full, vendeps.BuildBazel)})

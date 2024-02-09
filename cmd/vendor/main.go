@@ -22,8 +22,9 @@ var program = filepath.Base(os.Args[0])
 func Main(ctx context.Context, w io.Writer, args []string) error {
 	flags := flag.NewFlagSet("vendor", flag.ExitOnError)
 
-	var help, noCache, dryRun bool
+	var help, noCache, dryRun, bzlmod bool
 	flags.BoolVar(&help, "h", false, "Show this message and exit.")
+	flags.BoolVar(&bzlmod, "bzlmod", false, "Use module names as used with bzlmod (eg rules_go, rather than io_bazel_rules_go)")
 	flags.BoolVar(&noCache, "no-cache", false, "Ignore any locally cached dependency data.")
 	flags.BoolVar(&dryRun, "dry-run", false, "Print the set of actions that would be performed, without performing them.")
 	flags.Usage = func() {
@@ -41,7 +42,7 @@ func Main(ctx context.Context, w io.Writer, args []string) error {
 
 	// Start by parsing the dependency manifest.
 	fsys := os.DirFS(".")
-	actions, err := Vendor(fsys)
+	actions, err := Vendor(fsys, bzlmod)
 	if err != nil {
 		return fmt.Errorf("failed to load dependency manifest: %v", err)
 	}

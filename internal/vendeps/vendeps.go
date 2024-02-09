@@ -53,6 +53,10 @@ type GoPackage struct {
 	// Dependency details.
 	Name string `bzl:"name"`
 
+	// Whether to use Bzlmod names
+	// (eg rules_go, rather than io_bazel_rules_go).
+	Bzlmod bool
+
 	// Manually-managed BUILD file.
 	BuildFile string `bzl:"build_file"`
 
