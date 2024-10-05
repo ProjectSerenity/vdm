@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"io/fs"
 	"os"
+	"path/filepath"
 
 	"github.com/ProjectSerenity/vdm/internal/vendeps"
 )
@@ -45,6 +46,14 @@ func (c GenerateGoPackageBUILD) Do(fsys fs.FS) error {
 		err = os.Chmod(c.Path, 0644)
 		if err != nil {
 			return fmt.Errorf("failed to make %s writable: %v", c.Path, err)
+		}
+	}
+
+	if errors.Is(err, fs.ErrNotExist) {
+		parent := filepath.Dir(c.Path)
+		err = os.MkdirAll(parent, 0755)
+		if err != nil {
+			return fmt.Errorf("failed to make %s to write %s: %v", parent, c.Path, err)
 		}
 	}
 
