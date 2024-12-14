@@ -9,13 +9,9 @@ load("@rules_go//go:def.bzl", "go_library", "go_test")
 
 go_library(
     name = "note",
-    srcs = glob(
-        include = [
-            "*.go",
-            "*.s",
-        ],
-        exclude = ["*_test.go"],
-    ),
+    srcs = [
+        "note.go",
+    ],
     importpath = "golang.org/x/mod/sumdb/note",
     tags = [
         "manual",  # Only build when needed as a dependency.
@@ -29,7 +25,10 @@ go_library(
 go_test(
     name = "note_test",
     size = "small",
-    srcs = glob(["*_test.go"]),
+    srcs = [
+        "example_test.go",
+        "note_test.go",
+    ],
     data = glob(["testdata/**"]),
     embed = [":note"],
     deps = [

@@ -9,13 +9,10 @@ load("@rules_go//go:def.bzl", "go_library")
 
 go_library(
     name = "tables",
-    srcs = glob(
-        include = [
-            "*.go",
-            "*.s",
-        ],
-        exclude = ["*_test.go"],
-    ),
+    srcs = [
+        "jsonparser.go",
+        "tables.go",
+    ],
     importpath = "github.com/bazelbuild/buildtools/tables",
     tags = [
         "manual",  # Only build when needed as a dependency.

@@ -9,13 +9,13 @@ load("@rules_go//go:def.bzl", "go_library", "go_test")
 
 go_library(
     name = "models",
-    srcs = glob(
-        include = [
-            "*.go",
-            "*.s",
-        ],
-        exclude = ["*_test.go"],
-    ),
+    srcs = [
+        "constants.go",
+        "purl_to_package.go",
+        "results.go",
+        "vulnerabilities.go",
+        "vulnerability.go",
+    ],
     importpath = "github.com/google/osv-scanner/pkg/models",
     tags = [
         "manual",  # Only build when needed as a dependency.
@@ -32,7 +32,12 @@ go_library(
 go_test(
     name = "models_test",
     size = "small",
-    srcs = glob(["*_test.go"]),
+    srcs = [
+        "purl_to_package_test.go",
+        "results_test.go",
+        "vulnerabilities_test.go",
+        "vulnerability_test.go",
+    ],
     data = glob(["testdata/**"]),
     embed = [":models"],
 )

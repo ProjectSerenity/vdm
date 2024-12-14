@@ -9,13 +9,12 @@ load("@rules_go//go:def.bzl", "go_library", "go_test")
 
 go_library(
     name = "sumdb",
-    srcs = glob(
-        include = [
-            "*.go",
-            "*.s",
-        ],
-        exclude = ["*_test.go"],
-    ),
+    srcs = [
+        "cache.go",
+        "client.go",
+        "server.go",
+        "test.go",
+    ],
     importpath = "golang.org/x/mod/sumdb",
     tags = [
         "manual",  # Only build when needed as a dependency.
@@ -32,7 +31,9 @@ go_library(
 go_test(
     name = "sumdb_test",
     size = "small",
-    srcs = glob(["*_test.go"]),
+    srcs = [
+        "client_test.go",
+    ],
     data = glob(["testdata/**"]),
     embed = [":sumdb"],
     deps = [

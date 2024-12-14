@@ -9,13 +9,9 @@ load("@rules_go//go:def.bzl", "go_library", "go_test")
 
 go_library(
     name = "zip",
-    srcs = glob(
-        include = [
-            "*.go",
-            "*.s",
-        ],
-        exclude = ["*_test.go"],
-    ),
+    srcs = [
+        "zip.go",
+    ],
     importpath = "golang.org/x/mod/zip",
     tags = [
         "manual",  # Only build when needed as a dependency.
@@ -29,7 +25,10 @@ go_library(
 go_test(
     name = "zip_test",
     size = "medium",
-    srcs = glob(["*_test.go"]),
+    srcs = [
+        "vendor_test.go",
+        "zip_test.go",
+    ],
     data = glob(["testdata/**"]),
     embed = [":zip"],
     deps = [

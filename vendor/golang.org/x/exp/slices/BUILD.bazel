@@ -9,13 +9,13 @@ load("@rules_go//go:def.bzl", "go_library", "go_test")
 
 go_library(
     name = "slices",
-    srcs = glob(
-        include = [
-            "*.go",
-            "*.s",
-        ],
-        exclude = ["*_test.go"],
-    ),
+    srcs = [
+        "cmp.go",
+        "slices.go",
+        "sort.go",
+        "zsortanyfunc.go",
+        "zsortordered.go",
+    ],
     importpath = "golang.org/x/exp/slices",
     tags = [
         "manual",  # Only build when needed as a dependency.
@@ -29,7 +29,12 @@ go_library(
 go_test(
     name = "slices_test",
     size = "small",
-    srcs = glob(["*_test.go"]),
+    srcs = [
+        "slices_race_test.go",
+        "slices_test.go",
+        "sort_benchmark_test.go",
+        "sort_test.go",
+    ],
     data = glob(["testdata/**"]),
     embed = [":slices"],
 )

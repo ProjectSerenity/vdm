@@ -9,13 +9,9 @@ load("@rules_go//go:def.bzl", "go_library", "go_test")
 
 go_library(
     name = "semaphore",
-    srcs = glob(
-        include = [
-            "*.go",
-            "*.s",
-        ],
-        exclude = ["*_test.go"],
-    ),
+    srcs = [
+        "semaphore.go",
+    ],
     importpath = "golang.org/x/sync/semaphore",
     tags = [
         "manual",  # Only build when needed as a dependency.
@@ -26,7 +22,11 @@ go_library(
 go_test(
     name = "semaphore_test",
     size = "small",
-    srcs = glob(["*_test.go"]),
+    srcs = [
+        "semaphore_bench_test.go",
+        "semaphore_example_test.go",
+        "semaphore_test.go",
+    ],
     data = glob(["testdata/**"]),
     embed = [":semaphore"],
     deps = [

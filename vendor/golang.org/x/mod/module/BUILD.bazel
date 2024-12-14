@@ -9,13 +9,10 @@ load("@rules_go//go:def.bzl", "go_library", "go_test")
 
 go_library(
     name = "module",
-    srcs = glob(
-        include = [
-            "*.go",
-            "*.s",
-        ],
-        exclude = ["*_test.go"],
-    ),
+    srcs = [
+        "module.go",
+        "pseudo.go",
+    ],
     importpath = "golang.org/x/mod/module",
     tags = [
         "manual",  # Only build when needed as a dependency.
@@ -31,7 +28,10 @@ go_library(
 go_test(
     name = "module_test",
     size = "small",
-    srcs = glob(["*_test.go"]),
+    srcs = [
+        "module_test.go",
+        "pseudo_test.go",
+    ],
     data = glob(["testdata/**"]),
     embed = [":module"],
 )

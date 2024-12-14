@@ -9,13 +9,9 @@ load("@rules_go//go:def.bzl", "go_library", "go_test")
 
 go_library(
     name = "internal",
-    srcs = glob(
-        include = [
-            "*.go",
-            "*.s",
-        ],
-        exclude = ["*_test.go"],
-    ),
+    srcs = [
+        "internal.go",
+    ],
     importpath = "golang.org/x/xerrors/internal",
     tags = [
         "manual",  # Only build when needed as a dependency.
@@ -26,7 +22,8 @@ go_library(
 go_test(
     name = "internal_test",
     size = "small",
-    srcs = glob(["*_test.go"]),
+    srcs = [
+    ],
     data = glob(["testdata/**"]),
     embed = [":internal"],
 )

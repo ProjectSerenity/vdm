@@ -9,13 +9,9 @@ load("@rules_go//go:def.bzl", "go_library")
 
 go_library(
     name = "packageurl-go",
-    srcs = glob(
-        include = [
-            "*.go",
-            "*.s",
-        ],
-        exclude = ["*_test.go"],
-    ),
+    srcs = [
+        "packageurl.go",
+    ],
     importpath = "github.com/package-url/packageurl-go",
     tags = [
         "manual",  # Only build when needed as a dependency.

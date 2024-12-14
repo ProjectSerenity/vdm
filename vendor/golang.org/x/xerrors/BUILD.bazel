@@ -9,13 +9,15 @@ load("@rules_go//go:def.bzl", "go_library", "go_test")
 
 go_library(
     name = "xerrors",
-    srcs = glob(
-        include = [
-            "*.go",
-            "*.s",
-        ],
-        exclude = ["*_test.go"],
-    ),
+    srcs = [
+        "adaptor.go",
+        "doc.go",
+        "errors.go",
+        "fmt.go",
+        "format.go",
+        "frame.go",
+        "wrap.go",
+    ],
     importpath = "golang.org/x/xerrors",
     tags = [
         "manual",  # Only build when needed as a dependency.
@@ -29,7 +31,17 @@ go_library(
 go_test(
     name = "xerrors_test",
     size = "small",
-    srcs = glob(["*_test.go"]),
+    srcs = [
+        "errors_test.go",
+        "example_As_test.go",
+        "example_FormatError_test.go",
+        "example_test.go",
+        "fmt_test.go",
+        "fmt_unexported_test.go",
+        "stack_test.go",
+        "wrap_113_test.go",
+        "wrap_test.go",
+    ],
     data = glob(["testdata/**"]),
     embed = [":xerrors"],
 )

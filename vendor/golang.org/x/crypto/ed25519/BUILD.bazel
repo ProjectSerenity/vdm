@@ -9,13 +9,9 @@ load("@rules_go//go:def.bzl", "go_library", "go_test")
 
 go_library(
     name = "ed25519",
-    srcs = glob(
-        include = [
-            "*.go",
-            "*.s",
-        ],
-        exclude = ["*_test.go"],
-    ),
+    srcs = [
+        "ed25519.go",
+    ],
     importpath = "golang.org/x/crypto/ed25519",
     tags = [
         "manual",  # Only build when needed as a dependency.
@@ -26,7 +22,9 @@ go_library(
 go_test(
     name = "ed25519_test",
     size = "small",
-    srcs = glob(["*_test.go"]),
+    srcs = [
+        "ed25519_test.go",
+    ],
     data = glob(["testdata/**"]),
     embed = [":ed25519"],
 )
