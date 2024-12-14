@@ -63,7 +63,7 @@ func TestRenderGoPackageBuildFile(t *testing.T) {
 			}
 
 			if !bytes.Equal(got, want) {
-				t.Fatalf("RenderCrateBuildFile(): mismatch:\n%s", diff.Format(string(got), string(want)))
+				t.Fatalf("RenderGoBuildFile(): mismatch:\n%s", diff.Format(string(got), string(want)))
 			}
 		})
 	}

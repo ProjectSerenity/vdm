@@ -9,10 +9,9 @@ load("@{{ if not .Bzlmod }}io_bazel_{{ end }}rules_go//go:def.bzl", {{ if .Binar
 
 go_library(
     name = "{{ packageName . }}",
-    srcs = glob(
-        include = ["*.go", "*.s"],
-        exclude = ["*_test.go"],
-    ),{{ if or .Embed .EmbedGlobs }}
+    srcs = [{{ range .Files }}
+        "{{ . }}",{{ end }}
+    ],{{ if or .Embed .EmbedGlobs }}
     embedsrcs = {{ if .EmbedGlobs }}glob([{{ range .EmbedGlobs }}
         "{{ . }}",{{ end }}
     ]){{ end }}{{ if and .Embed .EmbedGlobs }} + {{ end }}{{ if .Embed }}[{{ range .Embed }}
@@ -40,7 +39,9 @@ go_binary(
 go_test(
     name = "{{ packageName . }}_test",
     size = "{{ if .TestSize }}{{ .TestSize }}{{ else }}small{{ end }}",
-    srcs = glob(["*_test.go"]),
+    srcs = [{{ range .TestFiles }}
+        "{{ . }}",{{ end }}
+    ],
     data = glob(["testdata/**"]){{ if .TestDataGlobs }} + glob([{{ range .TestDataGlobs }}
         "{{ . }}",{{ end }}
     ]){{ end }}{{ if .TestData }} + [{{ range .TestData }}

@@ -9,10 +9,8 @@ load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
 
 go_library(
     name = "zip",
-    srcs = glob(
-        include = ["*.go", "*.s"],
-        exclude = ["*_test.go"],
-    ),
+    srcs = [
+    ],
     importpath = "golang.org/x/mod/zip",
     tags = [
         "manual",  # Only build when needed as a dependency.
@@ -27,7 +25,8 @@ go_library(
 go_test(
     name = "zip_test",
     size = "small",
-    srcs = glob(["*_test.go"]),
+    srcs = [
+    ],
     data = glob(["testdata/**"]) + [
         "@rust_linux_x86_64//:rustc",
     ],
