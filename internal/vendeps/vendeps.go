@@ -51,7 +51,8 @@ type GoModule struct {
 // a Go module.
 type GoPackage struct {
 	// Dependency details.
-	Name string `bzl:"name"`
+	Name  string `bzl:"name"`
+	Files []string
 
 	// Whether to use Bzlmod names
 	// (eg rules_go, rather than io_bazel_rules_go).
@@ -70,7 +71,8 @@ type GoPackage struct {
 	BinaryDeps []string `bzl:"binary_deps"`
 
 	// Test configuration.
-	NoTests       bool     `bzl:"no_tests"`
+	NoTests       bool `bzl:"no_tests"`
+	TestFiles     []string
 	TestSize      string   `bzl:"test_size"`
 	TestData      []string `bzl:"test_data"`
 	TestDataGlobs []string `bzl:"test_data_globs"`

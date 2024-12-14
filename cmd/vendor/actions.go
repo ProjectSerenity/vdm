@@ -11,6 +11,7 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/ProjectSerenity/vdm/internal/vendeps"
 )
@@ -25,7 +26,42 @@ type GenerateGoPackageBUILD struct {
 
 var _ vendeps.Action = GenerateGoPackageBUILD{}
 
+// recordGoPackageFiles notes the list of Go source
+// files in a Go package for use in the Bazel
+// BUILD file later.
+func (c GenerateGoPackageBUILD) recordGoPackageFiles() error {
+	entries, err := os.ReadDir(filepath.Dir(c.Path))
+	if err != nil {
+		return fmt.Errorf("failed to read directory containing %s: %v", c.Package.Name, err)
+	}
+
+	for _, entry := range entries {
+		if entry.IsDir() {
+			continue
+		}
+
+		name := entry.Name()
+		if strings.HasSuffix(name, "_test.go") {
+			c.Package.TestFiles = append(c.Package.TestFiles, name)
+			continue
+		}
+
+		if strings.HasSuffix(name, ".go") || strings.HasSuffix(name, ".s") {
+			c.Package.Files = append(c.Package.Files, name)
+			continue
+		}
+	}
+
+	return nil
+}
+
 func (c GenerateGoPackageBUILD) Do(fsys fs.FS) error {
+	// Get the list of filenames.
+	err := c.recordGoPackageFiles()
+	if err != nil {
+		return err
+	}
+
 	// Render the build files.
 	pretty, err := RenderGoPackageBuildFile(c.Path, c.Package)
 	if err != nil {
