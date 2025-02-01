@@ -35,6 +35,9 @@ go_test(
         "sort_benchmark_test.go",
         "sort_test.go",
     ],
-    data = glob(["testdata/**"]),
+    data = glob(
+        ["testdata/**"],
+        allow_empty = True,
+    ),
     embed = [":slices"],
 )

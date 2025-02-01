@@ -29,7 +29,10 @@ go_test(
         "vendor_test.go",
         "zip_test.go",
     ],
-    data = glob(["testdata/**"]),
+    data = glob(
+        ["testdata/**"],
+        allow_empty = True,
+    ),
     embed = [":zip"],
     deps = [
         "//vendor/golang.org/x/mod/module",

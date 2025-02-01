@@ -30,6 +30,9 @@ go_test(
         "tile_test.go",
         "tlog_test.go",
     ],
-    data = glob(["testdata/**"]),
+    data = glob(
+        ["testdata/**"],
+        allow_empty = True,
+    ),
     embed = [":tlog"],
 )

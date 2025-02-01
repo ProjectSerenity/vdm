@@ -25,6 +25,9 @@ go_test(
     srcs = [
         "ed25519_test.go",
     ],
-    data = glob(["testdata/**"]),
+    data = glob(
+        ["testdata/**"],
+        allow_empty = True,
+    ),
     embed = [":ed25519"],
 )

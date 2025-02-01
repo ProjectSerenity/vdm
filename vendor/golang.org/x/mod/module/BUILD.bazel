@@ -32,6 +32,9 @@ go_test(
         "module_test.go",
         "pseudo_test.go",
     ],
-    data = glob(["testdata/**"]),
+    data = glob(
+        ["testdata/**"],
+        allow_empty = True,
+    ),
     embed = [":module"],
 )

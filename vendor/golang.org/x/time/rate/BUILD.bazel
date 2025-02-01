@@ -27,6 +27,9 @@ go_test(
         "rate_test.go",
         "sometimes_test.go",
     ],
-    data = glob(["testdata/**"]),
+    data = glob(
+        ["testdata/**"],
+        allow_empty = True,
+    ),
     embed = [":rate"],
 )

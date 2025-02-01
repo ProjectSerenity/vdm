@@ -34,7 +34,10 @@ go_test(
     srcs = [
         "client_test.go",
     ],
-    data = glob(["testdata/**"]),
+    data = glob(
+        ["testdata/**"],
+        allow_empty = True,
+    ),
     embed = [":sumdb"],
     deps = [
         "//vendor/golang.org/x/mod/sumdb/note",

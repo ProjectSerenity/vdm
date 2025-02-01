@@ -34,7 +34,10 @@ go_test(
         "example_test.go",
         "util_test.go",
     ],
-    data = glob(["testdata/**"]),
+    data = glob(
+        ["testdata/**"],
+        allow_empty = True,
+    ),
     embed = [":cmpopts"],
     deps = [
         "//vendor/github.com/google/go-cmp/cmp/internal/flags",

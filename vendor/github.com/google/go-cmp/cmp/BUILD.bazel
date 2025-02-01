@@ -46,7 +46,10 @@ go_test(
         "example_test.go",
         "options_test.go",
     ],
-    data = glob(["testdata/**"]),
+    data = glob(
+        ["testdata/**"],
+        allow_empty = True,
+    ),
     embed = [":cmp"],
     deps = [
         "//vendor/github.com/google/go-cmp/cmp/cmpopts",

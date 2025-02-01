@@ -29,6 +29,9 @@ go_test(
         "errgroup_test.go",
         "go120_test.go",
     ],
-    data = glob(["testdata/**"]),
+    data = glob(
+        ["testdata/**"],
+        allow_empty = True,
+    ),
     embed = [":errgroup"],
 )

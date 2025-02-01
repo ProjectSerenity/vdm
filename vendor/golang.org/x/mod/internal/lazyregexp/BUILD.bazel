@@ -24,6 +24,9 @@ go_test(
     size = "small",
     srcs = [
     ],
-    data = glob(["testdata/**"]),
+    data = glob(
+        ["testdata/**"],
+        allow_empty = True,
+    ),
     embed = [":lazyregexp"],
 )

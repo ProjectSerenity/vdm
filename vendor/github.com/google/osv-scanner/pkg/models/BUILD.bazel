@@ -38,6 +38,9 @@ go_test(
         "vulnerabilities_test.go",
         "vulnerability_test.go",
     ],
-    data = glob(["testdata/**"]),
+    data = glob(
+        ["testdata/**"],
+        allow_empty = True,
+    ),
     embed = [":models"],
 )

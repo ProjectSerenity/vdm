@@ -29,7 +29,10 @@ go_test(
         "example_test.go",
         "note_test.go",
     ],
-    data = glob(["testdata/**"]),
+    data = glob(
+        ["testdata/**"],
+        allow_empty = True,
+    ),
     embed = [":note"],
     deps = [
         "//vendor/golang.org/x/crypto/ed25519",

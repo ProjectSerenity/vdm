@@ -42,6 +42,9 @@ go_test(
         "wrap_113_test.go",
         "wrap_test.go",
     ],
-    data = glob(["testdata/**"]),
+    data = glob(
+        ["testdata/**"],
+        allow_empty = True,
+    ),
     embed = [":xerrors"],
 )
