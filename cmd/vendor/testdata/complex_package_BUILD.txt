@@ -27,7 +27,10 @@ go_test(
     size = "small",
     srcs = [
     ],
-    data = glob(["testdata/**"]) + [
+    data = glob(
+        ["testdata/**"],
+        allow_empty = True,
+    ) + [
         "@rust_linux_x86_64//:rustc",
     ],
     embed = [":zip"],

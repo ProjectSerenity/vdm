@@ -42,9 +42,15 @@ go_test(
     srcs = [{{ range .TestFiles }}
         "{{ . }}",{{ end }}
     ],
-    data = glob(["testdata/**"]){{ if .TestDataGlobs }} + glob([{{ range .TestDataGlobs }}
-        "{{ . }}",{{ end }}
-    ]){{ end }}{{ if .TestData }} + [{{ range .TestData }}
+    data = glob(
+        ["testdata/**"],
+        allow_empty = True,
+    ){{ if .TestDataGlobs }} + glob(
+        [{{ range .TestDataGlobs }}
+            "{{ . }}",{{ end }}
+        ],
+        allow_empty = True,
+    ){{ end }}{{ if .TestData }} + [{{ range .TestData }}
         "{{ . }}",{{ end }}
     ]{{ end }},
     embed = [":{{ packageName . }}"],{{ if .TestDeps }}
