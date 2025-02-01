@@ -8,8 +8,8 @@
 go = [
     module(
         name = "github.com/bazelbuild/buildtools",
-        version = "v0.0.0-20231115204819-d4c9dccdfbb1",
-        digest = "sha256:d2579ee382ce11ad8168225c6627ee40acf4d9fb65b62c437d285f93f312ecdf",
+        version = "v0.0.0-20250130132114-635c1223b1e6",
+        digest = "sha256:e2c03199d8d459539007141305cda549efbb1e78905e1e509ab945de7c08cb06",
         patch_args = [
             "-p1",
         ],

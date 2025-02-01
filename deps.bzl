@@ -6,11 +6,14 @@
 go = [
     module(
         name = "github.com/bazelbuild/buildtools",
-        version = "v0.0.0-20231115204819-d4c9dccdfbb1",
+        version = "v0.0.0-20250130132114-635c1223b1e6",
         packages = [
             package(
                 name = "github.com/bazelbuild/buildtools/build",
                 build_file = "patches/github.com_bazelbuild_buildtools_build.BUILD",
+            ),
+            package(
+                name = "github.com/bazelbuild/buildtools/labels",
             ),
             package(
                 name = "github.com/bazelbuild/buildtools/tables",
