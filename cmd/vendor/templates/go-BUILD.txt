@@ -53,7 +53,10 @@ go_test(
     ){{ end }}{{ if .TestData }} + [{{ range .TestData }}
         "{{ . }}",{{ end }}
     ]{{ end }},
-    embed = [":{{ packageName . }}"],{{ if .TestDeps }}
+    embed = [":{{ packageName . }}"],{{ if .TestEnv }}
+    env = { {{- range $k, $v := .TestEnv }}
+        {{ printf "%q" $k }}: {{ printf "%q" $v }},{{ end }}
+    },{{ end }}{{ if .TestDeps }}
     deps = [{{ range .TestDeps }}
         "//vendor/{{ . }}",{{ end }}
     ],{{ end }}
