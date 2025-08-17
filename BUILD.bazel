@@ -14,6 +14,7 @@ go_library(
     visibility = ["//visibility:private"],
     deps = [
         "//cmd/check",
+        "//cmd/json",
         "//cmd/update",
         "//cmd/vendor",
         "//internal/simplehttp",

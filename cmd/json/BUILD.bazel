@@ -1,0 +1,17 @@
+# Copyright 2023 The Firefly Authors.
+#
+# Use of this source code is governed by a BSD 3-clause
+# license that can be found in the LICENSE file.
+
+load("@rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "json",
+    srcs = ["main.go"],
+    importpath = "github.com/ProjectSerenity/vdm/cmd/json",
+    visibility = ["//:__subpackages__"],
+    deps = [
+        "//internal/starlark",
+        "//internal/vendeps",
+    ],
+)
