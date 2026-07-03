@@ -114,6 +114,10 @@ func Unmarshal(filename string, data []byte, v any) error {
 	return nil
 }
 
+type IsSorteder interface {
+	IsSorted() (sorted bool, firstUnsorted int)
+}
+
 func unmarshal(filename string, x build.Expr, name, structName string, v reflect.Value) error {
 	// pos is a helper for printing file:line prefixes
 	// for error messages.
@@ -159,6 +163,13 @@ func unmarshal(filename string, x build.Expr, name, structName string, v reflect
 			err := unmarshal(filename, elt, fmt.Sprintf("%s[%d]", name, i), structName, v.Index(i))
 			if err != nil {
 				return err
+			}
+		}
+
+		if s, ok := v.Interface().(IsSorteder); ok {
+			sorted, firstUnsorted := s.IsSorted()
+			if !sorted {
+				return fmt.Errorf("%s: list not sorted: first un-sorted element at %s", pos(expr), pos(expr.List[firstUnsorted]))
 			}
 		}
 	case *build.DictExpr:
