@@ -14,6 +14,7 @@ go_library(
         "go.go",
         "license.go",
         "patch.go",
+        "sorting.go",
         "vendeps.go",
     ],
     importpath = "github.com/ProjectSerenity/vdm/internal/vendeps",

@@ -19,7 +19,7 @@ const (
 
 // Deps describes a set of software dependencies.
 type Deps struct {
-	Go []*GoModule `bzl:"go/module"`
+	Go SortedGoModules `bzl:"go/module"`
 }
 
 // GoModule contains the information necessary
@@ -37,10 +37,10 @@ type GoModule struct {
 	Patches   []string `bzl:"patches"`
 
 	// Packages that should be used.
-	Packages []*GoPackage `bzl:"packages/package"`
+	Packages SortedGoPackages `bzl:"packages/package"`
 
 	// Directories containing plain files.
-	Directories []*TextFiles `bzl:"directories/files"`
+	Directories SortedTextFiles `bzl:"directories/files"`
 
 	// Generation details.
 	Digest      string `bzl:"digest"`
@@ -62,21 +62,21 @@ type GoPackage struct {
 	BuildFile string `bzl:"build_file"`
 
 	// Build configuration.
-	Deps       []string `bzl:"deps"`
-	Embed      []string `bzl:"embed"`
-	EmbedGlobs []string `bzl:"embed_globs"`
+	Deps       SortedStrings `bzl:"deps"`
+	Embed      SortedStrings `bzl:"embed"`
+	EmbedGlobs []string      `bzl:"embed_globs"`
 
 	// Binary configuration.
-	Binary     bool     `bzl:"binary"`
-	BinaryDeps []string `bzl:"binary_deps"`
+	Binary     bool          `bzl:"binary"`
+	BinaryDeps SortedStrings `bzl:"binary_deps"`
 
 	// Test configuration.
 	NoTests       bool `bzl:"no_tests"`
 	TestFiles     []string
 	TestSize      string            `bzl:"test_size"`
-	TestData      []string          `bzl:"test_data"`
+	TestData      SortedStrings     `bzl:"test_data"`
 	TestDataGlobs []string          `bzl:"test_data_globs"`
-	TestDeps      []string          `bzl:"test_deps"`
+	TestDeps      SortedStrings     `bzl:"test_deps"`
 	TestEnv       map[string]string `bzl:"test_env"`
 }
 
@@ -87,13 +87,13 @@ type TextFiles struct {
 	Name string `bzl:"name"`
 
 	// Export files publicly.
-	ExportsFiles []string `bzl:"exports_files"`
+	ExportsFiles SortedStrings `bzl:"exports_files"`
 }
 
 // UpdateDeps includes a set of dependencies
 // for the purposes of updating them.
 type UpdateDeps struct {
-	Go []*UpdateDep
+	Go SortedUpdateDeps
 }
 
 // UpdateDep describes the least information
