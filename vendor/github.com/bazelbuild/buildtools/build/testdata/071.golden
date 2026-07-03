@@ -1,7 +1,0 @@
-foo()
-
-# buildifier: disable=load-on-top
-
-load(":foo", "bar")
-
-bar()

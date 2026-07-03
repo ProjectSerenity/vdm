@@ -1,5 +1,0 @@
-package()
-
-load("foo", "x", "y")
-load("foo", "x", "z")
-load("bar", "baz")
