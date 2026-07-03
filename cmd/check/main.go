@@ -47,6 +47,29 @@ func Main(ctx context.Context, w io.Writer, args []string) error {
 	}
 
 	roots := flags.Args()
+	if len(roots) == 0 {
+		// Default to all child directories except
+		// the vendor directory.
+		entries, err := os.ReadDir(".")
+		if err != nil {
+			return fmt.Errorf("failed to read current directory: %v", err)
+		}
+
+		roots = make([]string, 0, len(entries))
+		for _, entry := range entries {
+			if !entry.IsDir() {
+				continue
+			}
+
+			name := entry.Name()
+			if name == "vendor" || strings.HasPrefix(name, ".") {
+				continue
+			}
+
+			roots = append(roots, fmt.Sprintf("//%s/...", name))
+		}
+	}
+
 	fsys := os.DirFS(".")
 	return CheckDependencies(fsys, roots)
 }
