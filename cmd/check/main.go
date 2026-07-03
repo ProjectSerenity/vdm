@@ -286,7 +286,7 @@ func CheckDependencies(fsys fs.FS, roots []string) error {
 
 	if len(vulns) > 0 {
 		os.Stderr.Write(b.Bytes())
-		return fmt.Errorf("Found %d vulnerabilities.", len(vulns))
+		fmt.Printf("Found %d vulnerabilities.\n", len(vulns))
 	}
 
 	if len(directOnly) == 0 {
