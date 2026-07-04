@@ -18,6 +18,7 @@ import (
 
 	"github.com/ProjectSerenity/vdm/cmd/check"
 	"github.com/ProjectSerenity/vdm/cmd/json"
+	"github.com/ProjectSerenity/vdm/cmd/stats"
 	"github.com/ProjectSerenity/vdm/cmd/update"
 	"github.com/ProjectSerenity/vdm/cmd/vendor"
 	"github.com/ProjectSerenity/vdm/internal/simplehttp"
@@ -60,6 +61,7 @@ func RegisterCommand(name, description string, fun func(ctx context.Context, w i
 func init() {
 	RegisterCommand("check", "Check managed dependencies for vulnerabilities and other issues.", check.Main)
 	RegisterCommand("json", "Print the current dependency set in JSON format.", json.Main)
+	RegisterCommand("stats", "Print statistical data about current dependency set.", stats.Main)
 	RegisterCommand("update", "Modify the dependency manifest to apply any available minor or patch updates to external dependencies.", update.Main)
 	RegisterCommand("vendor", "Vendor the managed dependencies into the vendor directory.", vendor.Main)
 }
