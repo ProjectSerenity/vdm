@@ -1,0 +1,79 @@
+banned-go-packages:
+	"github.com/stretchr/assert"  // Unidiomatic.
+	"github.com/stretchr/testify"  // Unidiomatic.
+
+go-modules:
+	module "example.com/no-packages" v1.2.3
+	module "github.com/google/go-cmp" v0.7.0  // Last updated 04/07/2026.
+		patch-args:
+			"-p1"
+			"-h"  // We don't sort these.
+		patches:
+			"github.com_google_go-cmp_cmp_foo.diff"  // Remove an unwanted dependency.
+			"other.diff"  // Another fake.
+		packages:
+			package "github.com/google/go-cmp/cmp"
+				deps:
+					"github.com/google/go-cmp/cmp/internal/diff"
+					"github.com/google/go-cmp/cmp/internal/flags"
+					"github.com/google/go-cmp/cmp/internal/function"
+					"github.com/google/go-cmp/cmp/internal/testprotos"
+					"github.com/google/go-cmp/cmp/internal/teststructs"
+					"github.com/google/go-cmp/cmp/internal/value"
+				test-deps:
+					"github.com/google/go-cmp/cmp/cmpopts"
+					"github.com/google/go-cmp/cmp/internal/teststructs/foo1"
+					"github.com/google/go-cmp/cmp/internal/teststructs/foo2"
+			package "github.com/google/go-cmp/cmp/cmpopts"
+				deps:
+					"github.com/google/go-cmp/cmp"
+					"github.com/google/go-cmp/cmp/internal/function"
+				test-deps:
+					"github.com/google/go-cmp/cmp/internal/flags"
+			package "github.com/google/go-cmp/cmp/internal/complex"  // We made this up to use all the encoding features.
+				build-file: "github.com_google_go-cmp_cmp_internal_complex.BUILD.bazel"  // foo
+				deps:
+					"bar"
+					"foo"
+				embed:
+					"bar.go"
+					"foo.go"  // We want to embed this file.
+				embed-globs:
+					"*.bazel"
+					"*.pb.go"  // Globs can be useful for generated files.
+				binary: true  // Check we can comment bools too.
+				binary-deps:
+					"example.com/foo"
+					"rsc.io/diff"  // We can comment these too.
+				no-tests: false  // Another boolean comment.
+				test-size: small  // This should be quick.
+				test-data:
+					"testdata/individual/bar.txt"
+					"testdata/individual/foo.txt"  // An individual file.
+				test-data-globs:
+					"testdata/globs/*.bazel"
+					"testdata/globs/*.txt"  // A group of files.
+				test-deps:
+					"github.com/google/go-cmp/cmp"
+					"rsc.io/diff"
+				test-env:
+					"aardvark": "one"  // Order matters here.
+					"second":   "two"  // And here too.
+			package "github.com/google/go-cmp/cmp/internal/diff"
+				deps:
+					"github.com/google/go-cmp/cmp/internal/flags"
+			package "github.com/google/go-cmp/cmp/internal/flags"
+			package "github.com/google/go-cmp/cmp/internal/function"
+			package "github.com/google/go-cmp/cmp/internal/testprotos"
+			package "github.com/google/go-cmp/cmp/internal/teststructs"
+				deps:
+					"github.com/google/go-cmp/cmp/internal/testprotos"
+			package "github.com/google/go-cmp/cmp/internal/teststructs/foo1"
+			package "github.com/google/go-cmp/cmp/internal/teststructs/foo2"
+			package "github.com/google/go-cmp/cmp/internal/value"
+				test-deps:
+					"github.com/google/go-cmp/cmp"
+	module "rsc.io/diff" v0.0.0-20190621135850-fe3479844c3c  // Last updated 04/07/2026.
+		packages:
+			package "rsc.io/diff"  // This is the only one.
+				no-tests: true

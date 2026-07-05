@@ -1,0 +1,33 @@
+-- deps.json --
+{
+	"GoModules": [
+		{
+			"Name": "rsc.io/diff",
+			"Version": {
+				"Value": "v0.0.0-20190621135850-fe3479844c3c",
+				"Comment": "Last updated 04/07/2026.",
+				"Pos": {
+					"File": "deps.vdm",
+					"Line": 2
+				}
+			},
+			"Packages": [
+				{
+					"Name": {
+						"Value": "rsc.io/diff",
+						"Comment": "This is the only one.",
+						"Pos": {
+							"File": "deps.vdm",
+							"Line": 4
+						}
+					}
+				}
+			]
+		}
+	]
+}
+-- deps.vdm --
+go-modules:
+	module "rsc.io/diff" v0.0.0-20190621135850-fe3479844c3c  // Last updated 04/07/2026.
+		packages:
+			package "rsc.io/diff"  // This is the only one.

@@ -1,0 +1,4 @@
+go-modules:
+	module "rsc.io/diff" v0.0.0-20190621135850-fe3479844c3c  // Last updated 04/07/2026.
+		packages:
+			package "rsc.io/diff"  // This is the only one.

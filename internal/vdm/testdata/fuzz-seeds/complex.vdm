@@ -1,0 +1,85 @@
+banned-go-packages:
+	"github.com/stretchr/testify"  // Unidiomatic.
+	"github.com/stretchr/assert"  // Unidiomatic.
+
+
+go-modules:
+
+	module "rsc.io/diff" v0.0.0-20190621135850-fe3479844c3c  // Last updated 04/07/2026.
+		packages:
+			package "rsc.io/diff"  // This is the only one.
+				no-tests: true
+	module "example.com/no-packages" v1.2.3
+	module "github.com/google/go-cmp" v0.7.0  // Last updated 04/07/2026.
+		patch-args:
+			"-p1"
+			"-h" // We don't sort these.
+		patches:
+			"other.diff"  // Another fake.
+			"github.com_google_go-cmp_cmp_foo.diff"  // Remove an unwanted dependency.
+		packages:
+			package "github.com/google/go-cmp/cmp"
+				deps:
+					"github.com/google/go-cmp/cmp/internal/diff"
+					"github.com/google/go-cmp/cmp/internal/flags"
+					"github.com/google/go-cmp/cmp/internal/function"
+					"github.com/google/go-cmp/cmp/internal/testprotos"
+					"github.com/google/go-cmp/cmp/internal/teststructs"
+					"github.com/google/go-cmp/cmp/internal/value"
+				test-deps:
+
+					"github.com/google/go-cmp/cmp/cmpopts"
+
+					"github.com/google/go-cmp/cmp/internal/teststructs/foo1"
+					"github.com/google/go-cmp/cmp/internal/teststructs/foo2"
+			package "github.com/google/go-cmp/cmp/cmpopts"
+				deps:
+					"github.com/google/go-cmp/cmp"
+					"github.com/google/go-cmp/cmp/internal/function"
+				test-deps:
+					"github.com/google/go-cmp/cmp/internal/flags"
+			package "github.com/google/go-cmp/cmp/internal/diff"
+				deps:
+					"github.com/google/go-cmp/cmp/internal/flags"
+			package "github.com/google/go-cmp/cmp/internal/flags"
+			package "github.com/google/go-cmp/cmp/internal/function"
+
+			package "github.com/google/go-cmp/cmp/internal/testprotos"
+			package "github.com/google/go-cmp/cmp/internal/teststructs"
+				deps:
+					"github.com/google/go-cmp/cmp/internal/testprotos"
+			package "github.com/google/go-cmp/cmp/internal/teststructs/foo1"
+			package "github.com/google/go-cmp/cmp/internal/teststructs/foo2"
+			package "github.com/google/go-cmp/cmp/internal/value"
+				test-deps:
+					"github.com/google/go-cmp/cmp"
+			package "github.com/google/go-cmp/cmp/internal/complex"  // We made this up to use all the encoding features.
+				build-file: "github.com_google_go-cmp_cmp_internal_complex.BUILD.bazel"  // foo
+				deps:
+					"foo"
+					"bar"
+				embed:
+					"foo.go"  // We want to embed this file.
+					"bar.go"
+				embed-globs:
+					"*.pb.go"  // Globs can be useful for generated files.
+					"*.bazel"
+				binary: true  // Check we can comment bools too.
+				binary-deps:
+					"rsc.io/diff"  // We can comment these too.
+					"example.com/foo"
+				no-tests: false  // Another boolean comment.
+				test-size: small  // This should be quick.
+				test-data:
+					"testdata/individual/foo.txt"  // An individual file.
+					"testdata/individual/bar.txt"
+				test-data-globs:
+					"testdata/globs/*.txt"  // A group of files.
+					"testdata/globs/*.bazel"
+				test-deps:
+					"rsc.io/diff"
+					"github.com/google/go-cmp/cmp"
+				test-env:
+					"second":   "two"  // And here too.
+					"aardvark": "one"  // Order matters here.
+

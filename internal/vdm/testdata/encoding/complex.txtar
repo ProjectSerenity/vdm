@@ -1,0 +1,483 @@
+-- deps.json --
+{
+	"BannedGoPackages": [
+		{
+			"Value": "github.com/stretchr/testify",
+			"Comment": "Unidiomatic.",
+			"Pos": {
+				"File": "deps.vdm",
+				"Line": 2
+			}
+		}
+	],
+	"GoModules": [
+		{
+			"Name": "rsc.io/diff",
+			"Version": {
+				"Value": "v0.0.0-20190621135850-fe3479844c3c",
+				"Comment": "Last updated 04/07/2026.",
+				"Pos": {
+					"File": "deps.vdm",
+					"Line": 5
+				}
+			},
+			"Packages": [
+				{
+					"Name": {
+						"Value": "rsc.io/diff",
+						"Comment": "This is the only one.",
+						"Pos": {
+							"File": "deps.vdm",
+							"Line": 7
+						}
+					},
+					"NoTests": {
+						"Value": true,
+						"Pos": {
+							"File": "deps.vdm",
+							"Line": 8
+						}
+					}
+				}
+			]
+		},
+		{
+			"Name": "example.com/no-packages",
+			"Version": {
+				"Value": "v1.2.3",
+				"Pos": {
+					"File": "deps.vdm",
+					"Line": 9
+				}
+			}
+		},
+		{
+			"Name": "github.com/google/go-cmp",
+			"Version": {
+				"Value": "v0.7.0",
+				"Comment": "Last updated 04/07/2026.",
+				"Pos": {
+					"File": "deps.vdm",
+					"Line": 10
+				}
+			},
+			"PatchArgs": [
+				{
+					"Value": "-p1",
+					"Pos": {
+						"File": "deps.vdm",
+						"Line": 12
+					}
+				}
+			],
+			"Patches": [
+				{
+					"Value": "github.com_google_go-cmp_cmp_foo.diff",
+					"Comment": "Remove an unwanted dependency.",
+						"Pos": {
+							"File": "deps.vdm",
+							"Line": 14
+						}
+				}
+			],
+			"Packages": [
+				{
+					"Name": {
+						"Value": "github.com/google/go-cmp/cmp",
+						"Pos": {
+							"File": "deps.vdm",
+							"Line": 16
+						}
+					},
+					"Deps": [
+						{
+							"Value": "github.com/google/go-cmp/cmp/internal/diff",
+							"Pos": {
+								"File": "deps.vdm",
+								"Line": 18
+							}
+						},
+						{
+							"Value": "github.com/google/go-cmp/cmp/internal/flags",
+							"Pos": {
+								"File": "deps.vdm",
+								"Line": 19
+							}
+						},
+						{
+							"Value": "github.com/google/go-cmp/cmp/internal/function",
+							"Pos": {
+								"File": "deps.vdm",
+								"Line": 20
+							}
+						},
+						{
+							"Value": "github.com/google/go-cmp/cmp/internal/testprotos",
+							"Pos": {
+								"File": "deps.vdm",
+								"Line": 21
+							}
+						},
+						{
+							"Value": "github.com/google/go-cmp/cmp/internal/teststructs",
+							"Pos": {
+								"File": "deps.vdm",
+								"Line": 22
+							}
+						},
+						{
+							"Value": "github.com/google/go-cmp/cmp/internal/value",
+							"Pos": {
+								"File": "deps.vdm",
+								"Line": 23
+							}
+						}
+					],
+					"TestDeps": [
+						{
+							"Value": "github.com/google/go-cmp/cmp/cmpopts",
+							"Pos": {
+								"File": "deps.vdm",
+								"Line": 25
+							}
+						},
+						{
+							"Value": "github.com/google/go-cmp/cmp/internal/teststructs/foo1",
+							"Pos": {
+								"File": "deps.vdm",
+								"Line": 26
+							}
+						},
+						{
+							"Value": "github.com/google/go-cmp/cmp/internal/teststructs/foo2",
+							"Pos": {
+								"File": "deps.vdm",
+								"Line": 27
+							}
+						}
+					]
+				},
+				{
+					"Name": {
+						"Value": "github.com/google/go-cmp/cmp/cmpopts",
+						"Pos": {
+							"File": "deps.vdm",
+							"Line": 28
+						}
+					},
+					"Deps": [
+						{
+							"Value": "github.com/google/go-cmp/cmp",
+							"Pos": {
+								"File": "deps.vdm",
+								"Line": 30
+							}
+						},
+						{
+							"Value": "github.com/google/go-cmp/cmp/internal/function",
+							"Pos": {
+								"File": "deps.vdm",
+								"Line": 31
+							}
+						}
+					],
+					"TestDeps": [
+						{
+							"Value": "github.com/google/go-cmp/cmp/internal/flags",
+							"Pos": {
+								"File": "deps.vdm",
+								"Line": 33
+							}
+						}
+					]
+				},
+				{
+					"Name": {
+						"Value": "github.com/google/go-cmp/cmp/internal/diff",
+						"Pos": {
+							"File": "deps.vdm",
+							"Line": 34
+						}
+					},
+					"Deps": [
+						{
+							"Value": "github.com/google/go-cmp/cmp/internal/flags",
+							"Pos": {
+								"File": "deps.vdm",
+								"Line": 36
+							}
+						}
+					]
+				},
+				{
+					"Name": {
+						"Value": "github.com/google/go-cmp/cmp/internal/flags",
+						"Pos": {
+							"File": "deps.vdm",
+							"Line": 37
+						}
+					}
+				},
+				{
+					"Name": {
+						"Value": "github.com/google/go-cmp/cmp/internal/function",
+						"Pos": {
+							"File": "deps.vdm",
+							"Line": 38
+						}
+					}
+				},
+				{
+					"Name": {
+						"Value": "github.com/google/go-cmp/cmp/internal/testprotos",
+						"Pos": {
+							"File": "deps.vdm",
+							"Line": 39
+						}
+					}
+				},
+				{
+					"Name": {
+						"Value": "github.com/google/go-cmp/cmp/internal/teststructs",
+						"Pos": {
+							"File": "deps.vdm",
+							"Line": 40
+						}
+					},
+					"Deps": [
+						{
+							"Value": "github.com/google/go-cmp/cmp/internal/testprotos",
+							"Pos": {
+								"File": "deps.vdm",
+								"Line": 42
+							}
+						}
+					]
+				},
+				{
+					"Name": {
+						"Value": "github.com/google/go-cmp/cmp/internal/teststructs/foo1",
+						"Pos": {
+							"File": "deps.vdm",
+							"Line": 43
+						}
+					}
+				},
+				{
+					"Name": {
+						"Value": "github.com/google/go-cmp/cmp/internal/teststructs/foo2",
+						"Pos": {
+							"File": "deps.vdm",
+							"Line": 44
+						}
+					}
+				},
+				{
+					"Name": {
+						"Value": "github.com/google/go-cmp/cmp/internal/value",
+						"Pos": {
+							"File": "deps.vdm",
+							"Line": 45
+						}
+					},
+					"TestDeps": [
+						{
+							"Value": "github.com/google/go-cmp/cmp",
+							"Pos": {
+								"File": "deps.vdm",
+								"Line": 47
+							}
+						}
+					]
+				},
+				{
+					"Name": {
+						"Value": "github.com/google/go-cmp/cmp/internal/complex",
+						"Comment": "We made this up to use all the encoding features.",
+						"Pos": {
+							"File": "deps.vdm",
+							"Line": 48
+						}
+					},
+					"BuildFile": {
+						"Value": "github.com_google_go-cmp_cmp_internal_complex.BUILD.bazel",
+						"Comment": "foo",
+						"Pos": {
+							"File": "deps.vdm",
+							"Line": 49
+						}
+					},
+					"Embed": [
+						{
+							"Value": "foo.go",
+							"Comment": "We want to embed this file.",
+							"Pos": {
+								"File": "deps.vdm",
+								"Line": 51
+							}
+						}
+					],
+					"EmbedGlobs": [
+						{
+							"Value": "*.pb.go",
+							"Comment": "Globs can be useful for generated files.",
+							"Pos": {
+								"File": "deps.vdm",
+								"Line": 53
+							}
+						}
+					],
+					"Binary": {
+						"Value": true,
+						"Comment": "Check we can comment bools too.",
+						"Pos": {
+							"File": "deps.vdm",
+							"Line": 54
+						}
+					},
+					"BinaryDeps": [
+						{
+							"Value": "rsc.io/diff",
+							"Comment": "We can comment these too.",
+							"Pos": {
+								"File": "deps.vdm",
+								"Line": 56
+							}
+						}
+					],
+					"NoTests": {
+						"Value": false,
+						"Comment": "Another boolean comment.",
+						"Pos": {
+							"File": "deps.vdm",
+							"Line": 57
+						}
+					},
+					"TestSize": {
+						"Value": "small",
+						"Comment": "This should be quick.",
+						"Pos": {
+							"File": "deps.vdm",
+							"Line": 58
+						}
+					},
+					"TestData": [
+						{
+							"Value": "testdata/individual/foo.txt",
+							"Comment": "An individual file.",
+							"Pos": {
+								"File": "deps.vdm",
+								"Line": 60
+							}
+						}
+					],
+					"TestDataGlobs": [
+						{
+							"Value": "testdata/globs/*.txt",
+							"Comment": "A group of files.",
+							"Pos": {
+								"File": "deps.vdm",
+								"Line": 62
+							}
+						}
+					],
+					"TestDeps": [
+						{
+							"Value": "github.com/google/go-cmp/cmp",
+							"Pos": {
+								"File": "deps.vdm",
+								"Line": 64
+							}
+						}
+					],
+					"TestEnv": {
+						"aardvark": {
+							"Value": "one",
+							"Comment": "Order matters here.",
+							"Pos": {
+								"File": "deps.vdm",
+								"Line": 66
+							}
+						},
+						"second": {
+							"Value": "two",
+							"Comment": "And here too.",
+							"Pos": {
+								"File": "deps.vdm",
+								"Line": 67
+							}
+						}
+					}
+				}
+			]
+		}
+	]
+}
+-- deps.vdm --
+banned-go-packages:
+	"github.com/stretchr/testify"  // Unidiomatic.
+
+go-modules:
+	module "rsc.io/diff" v0.0.0-20190621135850-fe3479844c3c  // Last updated 04/07/2026.
+		packages:
+			package "rsc.io/diff"  // This is the only one.
+				no-tests: true
+	module "example.com/no-packages" v1.2.3
+	module "github.com/google/go-cmp" v0.7.0  // Last updated 04/07/2026.
+		patch-args:
+			"-p1"
+		patches:
+			"github.com_google_go-cmp_cmp_foo.diff"  // Remove an unwanted dependency.
+		packages:
+			package "github.com/google/go-cmp/cmp"
+				deps:
+					"github.com/google/go-cmp/cmp/internal/diff"
+					"github.com/google/go-cmp/cmp/internal/flags"
+					"github.com/google/go-cmp/cmp/internal/function"
+					"github.com/google/go-cmp/cmp/internal/testprotos"
+					"github.com/google/go-cmp/cmp/internal/teststructs"
+					"github.com/google/go-cmp/cmp/internal/value"
+				test-deps:
+					"github.com/google/go-cmp/cmp/cmpopts"
+					"github.com/google/go-cmp/cmp/internal/teststructs/foo1"
+					"github.com/google/go-cmp/cmp/internal/teststructs/foo2"
+			package "github.com/google/go-cmp/cmp/cmpopts"
+				deps:
+					"github.com/google/go-cmp/cmp"
+					"github.com/google/go-cmp/cmp/internal/function"
+				test-deps:
+					"github.com/google/go-cmp/cmp/internal/flags"
+			package "github.com/google/go-cmp/cmp/internal/diff"
+				deps:
+					"github.com/google/go-cmp/cmp/internal/flags"
+			package "github.com/google/go-cmp/cmp/internal/flags"
+			package "github.com/google/go-cmp/cmp/internal/function"
+			package "github.com/google/go-cmp/cmp/internal/testprotos"
+			package "github.com/google/go-cmp/cmp/internal/teststructs"
+				deps:
+					"github.com/google/go-cmp/cmp/internal/testprotos"
+			package "github.com/google/go-cmp/cmp/internal/teststructs/foo1"
+			package "github.com/google/go-cmp/cmp/internal/teststructs/foo2"
+			package "github.com/google/go-cmp/cmp/internal/value"
+				test-deps:
+					"github.com/google/go-cmp/cmp"
+			package "github.com/google/go-cmp/cmp/internal/complex"  // We made this up to use all the encoding features.
+				build-file: "github.com_google_go-cmp_cmp_internal_complex.BUILD.bazel"  // foo
+				embed:
+					"foo.go"  // We want to embed this file.
+				embed-globs:
+					"*.pb.go"  // Globs can be useful for generated files.
+				binary: true  // Check we can comment bools too.
+				binary-deps:
+					"rsc.io/diff"  // We can comment these too.
+				no-tests: false  // Another boolean comment.
+				test-size: small  // This should be quick.
+				test-data:
+					"testdata/individual/foo.txt"  // An individual file.
+				test-data-globs:
+					"testdata/globs/*.txt"  // A group of files.
+				test-deps:
+					"github.com/google/go-cmp/cmp"
+				test-env:
+					"aardvark": "one"  // Order matters here.
+					"second":   "two"  // And here too.
