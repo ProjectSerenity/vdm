@@ -16,8 +16,10 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/ProjectSerenity/vdm/internal/gomodproxy"
 	"github.com/ProjectSerenity/vdm/internal/vdm"
-	"github.com/ProjectSerenity/vdm/internal/vendeps"
+
+	"golang.org/x/mod/semver"
 )
 
 var program = filepath.Base(os.Args[0])
@@ -74,17 +76,9 @@ func UpdateDependencies(ctx context.Context, w io.Writer, name string) error {
 		return err
 	}
 
-	modules := make([]*vendeps.UpdateDep, len(deps.GoModules))
-	for i, mod := range deps.GoModules {
-		modules[i] = &vendeps.UpdateDep{
-			Name:    mod.Name,
-			Version: &mod.Version.Value,
-		}
-	}
-
 	anyUpdated := false
-	for _, mod := range modules {
-		updated, err := vendeps.UpdateGoModule(ctx, mod)
+	for _, mod := range deps.GoModules {
+		updated, err := UpdateGoModule(ctx, w, mod.Name, &mod.Version.Value)
 		if err != nil {
 			return err
 		}
@@ -107,4 +101,27 @@ func UpdateDependencies(ctx context.Context, w io.Writer, name string) error {
 	}
 
 	return nil
+}
+
+// UpdateGoModule checks a Go module for updates,
+// using the proxy.golang.org Go module proxy API.
+func UpdateGoModule(ctx context.Context, w io.Writer, name string, version *string) (updated bool, err error) {
+	latest, err := gomodproxy.Latest(ctx, name)
+	if err != nil {
+		return false, err
+	}
+
+	switch semver.Compare(*version, latest) {
+	case 0:
+		// Current is latest.
+		return false, nil
+	case -1:
+		// There is a newer version.
+		fmt.Fprintf(w, "Updated Go module %s from %s to %s.\n", name, *version, latest)
+		*version = latest
+		return true, nil
+	default:
+		fmt.Fprintf(w, "WARN: Go module %s has version %s, but latest is %s, which is older.\n", name, *version, latest)
+		return false, nil
+	}
 }

@@ -9,13 +9,10 @@ import (
 	"context"
 	"fmt"
 	"io/fs"
-	"log"
 	"os"
 	"path"
 	"sort"
 	"strings"
-
-	"golang.org/x/mod/semver"
 
 	"github.com/ProjectSerenity/vdm/internal/gomodproxy"
 )
@@ -104,27 +101,4 @@ func FetchGoModule(ctx context.Context, mod *GoModule, dir string) error {
 	}
 
 	return nil
-}
-
-// UpdateGoModule checks a Go module for updates,
-// using the proxy.golang.org Go module proxy API.
-func UpdateGoModule(ctx context.Context, mod *UpdateDep) (updated bool, err error) {
-	latest, err := gomodproxy.Latest(ctx, mod.Name)
-	if err != nil {
-		return false, err
-	}
-
-	switch semver.Compare(*mod.Version, latest) {
-	case 0:
-		// Current is latest.
-		return false, nil
-	case -1:
-		// There is a newer version.
-		fmt.Printf("Updated Go module %s from %s to %s.\n", mod.Name, *mod.Version, latest)
-		*mod.Version = latest
-		return true, nil
-	default:
-		log.Printf("WARN: Go module %s has version %s, but latest is %s, which is older", mod.Name, *mod.Version, latest)
-		return false, nil
-	}
 }
