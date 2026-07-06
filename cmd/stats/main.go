@@ -19,8 +19,7 @@ import (
 	"path/filepath"
 	"text/tabwriter"
 
-	"github.com/ProjectSerenity/vdm/internal/starlark"
-	"github.com/ProjectSerenity/vdm/internal/vendeps"
+	"github.com/ProjectSerenity/vdm/internal/vdm"
 )
 
 var program = filepath.Base(os.Args[0])
@@ -71,31 +70,30 @@ type DependencyStats struct {
 // DependenciesStats assesses the dependency set
 // to produce statistics.
 func DependenciesStats(fsys fs.FS) (*DependencyStats, error) {
-	data, err := fs.ReadFile(fsys, vendeps.DepsBzl)
+	data, err := fs.ReadFile(fsys, vdm.DepsVDM)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read %s: %v", vendeps.DepsBzl, err)
+		return nil, fmt.Errorf("failed to read %s: %v", vdm.DepsVDM, err)
 	}
 
-	var deps vendeps.Deps
-	err = starlark.Unmarshal(vendeps.DepsBzl, data, &deps)
+	deps, err := vdm.ParseDeps(vdm.DepsVDM, string(data))
 	if err != nil {
 		return nil, err
 	}
 
 	var stats DependencyStats
-	if len(deps.Go) == 0 {
+	if len(deps.GoModules) == 0 {
 		return &stats, nil
 	}
 
 	// Find all modules so we can determine which
 	// are submodules.
-	modules := make(map[string]bool, len(deps.Go))
-	for _, mod := range deps.Go {
+	modules := make(map[string]bool, len(deps.GoModules))
+	for _, mod := range deps.GoModules {
 		stats.GoModules++
 		modules[mod.Name] = true
 		for _, pkg := range mod.Packages {
 			stats.GoPackages++
-			if !pkg.NoTests {
+			if !pkg.NoTests.Value {
 				stats.GoTestedPackages++
 			}
 		}
@@ -103,7 +101,7 @@ func DependenciesStats(fsys fs.FS) (*DependencyStats, error) {
 
 	// Determine which modules are submodules and
 	// which are root modules.
-	for _, mod := range deps.Go {
+	for _, mod := range deps.GoModules {
 		root := true
 		for parent := range parentModules(mod.Name) {
 			if modules[parent] {
