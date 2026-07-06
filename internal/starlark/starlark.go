@@ -255,6 +255,14 @@ func unmarshal(filename string, x build.Expr, name, structName string, v reflect
 					continue
 				}
 
+				// Capture any comment.
+				if tag == "no_tests" && len(assign.Comments.Suffix) == 1 {
+					comment := strings.TrimPrefix(assign.Comments.Suffix[0].Token, "#")
+					comment = strings.TrimSpace(comment)
+					field := v.FieldByName("NoTestsComment")
+					field.SetString(comment)
+				}
+
 				found = true
 				err := unmarshal(filename, assign.RHS, tag, structName, v.Field(i))
 				if err != nil {

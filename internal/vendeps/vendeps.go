@@ -71,13 +71,14 @@ type GoPackage struct {
 	BinaryDeps SortedStrings `bzl:"binary_deps" json:"binary_deps,omitzero"`
 
 	// Test configuration.
-	NoTests       bool              `bzl:"no_tests" json:"no_tests,omitzero"`
-	TestFiles     []string          `json:"-"`
-	TestSize      string            `bzl:"test_size" json:"test_size,omitzero"`
-	TestData      SortedStrings     `bzl:"test_data" json:"test_data,omitzero"`
-	TestDataGlobs []string          `bzl:"test_data_globs" json:"test_data_globs,omitzero"`
-	TestDeps      SortedStrings     `bzl:"test_deps" json:"test_deps,omitzero"`
-	TestEnv       map[string]string `bzl:"test_env" json:"test_env,omitzero"`
+	NoTests        bool              `bzl:"no_tests" json:"no_tests,omitzero"`
+	NoTestsComment string            `json:"-"`
+	TestFiles      []string          `json:"-"`
+	TestSize       string            `bzl:"test_size" json:"test_size,omitzero"`
+	TestData       SortedStrings     `bzl:"test_data" json:"test_data,omitzero"`
+	TestDataGlobs  []string          `bzl:"test_data_globs" json:"test_data_globs,omitzero"`
+	TestDeps       SortedStrings     `bzl:"test_deps" json:"test_deps,omitzero"`
+	TestEnv        map[string]string `bzl:"test_env" json:"test_env,omitzero"`
 }
 
 // TextFiles contains information necessary
