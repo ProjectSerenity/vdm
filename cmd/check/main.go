@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD 3-clause
 // license that can be found in the LICENSE file.
 
-// Command check uses package vendeps to check external dependencies for issues.
+// Command check checks the external dependencies for issues.
 package check
 
 import (
@@ -23,8 +23,7 @@ import (
 	"github.com/google/osv-scanner/pkg/models"
 	"github.com/google/osv-scanner/pkg/osv"
 
-	"github.com/ProjectSerenity/vdm/internal/starlark"
-	"github.com/ProjectSerenity/vdm/internal/vendeps"
+	"github.com/ProjectSerenity/vdm/internal/vdm"
 )
 
 var program = filepath.Base(os.Args[0])
@@ -80,18 +79,17 @@ func Main(ctx context.Context, w io.Writer, args []string) error {
 // The given roots are used as Bazel path selectors
 // for packages that are checked for dependencies.
 func CheckDependencies(fsys fs.FS, roots []string) error {
-	data, err := fs.ReadFile(fsys, vendeps.DepsBzl)
+	data, err := fs.ReadFile(fsys, vdm.DepsVDM)
 	if err != nil {
-		return fmt.Errorf("failed to read %s: %v", vendeps.DepsBzl, err)
+		return fmt.Errorf("failed to read %s: %v", vdm.DepsVDM, err)
 	}
 
-	var deps vendeps.Deps
-	err = starlark.Unmarshal(vendeps.DepsBzl, data, &deps)
+	deps, err := vdm.ParseDeps(vdm.DepsVDM, string(data))
 	if err != nil {
 		return err
 	}
 
-	if len(deps.Go) == 0 {
+	if len(deps.GoModules) == 0 {
 		return nil
 	}
 
@@ -103,19 +101,19 @@ func CheckDependencies(fsys fs.FS, roots []string) error {
 	all := make(map[string][]string)
 	directOnly := make(map[string][]string)
 	var goModules, goPackages int
-	for _, dep := range deps.Go {
+	for _, dep := range deps.GoModules {
 		goModules++
 		for _, pkg := range dep.Packages {
 			goPackages++
-			path := "vendor/" + pkg.Name
+			path := "vendor/" + pkg.Name.Value
 			directChildren := make([]string, 0, len(pkg.Deps))
 			children := make([]string, 0, len(pkg.Deps)+len(pkg.TestDeps))
 			for _, child := range pkg.Deps {
-				children = append(children, "vendor/"+child)
-				directChildren = append(directChildren, "vendor/"+child)
+				children = append(children, "vendor/"+child.Value)
+				directChildren = append(directChildren, "vendor/"+child.Value)
 			}
 			for _, child := range pkg.TestDeps {
-				children = append(children, "vendor/"+child)
+				children = append(children, "vendor/"+child.Value)
 			}
 
 			all[path] = children
@@ -212,16 +210,16 @@ func CheckDependencies(fsys fs.FS, roots []string) error {
 	//
 	// Start by building the set of queries.
 	batched := osv.BatchedQuery{
-		Queries: make([]*osv.Query, len(deps.Go)),
+		Queries: make([]*osv.Query, len(deps.GoModules)),
 	}
 
-	for i, module := range deps.Go {
+	for i, module := range deps.GoModules {
 		batched.Queries[i] = &osv.Query{
 			Package: osv.Package{
 				Name:      module.Name,
 				Ecosystem: "Go",
 			},
-			Version: strings.TrimPrefix(module.Version, "v"),
+			Version: strings.TrimPrefix(module.Version.Value, "v"),
 		}
 	}
 
