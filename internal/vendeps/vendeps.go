@@ -19,7 +19,7 @@ const (
 
 // Deps describes a set of software dependencies.
 type Deps struct {
-	Go SortedGoModules `bzl:"go/module"`
+	Go SortedGoModules `bzl:"go/module" json:"go,omitzero"`
 }
 
 // GoModule contains the information necessary
@@ -27,67 +27,67 @@ type Deps struct {
 // of packages within the module that are used.
 type GoModule struct {
 	// Dependency details.
-	Name    string `bzl:"name"`
-	Version string `bzl:"version"`
+	Name    string `bzl:"name" json:"name,omitzero"`
+	Version string `bzl:"version" json:"version,omitzero"`
 
 	// Patches to be applied to the
 	// downloaded module, before the
 	// BUILD file is copied/generated.
-	PatchArgs []string `bzl:"patch_args"`
-	Patches   []string `bzl:"patches"`
+	PatchArgs []string `bzl:"patch_args" json:"patch_args,omitzero"`
+	Patches   []string `bzl:"patches" json:"patches,omitzero"`
 
 	// Packages that should be used.
-	Packages SortedGoPackages `bzl:"packages/package"`
+	Packages SortedGoPackages `bzl:"packages/package" json:"packages,omitzero"`
 
 	// Directories containing plain files.
-	Directories SortedTextFiles `bzl:"directories/files"`
+	Directories SortedTextFiles `bzl:"directories/files" json:"directories,omitzero"`
 
 	// Generation details.
-	Digest      string `bzl:"digest"`
-	PatchDigest string `bzl:"patch_digest"`
+	Digest      string `bzl:"digest" json:"digest,omitzero"`
+	PatchDigest string `bzl:"patch_digest" json:"patch_digest,omitzero"`
 }
 
 // GoPackage describes a package within
 // a Go module.
 type GoPackage struct {
 	// Dependency details.
-	Name  string `bzl:"name"`
-	Files []string
+	Name  string   `bzl:"name" json:"name,omitzero"`
+	Files []string `json:"-"`
 
 	// Whether to use Bzlmod names
 	// (eg rules_go, rather than io_bazel_rules_go).
-	Bzlmod bool
+	Bzlmod bool `json:"-"`
 
 	// Manually-managed BUILD file.
-	BuildFile string `bzl:"build_file"`
+	BuildFile string `bzl:"build_file" json:"build_file,omitzero"`
 
 	// Build configuration.
-	Deps       SortedStrings `bzl:"deps"`
-	Embed      SortedStrings `bzl:"embed"`
-	EmbedGlobs []string      `bzl:"embed_globs"`
+	Deps       SortedStrings `bzl:"deps" json:"deps,omitzero"`
+	Embed      SortedStrings `bzl:"embed" json:"embed,omitzero"`
+	EmbedGlobs []string      `bzl:"embed_globs" json:"embed_globs,omitzero"`
 
 	// Binary configuration.
-	Binary     bool          `bzl:"binary"`
-	BinaryDeps SortedStrings `bzl:"binary_deps"`
+	Binary     bool          `bzl:"binary" json:"binary,omitzero"`
+	BinaryDeps SortedStrings `bzl:"binary_deps" json:"binary_deps,omitzero"`
 
 	// Test configuration.
-	NoTests       bool `bzl:"no_tests"`
-	TestFiles     []string
-	TestSize      string            `bzl:"test_size"`
-	TestData      SortedStrings     `bzl:"test_data"`
-	TestDataGlobs []string          `bzl:"test_data_globs"`
-	TestDeps      SortedStrings     `bzl:"test_deps"`
-	TestEnv       map[string]string `bzl:"test_env"`
+	NoTests       bool              `bzl:"no_tests" json:"no_tests,omitzero"`
+	TestFiles     []string          `json:"-"`
+	TestSize      string            `bzl:"test_size" json:"test_size,omitzero"`
+	TestData      SortedStrings     `bzl:"test_data" json:"test_data,omitzero"`
+	TestDataGlobs []string          `bzl:"test_data_globs" json:"test_data_globs,omitzero"`
+	TestDeps      SortedStrings     `bzl:"test_deps" json:"test_deps,omitzero"`
+	TestEnv       map[string]string `bzl:"test_env" json:"test_env,omitzero"`
 }
 
 // TextFiles contains information necessary
 // to manage text files.
 type TextFiles struct {
 	// Dependency details.
-	Name string `bzl:"name"`
+	Name string `bzl:"name" json:"name,omitzero"`
 
 	// Export files publicly.
-	ExportsFiles SortedStrings `bzl:"exports_files"`
+	ExportsFiles SortedStrings `bzl:"exports_files" json:"exports_files,omitzero"`
 }
 
 // UpdateDeps includes a set of dependencies
