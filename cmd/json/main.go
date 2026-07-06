@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD 3-clause
 // license that can be found in the LICENSE file.
 
-// Command json uses package vendeps to vendor external dependencies into the repository.
+// Command json produces a JSON representation of the dependency set.
 package json
 
 import (
@@ -16,8 +16,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/ProjectSerenity/vdm/internal/starlark"
-	"github.com/ProjectSerenity/vdm/internal/vendeps"
+	"github.com/ProjectSerenity/vdm/internal/vdm"
 )
 
 var program = filepath.Base(os.Args[0])
@@ -42,13 +41,12 @@ func Main(ctx context.Context, w io.Writer, args []string) error {
 
 	// Start by parsing the dependency manifest.
 	fsys := os.DirFS(".")
-	data, err := fs.ReadFile(fsys, vendeps.DepsBzl)
+	data, err := fs.ReadFile(fsys, vdm.DepsVDM)
 	if err != nil {
-		return fmt.Errorf("failed to read %s: %v", vendeps.DepsBzl, err)
+		return fmt.Errorf("failed to read %s: %v", vdm.DepsVDM, err)
 	}
 
-	var deps vendeps.Deps
-	err = starlark.Unmarshal(vendeps.DepsBzl, data, &deps)
+	deps, err := vdm.ParseDeps(vdm.DepsVDM, string(data))
 	if err != nil {
 		return err
 	}
