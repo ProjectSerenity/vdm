@@ -50,8 +50,8 @@ type ParsedString struct {
 
 // Deps describes a set of software dependencies.
 type Deps struct {
-	BannedGoPackages []ParsedString
-	GoModules        []*GoModule
+	BannedGoPackages []ParsedString `json:"banned_go_packages,omitzero"`
+	GoModules        []*GoModule    `json:"go_modules,omitzero"`
 }
 
 // GoModule contains the information necessary
@@ -59,44 +59,44 @@ type Deps struct {
 // of packages within the module that are used.
 type GoModule struct {
 	// Dependency details.
-	Name    string
-	Version ParsedString
+	Name    string       `json:"name,omitzero"`
+	Version ParsedString `json:"version,omitzero"`
 
 	// Patches to be applied to the
 	// downloaded module, before the
 	// BUILD file is copied/generated.
-	PatchArgs []ParsedString
-	Patches   []ParsedString
+	PatchArgs []ParsedString `json:"patch_args,omitzero"`
+	Patches   []ParsedString `json:"patches,omitzero"`
 
 	// Packages that should be used.
-	Packages []*GoPackage
+	Packages []*GoPackage `json:"packages,omitzero"`
 }
 
 // GoPackage describes a package within
 // a Go module.
 type GoPackage struct {
 	// Dependency details.
-	Name ParsedString
+	Name ParsedString `json:"name,omitzero"`
 
 	// Manually-managed BUILD file.
-	BuildFile ParsedString
+	BuildFile ParsedString `json:"build_file,omitzero"`
 
 	// Build configuration.
-	Deps       []ParsedString
-	Embed      []ParsedString
-	EmbedGlobs []ParsedString
+	Deps       []ParsedString `json:"deps,omitzero"`
+	Embed      []ParsedString `json:"embed,omitzero"`
+	EmbedGlobs []ParsedString `json:"embed_globs,omitzero"`
 
 	// Binary configuration.
-	Binary     ParsedBool
-	BinaryDeps []ParsedString
+	Binary     ParsedBool     `json:"binary,omitzero"`
+	BinaryDeps []ParsedString `json:"binary_deps,omitzero"`
 
 	// Test configuration.
-	NoTests       ParsedBool
-	TestSize      ParsedString
-	TestData      []ParsedString
-	TestDataGlobs []ParsedString
-	TestDeps      []ParsedString
-	TestEnv       map[string]ParsedString
+	NoTests       ParsedBool              `json:"no_tests,omitzero"`
+	TestSize      ParsedString            `json:"test_size,omitzero"`
+	TestData      []ParsedString          `json:"test_data,omitzero"`
+	TestDataGlobs []ParsedString          `json:"test_data_globs,omitzero"`
+	TestDeps      []ParsedString          `json:"test_deps,omitzero"`
+	TestEnv       map[string]ParsedString `json:"test_env,omitzero"`
 }
 
 // Sort ensures that all order-insensitive data

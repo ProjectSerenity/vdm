@@ -1,22 +1,22 @@
 -- deps.json --
 {
-	"GoModules": [
+	"go_modules": [
 		{
-			"Name": "rsc.io/diff",
-			"Version": {
-				"Value": "v0.0.0-20190621135850-fe3479844c3c",
-				"Pos": {
-					"File": "deps.vdm",
-					"Line": 2
+			"name": "rsc.io/diff",
+			"version": {
+				"value": "v0.0.0-20190621135850-fe3479844c3c",
+				"pos": {
+					"file": "deps.vdm",
+					"line": 2
 				}
 			},
-			"Packages": [
+			"packages": [
 				{
-					"Name": {
-						"Value": "rsc.io/diff",
-						"Pos": {
-							"File": "deps.vdm",
-							"Line": 4
+					"name": {
+						"value": "rsc.io/diff",
+						"pos": {
+							"file": "deps.vdm",
+							"line": 4
 						}
 					}
 				}
