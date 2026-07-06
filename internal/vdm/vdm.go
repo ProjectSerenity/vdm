@@ -8,6 +8,10 @@ import (
 )
 
 const (
+	DepsVDM = "deps.vdm"
+)
+
+const (
 	tabs   = "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t"
 	spaces = "                                "
 )
