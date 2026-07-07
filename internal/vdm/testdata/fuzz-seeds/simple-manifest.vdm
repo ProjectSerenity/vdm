@@ -1,0 +1,4 @@
+go-modules:
+	module "rsc.io/diff" v0.0.0-20190621135850-fe3479844c3c
+		download: sha256:/WCDjRGIVDjKlhtSc1PEApp2fR58gfSVK62dr/yQNyQ=
+		vendored: sha256:AB6TWADCiFzYx4nzfwjeNQBxOA+FM7yLQGFe0PKx38k=

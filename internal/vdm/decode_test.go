@@ -7,6 +7,7 @@ package vdm
 
 import (
 	"encoding/json"
+	"os"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -51,6 +52,71 @@ func TestVectorsParseDeps(t *testing.T) {
 
 			if diff := cmp.Diff(&want, got); diff != "" {
 				t.Errorf("ParseDeps(): deps mismatch (-want, +got)\n%s", diff)
+			}
+		})
+	}
+}
+
+func TestReadDeps(t *testing.T) {
+	tests := []struct {
+		Name  string
+		Path  string
+		Want  *Deps
+		Error string
+	}{
+		{
+			Name:  "missing",
+			Path:  "nonexistant.vdm",
+			Error: "open nonexistant.vdm: no such file or directory",
+		},
+		{
+			Name: "simple",
+			Path: "fuzz-seeds/simple.vdm",
+			Want: &Deps{
+				GoModules: []*GoModule{
+					{
+						Name: "rsc.io/diff",
+						Version: ParsedString{
+							Value: "v0.0.0-20190621135850-fe3479844c3c",
+							Pos:   Pos{File: "fuzz-seeds/simple.vdm", Line: 2},
+						},
+						Packages: []*GoPackage{
+							{
+								Name: ParsedString{
+									Value: "rsc.io/diff",
+									Pos:   Pos{File: "fuzz-seeds/simple.vdm", Line: 4},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.Name, func(t *testing.T) {
+			got, err := ReadDeps(os.DirFS("testdata"), test.Path)
+			if test.Error != "" {
+				if err == nil {
+					t.Fatalf("ReadDeps(): unexpected lack of error")
+				}
+
+				e := err.Error()
+				if e != test.Error {
+					t.Fatalf("ReadDeps(): got wrong error:\nGot:  %s\nWant: %s", e, test.Error)
+				}
+
+				// All good.
+				return
+			}
+
+			if err != nil {
+				t.Fatalf("ReadDeps(): got unexpected error: %v", err)
+			}
+
+			if diff := cmp.Diff(test.Want, got); diff != "" {
+				t.Errorf("ReadDeps(): module mismatch (-want, +got)\n%s", diff)
 			}
 		})
 	}
@@ -1319,6 +1385,71 @@ func TestParser_ParseGoPackage(t *testing.T) {
 
 			if p.Data != test.Next {
 				t.Errorf("parser.ParseGoPackage(): got wrong next data:\nGot:  %q\nWant: %q", p.Data, test.Next)
+			}
+		})
+	}
+}
+
+func TestReadManifests(t *testing.T) {
+	tests := []struct {
+		Name  string
+		Path  string
+		Want  *Manifests
+		Error string
+	}{
+		{
+			Name:  "missing",
+			Path:  "nonexistant",
+			Error: "open nonexistant: no such file or directory",
+		},
+		{
+			Name: "simple",
+			Path: "fuzz-seeds/simple-manifest.vdm",
+			Want: &Manifests{
+				GoModules: []*GoModuleManifest{
+					{
+						Name: "rsc.io/diff",
+						Version: ParsedString{
+							Value: "v0.0.0-20190621135850-fe3479844c3c",
+							Pos:   Pos{File: "fuzz-seeds/simple-manifest.vdm", Line: 2},
+						},
+						Download: ParsedString{
+							Value: "sha256:/WCDjRGIVDjKlhtSc1PEApp2fR58gfSVK62dr/yQNyQ=",
+							Pos:   Pos{File: "fuzz-seeds/simple-manifest.vdm", Line: 3},
+						},
+						Vendored: ParsedString{
+							Value: "sha256:AB6TWADCiFzYx4nzfwjeNQBxOA+FM7yLQGFe0PKx38k=",
+							Pos:   Pos{File: "fuzz-seeds/simple-manifest.vdm", Line: 4},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.Name, func(t *testing.T) {
+			got, err := ReadManifests(os.DirFS("testdata"), test.Path)
+			if test.Error != "" {
+				if err == nil {
+					t.Fatalf("ReadManifests(): unexpected lack of error")
+				}
+
+				e := err.Error()
+				if e != test.Error {
+					t.Fatalf("ReadManifests(): got wrong error:\nGot:  %s\nWant: %s", e, test.Error)
+				}
+
+				// All good.
+				return
+			}
+
+			if err != nil {
+				t.Fatalf("ReadManifests(): got unexpected error: %v", err)
+			}
+
+			if diff := cmp.Diff(test.Want, got); diff != "" {
+				t.Errorf("ReadManifests(): module mismatch (-want, +got)\n%s", diff)
 			}
 		})
 	}

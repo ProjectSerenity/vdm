@@ -9,12 +9,24 @@ import (
 	"cmp"
 	"fmt"
 	"io"
+	"io/fs"
 	"maps"
 	"slices"
 	"strconv"
 	"strings"
 	"unicode"
 )
+
+// ReadDeps opens the specified file in the filesystem
+// and parses its contents as a dependency set.
+func ReadDeps(fsys fs.FS, name string) (*Deps, error) {
+	data, err := fs.ReadFile(fsys, name)
+	if err != nil {
+		return nil, err
+	}
+
+	return ParseDeps(name, string(data))
+}
 
 // ParseDeps parses the dependency set from a VDM file.
 func ParseDeps(name, data string) (*Deps, error) {
@@ -401,6 +413,17 @@ func (p *parser) ParseGoPackage() (*GoPackage, error) {
 			return nil, p.Errorf("unrecognised keyword %q", keyword)
 		}
 	}
+}
+
+// ReadManifests opens the specified file in the filesystem
+// and parses its contents as a dependency set manifest.
+func ReadManifests(fsys fs.FS, name string) (*Manifests, error) {
+	data, err := fs.ReadFile(fsys, name)
+	if err != nil {
+		return nil, err
+	}
+
+	return ParseManifests(name, string(data))
 }
 
 // ParseManifests parses the vendored dependency set from a VDM file.

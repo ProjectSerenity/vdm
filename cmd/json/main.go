@@ -12,7 +12,6 @@ import (
 	"flag"
 	"fmt"
 	"io"
-	"io/fs"
 	"os"
 	"path/filepath"
 
@@ -41,17 +40,12 @@ func Main(ctx context.Context, w io.Writer, args []string) error {
 
 	// Start by parsing the dependency manifest.
 	fsys := os.DirFS(".")
-	data, err := fs.ReadFile(fsys, vdm.DepsVDM)
-	if err != nil {
-		return fmt.Errorf("failed to read %s: %v", vdm.DepsVDM, err)
-	}
-
-	deps, err := vdm.ParseDeps(vdm.DepsVDM, string(data))
+	deps, err := vdm.ReadDeps(fsys, vdm.DepsVDM)
 	if err != nil {
 		return err
 	}
 
-	data, err = json.MarshalIndent(&deps, "", "\t")
+	data, err := json.MarshalIndent(&deps, "", "\t")
 	if err != nil {
 		return fmt.Errorf("failed to encode JSON data: %v", err)
 	}

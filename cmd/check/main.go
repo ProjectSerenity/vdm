@@ -79,12 +79,7 @@ func Main(ctx context.Context, w io.Writer, args []string) error {
 // The given roots are used as Bazel path selectors
 // for packages that are checked for dependencies.
 func CheckDependencies(fsys fs.FS, roots []string) error {
-	data, err := fs.ReadFile(fsys, vdm.DepsVDM)
-	if err != nil {
-		return fmt.Errorf("failed to read %s: %v", vdm.DepsVDM, err)
-	}
-
-	deps, err := vdm.ParseDeps(vdm.DepsVDM, string(data))
+	deps, err := vdm.ReadDeps(fsys, vdm.DepsVDM)
 	if err != nil {
 		return err
 	}

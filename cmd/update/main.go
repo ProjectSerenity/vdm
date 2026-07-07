@@ -66,12 +66,7 @@ func UpdateDependencies(ctx context.Context, w io.Writer, name string) error {
 	// for updates, and writing out any changes
 	// made.
 
-	data, err := os.ReadFile(name)
-	if err != nil {
-		return err
-	}
-
-	deps, err := vdm.ParseDeps(vdm.DepsVDM, string(data))
+	deps, err := vdm.ReadDeps(os.DirFS("."), vdm.DepsVDM)
 	if err != nil {
 		return err
 	}
@@ -94,7 +89,7 @@ func UpdateDependencies(ctx context.Context, w io.Writer, name string) error {
 	// We've updated the dependency set
 	// so we format it and write it
 	// back out.
-	data = deps.Encode()
+	data := deps.Encode()
 	err = os.WriteFile(name, data, 0644)
 	if err != nil {
 		return fmt.Errorf("failed to write updates back to %s: %v", name, err)

@@ -70,12 +70,7 @@ type DependencyStats struct {
 // DependenciesStats assesses the dependency set
 // to produce statistics.
 func DependenciesStats(fsys fs.FS) (*DependencyStats, error) {
-	data, err := fs.ReadFile(fsys, vdm.DepsVDM)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read %s: %v", vdm.DepsVDM, err)
-	}
-
-	deps, err := vdm.ParseDeps(vdm.DepsVDM, string(data))
+	deps, err := vdm.ReadDeps(fsys, vdm.DepsVDM)
 	if err != nil {
 		return nil, err
 	}
