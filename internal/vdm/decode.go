@@ -13,17 +13,17 @@ import (
 
 // ParseDeps parses the dependency set from a VDM file.
 func ParseDeps(name, data string) (*Deps, error) {
+	deps := new(Deps)
 	p := &parser{
 		Data: data,
 		File: name,
 		Line: 1,
-		Deps: new(Deps),
 	}
 
 	for {
 		keyword, err := p.FindColon(0)
 		if err == io.EOF {
-			return p.Deps, nil
+			return deps, nil
 		}
 
 		if err != nil {
@@ -32,11 +32,11 @@ func ParseDeps(name, data string) (*Deps, error) {
 
 		switch keyword {
 		case "banned-go-packages":
-			if len(p.Deps.BannedGoPackages) != 0 {
-				return nil, p.Errorf("duplicate banned Go package set, first found at %s", p.Deps.BannedGoPackages[0].Pos)
+			if len(deps.BannedGoPackages) != 0 {
+				return nil, p.Errorf("duplicate banned Go package set, first found at %s", deps.BannedGoPackages[0].Pos)
 			}
 
-			p.Deps.BannedGoPackages, err = p.FindQuotedStrings(1)
+			deps.BannedGoPackages, err = p.FindQuotedStrings(1)
 			if err == io.EOF {
 				return nil, p.Errorf("expected a quoted string after banned-go-packages:, got EOF")
 			}
@@ -45,19 +45,19 @@ func ParseDeps(name, data string) (*Deps, error) {
 				return nil, err
 			}
 		case "go-modules":
-			if len(p.Deps.GoModules) != 0 {
-				return nil, p.Errorf("duplicate Go module set, first found at %s", p.Deps.GoModules[0].Version.Pos)
+			if len(deps.GoModules) != 0 {
+				return nil, p.Errorf("duplicate Go module set, first found at %s", deps.GoModules[0].Version.Pos)
 			}
 
 			keywordPos := p.Pos()
 			for {
 				module, err := p.ParseGoModule()
 				if err == io.EOF {
-					if len(p.Deps.GoModules) == 0 {
+					if len(deps.GoModules) == 0 {
 						return nil, p.Errorf("no Go modules provided after %q keyword at %s", "go-modules", keywordPos)
 					}
 
-					return p.Deps, nil
+					return deps, nil
 				}
 
 				if err != nil {
@@ -68,7 +68,7 @@ func ParseDeps(name, data string) (*Deps, error) {
 					break
 				}
 
-				p.Deps.GoModules = append(p.Deps.GoModules, module)
+				deps.GoModules = append(deps.GoModules, module)
 			}
 		default:
 			return nil, p.Errorf("unrecognised keyword %q", keyword)
@@ -402,7 +402,6 @@ type parser struct {
 	Data string
 	File string
 	Line int
-	Deps *Deps
 }
 
 func (p *parser) Pos() Pos    { return Pos{File: p.File, Line: p.Line} }
