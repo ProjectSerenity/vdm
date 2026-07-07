@@ -73,6 +73,26 @@ func (pkg *GoPackage) encode(buf *bytes.Buffer) {
 	}
 }
 
+// Encode writes out the manifest set.
+func (m *Manifests) Encode() []byte {
+	var buf bytes.Buffer
+	if m == nil {
+		return nil
+	}
+
+	if len(m.GoModules) > 0 {
+		fmt.Fprintf(&buf, "go-modules:\n")
+		for _, mod := range m.GoModules {
+			fmt.Fprintf(&buf, "\tmodule %q %s\n", mod.Name, mod.Version.string())
+			encodeParsedStringString(&buf, 2, "download", mod.Download)
+			encodeParsedStringString(&buf, 2, "vendored", mod.Vendored)
+			encodeParsedStringString(&buf, 2, "patches", mod.Patches)
+		}
+	}
+
+	return buf.Bytes()
+}
+
 func (p ParsedBool) string() string {
 	if p.Comment == "" {
 		return fmt.Sprintf("%v", p.Value)

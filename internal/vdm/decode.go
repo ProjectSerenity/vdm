@@ -398,6 +398,168 @@ func (p *parser) ParseGoPackage() (*GoPackage, error) {
 	}
 }
 
+// ParseManifests parses the vendored dependency set from a VDM file.
+func ParseManifests(name, data string) (*Manifests, error) {
+	manifests := new(Manifests)
+	p := &parser{
+		Data: data,
+		File: name,
+		Line: 1,
+	}
+
+	for {
+		keyword, err := p.FindColon(0)
+		if err == io.EOF {
+			return manifests, nil
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		switch keyword {
+		case "go-modules":
+			if len(manifests.GoModules) != 0 {
+				return nil, p.Errorf("duplicate Go module set, first found at %s", manifests.GoModules[0].Version.Pos)
+			}
+
+			keywordPos := p.Pos()
+			for {
+				module, err := p.ParseGoModuleManifest()
+				if err == io.EOF {
+					if len(manifests.GoModules) == 0 {
+						return nil, p.Errorf("no Go modules provided after %q keyword at %s", "go-modules", keywordPos)
+					}
+
+					return manifests, nil
+				}
+
+				if err != nil {
+					return nil, err
+				}
+
+				if module == nil {
+					break
+				}
+
+				manifests.GoModules = append(manifests.GoModules, module)
+			}
+		default:
+			return nil, p.Errorf("unrecognised keyword %q", keyword)
+		}
+	}
+}
+
+// ParseGoModuleManifest parses a single Go module manifest.
+func (p *parser) ParseGoModuleManifest() (*GoModuleManifest, error) {
+	ok, err := p.FindKeyword(1, "module")
+	if err != nil {
+		return nil, err
+	}
+
+	if !ok {
+		return nil, nil
+	}
+
+	moduleName, err := p.ParseQuotedString()
+	if err == io.EOF {
+		return nil, p.Errorf("expected module name, got EOF")
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if !p.SkipSpaces() {
+		return nil, p.Errorf("expected space after module name, got %q", p.Tokenise(p.Data))
+	}
+
+	version, err := p.ParseParsedString()
+	if err == io.EOF {
+		return nil, p.Errorf("expected module version, got EOF")
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	module := &GoModuleManifest{
+		Name:    moduleName,
+		Version: version,
+	}
+
+	// Iterate the remaining keywords.
+	for {
+		keyword, err := p.FindColon(2)
+		if err == io.EOF {
+			return module, nil
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		switch keyword {
+		case "":
+			// We're done.
+			return module, nil
+		case "download":
+			if module.Download.Value != "" {
+				return nil, p.Errorf("duplicate download, first found at %s", module.Download.Pos)
+			}
+
+			if !p.SkipSpaces() {
+				return nil, p.Errorf("expected a space after download:, got %q", p.Tokenise(p.Data))
+			}
+
+			module.Download, err = p.ParseParsedString()
+			if err == io.EOF {
+				return nil, p.Errorf("expected a string after download:, got EOF")
+			}
+
+			if err != nil {
+				return nil, err
+			}
+		case "vendored":
+			if module.Vendored.Value != "" {
+				return nil, p.Errorf("duplicate vendored, first found at %s", module.Vendored.Pos)
+			}
+
+			if !p.SkipSpaces() {
+				return nil, p.Errorf("expected a space after vendored:, got %q", p.Tokenise(p.Data))
+			}
+
+			module.Vendored, err = p.ParseParsedString()
+			if err == io.EOF {
+				return nil, p.Errorf("expected a string after vendored:, got EOF")
+			}
+
+			if err != nil {
+				return nil, err
+			}
+		case "patches":
+			if module.Patches.Value != "" {
+				return nil, p.Errorf("duplicate patches, first found at %s", module.Patches.Pos)
+			}
+
+			if !p.SkipSpaces() {
+				return nil, p.Errorf("expected a space after patches:, got %q", p.Tokenise(p.Data))
+			}
+
+			module.Patches, err = p.ParseParsedString()
+			if err == io.EOF {
+				return nil, p.Errorf("expected a string after patches:, got EOF")
+			}
+
+			if err != nil {
+				return nil, err
+			}
+		default:
+			return nil, p.Errorf("unrecognised keyword %q", keyword)
+		}
+	}
+}
+
 type parser struct {
 	Data string
 	File string
@@ -576,7 +738,7 @@ func (p *parser) ParseString() (s string, err error) {
 		}
 
 		switch b {
-		case '.', '-', '_', '/':
+		case '.', '+', '-', '_', '/', ':', '=':
 			continue
 		case ' ', '\n':
 			s = p.Data[:i]

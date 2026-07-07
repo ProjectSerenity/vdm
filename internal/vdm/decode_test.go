@@ -1319,6 +1319,536 @@ func TestParser_ParseGoPackage(t *testing.T) {
 	}
 }
 
+func TestParseManifests(t *testing.T) {
+	tests := []struct {
+		Name  string
+		Data  []string
+		Want  *Manifests
+		Error string
+	}{
+		{
+			Name: "empty-nothing",
+			Data: []string{""},
+			Want: &Manifests{},
+		},
+		{
+			Name: "invalid-bad-keyword",
+			Data: []string{
+				`not-a-keyword`,
+			},
+			Error: `manifests.vdm:1: expected a keyword, got invalid token "not-a-keyword"`,
+		},
+
+		// go-modules
+		{
+			Name: "invalid-duplicate-go-modules",
+			Data: []string{
+				`go-modules:`,
+				`	module "example.com/foo" v1.2.3`,
+				`go-modules:`,
+			},
+			Error: `manifests.vdm:3: duplicate Go module set, first found at manifests.vdm:2`,
+		},
+		{
+			Name: "invalid-missing-go-modules",
+			Data: []string{
+				`go-modules:`,
+				``,
+			},
+			Error: `manifests.vdm:2: no Go modules provided after "go-modules" keyword at manifests.vdm:1`,
+		},
+		{
+			Name: "invalid-bad-go-modules",
+			Data: []string{
+				`go-modules:`,
+				`	"first"`,
+				`		"second"`,
+			},
+			Error: `manifests.vdm:2: expected keyword "module", got invalid token "\t\"first\""`,
+		},
+		{
+			Name: "valid-simple-go-modules",
+			Data: []string{
+				`go-modules:`,
+				`	module "first" v1.2.3`,
+			},
+			Want: &Manifests{
+				GoModules: []*GoModuleManifest{
+					{
+						Name: "first",
+						Version: ParsedString{
+							Value: "v1.2.3",
+							Pos:   Pos{File: "manifests.vdm", Line: 2},
+						},
+					},
+				},
+			},
+		},
+
+		{
+			Name: "invalid-unrecognised-keyword",
+			Data: []string{
+				``,
+				`something-bizarre:`,
+			},
+			Error: `manifests.vdm:2: unrecognised keyword "something-bizarre"`,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.Name, func(t *testing.T) {
+			got, err := ParseManifests("manifests.vdm", strings.Join(test.Data, "\n"))
+			if test.Error != "" {
+				if err == nil {
+					t.Fatalf("ParseManifests(): unexpected lack of error")
+				}
+
+				e := err.Error()
+				if e != test.Error {
+					t.Fatalf("ParseManifests(): got wrong error:\nGot:  %s\nWant: %s", e, test.Error)
+				}
+
+				// All good.
+				return
+			}
+
+			if err != nil {
+				t.Fatalf("ParseManifests(): got unexpected error: %v", err)
+			}
+
+			if diff := cmp.Diff(test.Want, got); diff != "" {
+				t.Errorf("ParseManifests(): module mismatch (-want, +got)\n%s", diff)
+			}
+		})
+	}
+}
+
+func TestParser_ParseGoModuleManifest(t *testing.T) {
+	tests := []struct {
+		Name  string
+		Data  []string
+		Want  *GoModuleManifest
+		Error string
+		Next  string
+	}{
+		{
+			Name:  "empty-nothing",
+			Data:  []string{""},
+			Error: "EOF",
+			Next:  "",
+		},
+		{
+			Name: "empty-newlines",
+			Data: []string{
+				``,
+				``,
+				``,
+			},
+			Error: "EOF",
+			Next:  "",
+		},
+		{
+			Name: "valid-missing",
+			Data: []string{
+				``,
+				``,
+				`go:`,
+			},
+			Next: "go:",
+		},
+		{
+			Name: "invalid-no-name",
+			Data: []string{
+				`	module `,
+			},
+			Error: `manifests.vdm:1: expected module name, got EOF`,
+		},
+		{
+			Name: "invalid-bad-name",
+			Data: []string{
+				`	module "\x"`,
+			},
+			Error: `manifests.vdm:1: expected a quoted string, got invalid syntax`,
+		},
+		{
+			Name: "invalid-no-space-after-name",
+			Data: []string{
+				`	module "foo"`,
+			},
+			Error: `manifests.vdm:1: expected space after module name, got ""`,
+		},
+		{
+			Name: "invalid-string-after-name",
+			Data: []string{
+				`	module "foo"bar`,
+			},
+			Error: `manifests.vdm:1: expected space after module name, got "bar"`,
+		},
+		{
+			Name: "invalid-no-version",
+			Data: []string{
+				`	module "foo" `,
+			},
+			Error: `manifests.vdm:1: expected module version, got EOF`,
+		},
+		{
+			Name: "invalid-bad-version",
+			Data: []string{
+				`	module "foo" BAD!`,
+			},
+			Error: `manifests.vdm:1: expected a string, got '!'`,
+		},
+		{
+			Name: "invalid-bad-version-comment",
+			Data: []string{
+				`	module "foo" v1.2.3 foo`,
+			},
+			Error: `manifests.vdm:1: expected a newline or comment, got "foo"`,
+		},
+		{
+			Name: "valid-simple",
+			Data: []string{
+				`	module "foo" v1.2.3`,
+			},
+			Want: &GoModuleManifest{
+				Name: "foo",
+				Version: ParsedString{
+					Value: "v1.2.3",
+					Pos:   Pos{File: "manifests.vdm", Line: 1},
+				},
+			},
+			Next: "",
+		},
+		{
+			Name: "valid-simple-newline",
+			Data: []string{
+				`	module "foo" v1.2.3`,
+				``,
+			},
+			Want: &GoModuleManifest{
+				Name: "foo",
+				Version: ParsedString{
+					Value: "v1.2.3",
+					Pos:   Pos{File: "manifests.vdm", Line: 1},
+				},
+			},
+			Next: "",
+		},
+		{
+			Name: "valid-simple-comment",
+			Data: []string{
+				`	module "foo" v1.2.3 // Simple.`,
+				``,
+			},
+			Want: &GoModuleManifest{
+				Name: "foo",
+				Version: ParsedString{
+					Value:   "v1.2.3",
+					Pos:     Pos{File: "manifests.vdm", Line: 1},
+					Comment: "Simple.",
+				},
+			},
+			Next: "",
+		},
+		{
+			Name: "invalid-bad-keyword",
+			Data: []string{
+				`	module "foo" v1.2.3`,
+				`		download`,
+			},
+			Error: `manifests.vdm:2: expected a keyword, got invalid token "\t\tdownload"`,
+		},
+		{
+			Name: "invalid-unrecognised-keyword",
+			Data: []string{
+				`	module "foo" v1.2.3`,
+				`		wibble:`,
+			},
+			Error: `manifests.vdm:2: unrecognised keyword "wibble"`,
+		},
+
+		// download
+		{
+			Name: "invalid-abutting-download",
+			Data: []string{
+				`	module "foo" v1.2.3`,
+				`		download:first`,
+			},
+			Error: `manifests.vdm:2: expected a space after download:, got "first"`,
+		},
+		{
+			Name: "invalid-duplicate-download",
+			Data: []string{
+				`	module "foo" v1.2.3`,
+				`		download: first`,
+				`		download: second`,
+			},
+			Error: `manifests.vdm:3: duplicate download, first found at manifests.vdm:2`,
+		},
+		{
+			Name: "invalid-missing-download",
+			Data: []string{
+				`	module "foo" v1.2.3`,
+				`		download: `,
+			},
+			Error: `manifests.vdm:2: expected a string after download:, got EOF`,
+		},
+		{
+			Name: "invalid-bad-download",
+			Data: []string{
+				`	module "foo" v1.2.3`,
+				`		download: "first"`,
+			},
+			Error: `manifests.vdm:2: expected a string, got '"'`,
+		},
+		{
+			Name: "valid-simple-download",
+			Data: []string{
+				`	module "foo" v1.2.3`,
+				`		download: BUILD.bazel // Check comments work.`,
+			},
+			Want: &GoModuleManifest{
+				Name: "foo",
+				Version: ParsedString{
+					Value: "v1.2.3",
+					Pos:   Pos{File: "manifests.vdm", Line: 1},
+				},
+				Download: ParsedString{
+					Value:   "BUILD.bazel",
+					Pos:     Pos{File: "manifests.vdm", Line: 2},
+					Comment: "Check comments work.",
+				},
+			},
+			Next: "",
+		},
+
+		// vendored
+		{
+			Name: "invalid-abutting-vendored",
+			Data: []string{
+				`	module "foo" v1.2.3`,
+				`		vendored:first`,
+			},
+			Error: `manifests.vdm:2: expected a space after vendored:, got "first"`,
+		},
+		{
+			Name: "invalid-duplicate-vendored",
+			Data: []string{
+				`	module "foo" v1.2.3`,
+				`		vendored: first`,
+				`		vendored: second`,
+			},
+			Error: `manifests.vdm:3: duplicate vendored, first found at manifests.vdm:2`,
+		},
+		{
+			Name: "invalid-missing-vendored",
+			Data: []string{
+				`	module "foo" v1.2.3`,
+				`		vendored: `,
+			},
+			Error: `manifests.vdm:2: expected a string after vendored:, got EOF`,
+		},
+		{
+			Name: "invalid-bad-vendored",
+			Data: []string{
+				`	module "foo" v1.2.3`,
+				`		vendored: "first"`,
+			},
+			Error: `manifests.vdm:2: expected a string, got '"'`,
+		},
+		{
+			Name: "valid-simple-vendored",
+			Data: []string{
+				`	module "foo" v1.2.3`,
+				`		vendored: BUILD.bazel // Check comments work.`,
+			},
+			Want: &GoModuleManifest{
+				Name: "foo",
+				Version: ParsedString{
+					Value: "v1.2.3",
+					Pos:   Pos{File: "manifests.vdm", Line: 1},
+				},
+				Vendored: ParsedString{
+					Value:   "BUILD.bazel",
+					Pos:     Pos{File: "manifests.vdm", Line: 2},
+					Comment: "Check comments work.",
+				},
+			},
+			Next: "",
+		},
+
+		// patches
+		{
+			Name: "invalid-abutting-patches",
+			Data: []string{
+				`	module "foo" v1.2.3`,
+				`		patches:first`,
+			},
+			Error: `manifests.vdm:2: expected a space after patches:, got "first"`,
+		},
+		{
+			Name: "invalid-duplicate-patches",
+			Data: []string{
+				`	module "foo" v1.2.3`,
+				`		patches: first`,
+				`		patches: second`,
+			},
+			Error: `manifests.vdm:3: duplicate patches, first found at manifests.vdm:2`,
+		},
+		{
+			Name: "invalid-missing-patches",
+			Data: []string{
+				`	module "foo" v1.2.3`,
+				`		patches: `,
+			},
+			Error: `manifests.vdm:2: expected a string after patches:, got EOF`,
+		},
+		{
+			Name: "invalid-bad-patches",
+			Data: []string{
+				`	module "foo" v1.2.3`,
+				`		patches: "first"`,
+			},
+			Error: `manifests.vdm:2: expected a string, got '"'`,
+		},
+		{
+			Name: "valid-simple-patches",
+			Data: []string{
+				`	module "foo" v1.2.3`,
+				`		patches:  BUILD.bazel // Check comments work.`,
+			},
+			Want: &GoModuleManifest{
+				Name: "foo",
+				Version: ParsedString{
+					Value: "v1.2.3",
+					Pos:   Pos{File: "manifests.vdm", Line: 1},
+				},
+				Patches: ParsedString{
+					Value:   "BUILD.bazel",
+					Pos:     Pos{File: "manifests.vdm", Line: 2},
+					Comment: "Check comments work.",
+				},
+			},
+			Next: "",
+		},
+
+		// all
+		{
+			Name: "valid-simple-all-eof",
+			Data: []string{
+				`	module "foo" v1.2.3`,
+				`		download: sha256:/WCDjRGIVDjKlhtSc1PEApp2fR58gfSVK62dr/yQNyQ=`,
+				`		vendored: sha256:AB6TWADCiFzYx4nzfwjeNQBxOA+FM7yLQGFe0PKx38k=`,
+				`		patches:  sha256:zeHhy1A/3rpHyenrSFE6TgQixKDzw9ZNM1dEHwAdN4I=`,
+			},
+			Want: &GoModuleManifest{
+				Name: "foo",
+				Version: ParsedString{
+					Value: "v1.2.3",
+					Pos:   Pos{File: "manifests.vdm", Line: 1},
+				},
+				Download: ParsedString{
+					Value: "sha256:/WCDjRGIVDjKlhtSc1PEApp2fR58gfSVK62dr/yQNyQ=",
+					Pos: Pos{
+						File: "manifests.vdm",
+						Line: 2,
+					},
+				},
+				Vendored: ParsedString{
+					Value: "sha256:AB6TWADCiFzYx4nzfwjeNQBxOA+FM7yLQGFe0PKx38k=",
+					Pos: Pos{
+						File: "manifests.vdm",
+						Line: 3,
+					},
+				},
+				Patches: ParsedString{
+					Value: "sha256:zeHhy1A/3rpHyenrSFE6TgQixKDzw9ZNM1dEHwAdN4I=",
+					Pos: Pos{
+						File: "manifests.vdm",
+						Line: 4,
+					},
+				},
+			},
+		},
+		{
+			Name: "valid-simple-all-suffixed",
+			Data: []string{
+				`	module "foo" v1.2.3`,
+				`		download: sha256:/WCDjRGIVDjKlhtSc1PEApp2fR58gfSVK62dr/yQNyQ=`,
+				`		vendored: sha256:AB6TWADCiFzYx4nzfwjeNQBxOA+FM7yLQGFe0PKx38k=`,
+				`		patches:  sha256:zeHhy1A/3rpHyenrSFE6TgQixKDzw9ZNM1dEHwAdN4I=`,
+				`	other`,
+			},
+			Want: &GoModuleManifest{
+				Name: "foo",
+				Version: ParsedString{
+					Value: "v1.2.3",
+					Pos:   Pos{File: "manifests.vdm", Line: 1},
+				},
+				Download: ParsedString{
+					Value: "sha256:/WCDjRGIVDjKlhtSc1PEApp2fR58gfSVK62dr/yQNyQ=",
+					Pos: Pos{
+						File: "manifests.vdm",
+						Line: 2,
+					},
+				},
+				Vendored: ParsedString{
+					Value: "sha256:AB6TWADCiFzYx4nzfwjeNQBxOA+FM7yLQGFe0PKx38k=",
+					Pos: Pos{
+						File: "manifests.vdm",
+						Line: 3,
+					},
+				},
+				Patches: ParsedString{
+					Value: "sha256:zeHhy1A/3rpHyenrSFE6TgQixKDzw9ZNM1dEHwAdN4I=",
+					Pos: Pos{
+						File: "manifests.vdm",
+						Line: 4,
+					},
+				},
+			},
+			Next: "\tother",
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.Name, func(t *testing.T) {
+			p := &parser{
+				Data: strings.Join(test.Data, "\n"),
+				File: "manifests.vdm",
+				Line: 1,
+			}
+
+			got, err := p.ParseGoModuleManifest()
+			if test.Error != "" {
+				if err == nil {
+					t.Fatalf("parser.ParseGoModuleManifest(): unexpected lack of error")
+				}
+
+				e := err.Error()
+				if e != test.Error {
+					t.Fatalf("parser.ParseGoModuleManifest(): got wrong error:\nGot:  %s\nWant: %s", e, test.Error)
+				}
+
+				// All good.
+				return
+			}
+
+			if err != nil {
+				t.Fatalf("parser.ParseGoModuleManifest(): got unexpected error: %v", err)
+			}
+
+			if diff := cmp.Diff(test.Want, got); diff != "" {
+				t.Errorf("parser.ParseGoModuleManifest(): module manifest mismatch (-want, +got)\n%s", diff)
+			}
+
+			if p.Data != test.Next {
+				t.Errorf("parser.ParseGoModuleManifest(): got wrong next data:\nGot:  %q\nWant: %q", p.Data, test.Next)
+			}
+		})
+	}
+}
+
 func TestParser_ParseComment(t *testing.T) {
 	tests := []struct {
 		Name  string

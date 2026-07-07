@@ -129,3 +129,32 @@ func (d *Deps) Sort() {
 		}
 	}
 }
+
+// Manifests describes a set of vendored
+// dependencies. This is used to identify
+// which vendoring activities can be skipped
+// because the vendor directory already has
+// the desired data.
+type Manifests struct {
+	GoModules []*GoModuleManifest `json:"go_modules,omitzero"`
+}
+
+// GoModuleManifest records information about
+// a Go module that has been vendored. This
+// includes the checksum of the module's code
+// (as recorded in the Go checksum database)
+// and the checksum of the vendored directory,
+// which may include omissions.
+//
+// Optionally, the manifest will also include
+// a checksum of any patches applied.
+type GoModuleManifest struct {
+	// Dependency details.
+	Name    string       `json:"name,omitzero"`
+	Version ParsedString `json:"version,omitzero"`
+
+	// Checksums.
+	Download ParsedString `json:"download,omitzero"` // Downloaded content, as in the Go checksum database.
+	Vendored ParsedString `json:"vendored,omitzero"` // Vendored content, after omitting packages.
+	Patches  ParsedString `json:"patches,omitzero"`  // Patch file contents (optional).
+}

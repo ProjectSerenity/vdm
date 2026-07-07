@@ -106,3 +106,111 @@ func TestDeps_Encode(t *testing.T) {
 		})
 	}
 }
+
+func TestManifests_Encode(t *testing.T) {
+	tests := []struct {
+		Name      string
+		Manifests *Manifests
+		Want      []string
+	}{
+		{
+			Name:      "nil",
+			Manifests: (*Manifests)(nil),
+			Want:      []string{""},
+		},
+		{
+			Name: "simple-no-patches",
+			Manifests: &Manifests{
+				GoModules: []*GoModuleManifest{
+					{
+						Name: "rsc.io/diff",
+						Version: ParsedString{
+							Value: "v0.0.0-20190621135850-fe3479844c3c",
+							Pos: Pos{
+								File: "deps.vdm",
+								Line: 2,
+							},
+						},
+						Download: ParsedString{
+							Value: "sha256:/WCDjRGIVDjKlhtSc1PEApp2fR58gfSVK62dr/yQNyQ=",
+							Pos: Pos{
+								File: "manifests.vdm",
+								Line: 3,
+							},
+						},
+						Vendored: ParsedString{
+							Value: "sha256:AB6TWADCiFzYx4nzfwjeNQBxOA+FM7yLQGFe0PKx38k=",
+							Pos: Pos{
+								File: "manifests.vdm",
+								Line: 4,
+							},
+						},
+					},
+				},
+			},
+			Want: []string{
+				`go-modules:`,
+				`	module "rsc.io/diff" v0.0.0-20190621135850-fe3479844c3c`,
+				`		download: sha256:/WCDjRGIVDjKlhtSc1PEApp2fR58gfSVK62dr/yQNyQ=`,
+				`		vendored: sha256:AB6TWADCiFzYx4nzfwjeNQBxOA+FM7yLQGFe0PKx38k=`,
+				``,
+			},
+		},
+		{
+			Name: "simple-patches",
+			Manifests: &Manifests{
+				GoModules: []*GoModuleManifest{
+					{
+						Name: "rsc.io/diff",
+						Version: ParsedString{
+							Value: "v0.0.0-20190621135850-fe3479844c3c",
+							Pos: Pos{
+								File: "deps.vdm",
+								Line: 2,
+							},
+						},
+						Download: ParsedString{
+							Value: "sha256:/WCDjRGIVDjKlhtSc1PEApp2fR58gfSVK62dr/yQNyQ=",
+							Pos: Pos{
+								File: "manifests.vdm",
+								Line: 3,
+							},
+						},
+						Vendored: ParsedString{
+							Value: "sha256:AB6TWADCiFzYx4nzfwjeNQBxOA+FM7yLQGFe0PKx38k=",
+							Pos: Pos{
+								File: "manifests.vdm",
+								Line: 4,
+							},
+						},
+						Patches: ParsedString{
+							Value: " sha256:zeHhy1A/3rpHyenrSFE6TgQixKDzw9ZNM1dEHwAdN4I=",
+							Pos: Pos{
+								File: "manifests.vdm",
+								Line: 5,
+							},
+						},
+					},
+				},
+			},
+			Want: []string{
+				`go-modules:`,
+				`	module "rsc.io/diff" v0.0.0-20190621135850-fe3479844c3c`,
+				`		download: sha256:/WCDjRGIVDjKlhtSc1PEApp2fR58gfSVK62dr/yQNyQ=`,
+				`		vendored: sha256:AB6TWADCiFzYx4nzfwjeNQBxOA+FM7yLQGFe0PKx38k=`,
+				`		patches:  sha256:zeHhy1A/3rpHyenrSFE6TgQixKDzw9ZNM1dEHwAdN4I=`,
+				``,
+			},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.Name, func(t *testing.T) {
+			got := string(test.Manifests.Encode())
+			want := strings.Join(test.Want, "\n")
+			if got != want {
+				t.Fatalf("bad output:\n%s", diff.Format(want, got))
+			}
+		})
+	}
+}
