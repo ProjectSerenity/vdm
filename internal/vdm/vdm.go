@@ -13,7 +13,8 @@ import (
 )
 
 const (
-	DepsVDM = "deps.vdm"
+	DepsVDM      = "deps.vdm"
+	ManifestsVDM = "manifests.vdm"
 )
 
 const (
