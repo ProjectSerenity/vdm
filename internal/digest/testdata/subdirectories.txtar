@@ -1,0 +1,8 @@
+-- foo/bar/baz.txt --
+123
+-- foo/bar/ignored.txt --
+234
+-- foo/bar/a/b/c.txt --
+345
+-- baz/other.txt --
+456
