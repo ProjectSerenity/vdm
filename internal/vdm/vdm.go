@@ -75,8 +75,7 @@ type GoModule struct {
 	// Patches to be applied to the
 	// downloaded module, before the
 	// BUILD file is copied/generated.
-	PatchArgs []ParsedString `json:"patch_args,omitzero"`
-	Patches   []ParsedString `json:"patches,omitzero"`
+	Patches []ParsedString `json:"patches,omitzero"`
 
 	// Packages that should be used.
 	Packages []*GoPackage `json:"packages,omitzero"`

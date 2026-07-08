@@ -31,7 +31,6 @@ func (d *Deps) Encode() []byte {
 		fmt.Fprintf(&buf, "go-modules:\n")
 		for _, mod := range d.GoModules {
 			fmt.Fprintf(&buf, "\tmodule %q %s\n", mod.Name, mod.Version.string())
-			encodeParsedStringsQuoted(&buf, 2, "patch-args", mod.PatchArgs)
 			encodeParsedStringsQuoted(&buf, 2, "patches", mod.Patches)
 			if len(mod.Packages) == 0 {
 				continue

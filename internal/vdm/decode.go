@@ -146,15 +146,6 @@ func (p *parser) ParseGoModule() (*GoModule, error) {
 		case "":
 			// We're done.
 			return module, nil
-		case "patch-args":
-			if len(module.PatchArgs) > 0 {
-				return nil, p.Errorf("duplicate patch args, first found at %s", module.PatchArgs[0].Pos)
-			}
-
-			module.PatchArgs, err = p.FindQuotedStrings(3)
-			if err != nil {
-				return nil, err
-			}
 		case "patches":
 			if len(module.Patches) > 0 {
 				return nil, p.Errorf("duplicate patches, first found at %s", module.Patches[0].Pos)

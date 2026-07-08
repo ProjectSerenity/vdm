@@ -90,11 +90,10 @@ func Convert(deps *vendeps.Deps) *vdm.Deps {
 		}
 
 		out.GoModules[i] = &vdm.GoModule{
-			Name:      mod.Name,
-			Version:   cloneParsedString(mod.Version),
-			PatchArgs: cloneParsedStrings(mod.PatchArgs),
-			Patches:   cloneParsedStrings(mod.Patches),
-			Packages:  pkgs,
+			Name:     mod.Name,
+			Version:  cloneParsedString(mod.Version),
+			Patches:  cloneParsedStrings(mod.Patches),
+			Packages: pkgs,
 		}
 	}
 

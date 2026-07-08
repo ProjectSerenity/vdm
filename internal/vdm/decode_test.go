@@ -419,27 +419,6 @@ func TestParser_ParseGoModule(t *testing.T) {
 			Error: `deps.vdm:2: unrecognised keyword "wibble"`,
 		},
 		{
-			Name: "invalid-duplicate-patch-args",
-			Data: []string{
-				`	module "foo" v1.2.3`,
-				`		patch-args:`,
-				`			"-first"`,
-				`		patch-args:`,
-				`			"-second"`,
-			},
-			Error: "deps.vdm:4: duplicate patch args, first found at deps.vdm:3",
-		},
-		{
-			Name: "invalid-bad-patch-args",
-			Data: []string{
-				`	module "foo" v1.2.3`,
-				`		patch-args:`,
-				`			"-first"`,
-				`				"-second"`,
-			},
-			Error: "deps.vdm:4: expected a quoted string, got excessive indentation",
-		},
-		{
 			Name: "invalid-duplicate-patches",
 			Data: []string{
 				`	module "foo" v1.2.3`,

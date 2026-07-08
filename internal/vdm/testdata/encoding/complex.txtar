@@ -61,22 +61,13 @@
 					"line": 10
 				}
 			},
-			"patch_args": [
-				{
-					"value": "-p1",
-					"pos": {
-						"file": "deps.vdm",
-						"line": 12
-					}
-				}
-			],
 			"patches": [
 				{
 					"value": "github.com_google_go-cmp_cmp_foo.diff",
 					"comment": "Remove an unwanted dependency.",
 						"pos": {
 							"file": "deps.vdm",
-							"line": 14
+							"line": 12
 						}
 				}
 			],
@@ -86,7 +77,7 @@
 						"value": "github.com/google/go-cmp/cmp",
 						"pos": {
 							"file": "deps.vdm",
-							"line": 16
+							"line": 14
 						}
 					},
 					"deps": [
@@ -94,42 +85,42 @@
 							"value": "github.com/google/go-cmp/cmp/internal/diff",
 							"pos": {
 								"file": "deps.vdm",
-								"line": 18
+								"line": 16
 							}
 						},
 						{
 							"value": "github.com/google/go-cmp/cmp/internal/flags",
 							"pos": {
 								"file": "deps.vdm",
-								"line": 19
+								"line": 17
 							}
 						},
 						{
 							"value": "github.com/google/go-cmp/cmp/internal/function",
 							"pos": {
 								"file": "deps.vdm",
-								"line": 20
+								"line": 18
 							}
 						},
 						{
 							"value": "github.com/google/go-cmp/cmp/internal/testprotos",
 							"pos": {
 								"file": "deps.vdm",
-								"line": 21
+								"line": 19
 							}
 						},
 						{
 							"value": "github.com/google/go-cmp/cmp/internal/teststructs",
 							"pos": {
 								"file": "deps.vdm",
-								"line": 22
+								"line": 20
 							}
 						},
 						{
 							"value": "github.com/google/go-cmp/cmp/internal/value",
 							"pos": {
 								"file": "deps.vdm",
-								"line": 23
+								"line": 21
 							}
 						}
 					],
@@ -138,21 +129,21 @@
 							"value": "github.com/google/go-cmp/cmp/cmpopts",
 							"pos": {
 								"file": "deps.vdm",
-								"line": 25
+								"line": 23
 							}
 						},
 						{
 							"value": "github.com/google/go-cmp/cmp/internal/teststructs/foo1",
 							"pos": {
 								"file": "deps.vdm",
-								"line": 26
+								"line": 24
 							}
 						},
 						{
 							"value": "github.com/google/go-cmp/cmp/internal/teststructs/foo2",
 							"pos": {
 								"file": "deps.vdm",
-								"line": 27
+								"line": 25
 							}
 						}
 					]
@@ -162,7 +153,7 @@
 						"value": "github.com/google/go-cmp/cmp/cmpopts",
 						"pos": {
 							"file": "deps.vdm",
-							"line": 28
+							"line": 26
 						}
 					},
 					"deps": [
@@ -170,14 +161,14 @@
 							"value": "github.com/google/go-cmp/cmp",
 							"pos": {
 								"file": "deps.vdm",
-								"line": 30
+								"line": 28
 							}
 						},
 						{
 							"value": "github.com/google/go-cmp/cmp/internal/function",
 							"pos": {
 								"file": "deps.vdm",
-								"line": 31
+								"line": 29
 							}
 						}
 					],
@@ -186,7 +177,7 @@
 							"value": "github.com/google/go-cmp/cmp/internal/flags",
 							"pos": {
 								"file": "deps.vdm",
-								"line": 33
+								"line": 31
 							}
 						}
 					]
@@ -196,7 +187,7 @@
 						"value": "github.com/google/go-cmp/cmp/internal/diff",
 						"pos": {
 							"file": "deps.vdm",
-							"line": 34
+							"line": 32
 						}
 					},
 					"deps": [
@@ -204,7 +195,7 @@
 							"value": "github.com/google/go-cmp/cmp/internal/flags",
 							"pos": {
 								"file": "deps.vdm",
-								"line": 36
+								"line": 34
 							}
 						}
 					]
@@ -214,7 +205,7 @@
 						"value": "github.com/google/go-cmp/cmp/internal/flags",
 						"pos": {
 							"file": "deps.vdm",
-							"line": 37
+							"line": 35
 						}
 					}
 				},
@@ -223,7 +214,7 @@
 						"value": "github.com/google/go-cmp/cmp/internal/function",
 						"pos": {
 							"file": "deps.vdm",
-							"line": 38
+							"line": 36
 						}
 					}
 				},
@@ -232,7 +223,7 @@
 						"value": "github.com/google/go-cmp/cmp/internal/testprotos",
 						"pos": {
 							"file": "deps.vdm",
-							"line": 39
+							"line": 37
 						}
 					}
 				},
@@ -241,7 +232,7 @@
 						"value": "github.com/google/go-cmp/cmp/internal/teststructs",
 						"pos": {
 							"file": "deps.vdm",
-							"line": 40
+							"line": 38
 						}
 					},
 					"deps": [
@@ -249,7 +240,7 @@
 							"value": "github.com/google/go-cmp/cmp/internal/testprotos",
 							"pos": {
 								"file": "deps.vdm",
-								"line": 42
+								"line": 40
 							}
 						}
 					]
@@ -259,7 +250,7 @@
 						"value": "github.com/google/go-cmp/cmp/internal/teststructs/foo1",
 						"pos": {
 							"file": "deps.vdm",
-							"line": 43
+							"line": 41
 						}
 					}
 				},
@@ -268,7 +259,7 @@
 						"value": "github.com/google/go-cmp/cmp/internal/teststructs/foo2",
 						"pos": {
 							"file": "deps.vdm",
-							"line": 44
+							"line": 42
 						}
 					}
 				},
@@ -277,7 +268,7 @@
 						"value": "github.com/google/go-cmp/cmp/internal/value",
 						"pos": {
 							"file": "deps.vdm",
-							"line": 45
+							"line": 43
 						}
 					},
 					"test_deps": [
@@ -285,7 +276,7 @@
 							"value": "github.com/google/go-cmp/cmp",
 							"pos": {
 								"file": "deps.vdm",
-								"line": 47
+								"line": 45
 							}
 						}
 					]
@@ -296,7 +287,7 @@
 						"comment": "We made this up to use all the encoding features.",
 						"pos": {
 							"file": "deps.vdm",
-							"line": 48
+							"line": 46
 						}
 					},
 					"build_file": {
@@ -304,7 +295,7 @@
 						"comment": "foo",
 						"pos": {
 							"file": "deps.vdm",
-							"line": 49
+							"line": 47
 						}
 					},
 					"embed": [
@@ -313,7 +304,7 @@
 							"comment": "We want to embed this file.",
 							"pos": {
 								"file": "deps.vdm",
-								"line": 51
+								"line": 49
 							}
 						}
 					],
@@ -323,7 +314,7 @@
 							"comment": "Globs can be useful for generated files.",
 							"pos": {
 								"file": "deps.vdm",
-								"line": 53
+								"line": 51
 							}
 						}
 					],
@@ -332,7 +323,7 @@
 						"comment": "Check we can comment bools too.",
 						"pos": {
 							"file": "deps.vdm",
-							"line": 54
+							"line": 52
 						}
 					},
 					"binary_deps": [
@@ -341,7 +332,7 @@
 							"comment": "We can comment these too.",
 							"pos": {
 								"file": "deps.vdm",
-								"line": 56
+								"line": 54
 							}
 						}
 					],
@@ -350,7 +341,7 @@
 						"comment": "Another boolean comment.",
 						"pos": {
 							"file": "deps.vdm",
-							"line": 57
+							"line": 55
 						}
 					},
 					"test_size": {
@@ -358,7 +349,7 @@
 						"comment": "This should be quick.",
 						"pos": {
 							"file": "deps.vdm",
-							"line": 58
+							"line": 56
 						}
 					},
 					"test_data": [
@@ -367,7 +358,7 @@
 							"comment": "An individual file.",
 							"pos": {
 								"file": "deps.vdm",
-								"line": 60
+								"line": 58
 							}
 						}
 					],
@@ -377,7 +368,7 @@
 							"comment": "A group of files.",
 							"pos": {
 								"file": "deps.vdm",
-								"line": 62
+								"line": 60
 							}
 						}
 					],
@@ -386,7 +377,7 @@
 							"value": "github.com/google/go-cmp/cmp",
 							"pos": {
 								"file": "deps.vdm",
-								"line": 64
+								"line": 62
 							}
 						}
 					],
@@ -396,7 +387,7 @@
 							"comment": "Order matters here.",
 							"pos": {
 								"file": "deps.vdm",
-								"line": 66
+								"line": 64
 							}
 						},
 						"second": {
@@ -404,7 +395,7 @@
 							"comment": "And here too.",
 							"pos": {
 								"file": "deps.vdm",
-								"line": 67
+								"line": 65
 							}
 						}
 					}
@@ -424,8 +415,6 @@ go-modules:
 				no-tests: true
 	module "example.com/no-packages" v1.2.3
 	module "github.com/google/go-cmp" v0.7.0  // Last updated 04/07/2026.
-		patch-args:
-			"-p1"
 		patches:
 			"github.com_google_go-cmp_cmp_foo.diff"  // Remove an unwanted dependency.
 		packages:
