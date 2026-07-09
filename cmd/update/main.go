@@ -8,17 +8,21 @@ package update
 
 import (
 	"context"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"io"
 	"log"
+	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
-	"github.com/ProjectSerenity/vdm/internal/gomodproxy"
+	"github.com/ProjectSerenity/vdm/internal/simplehttp"
 	"github.com/ProjectSerenity/vdm/internal/vdm"
 
+	"golang.org/x/mod/module"
 	"golang.org/x/mod/semver"
 )
 
@@ -73,7 +77,7 @@ func UpdateDependencies(ctx context.Context, w io.Writer, name string) error {
 
 	anyUpdated := false
 	for _, mod := range deps.GoModules {
-		updated, err := UpdateGoModule(ctx, w, mod.Name, &mod.Version.Value)
+		updated, err := UpdateGoModule(ctx, w, goModuleProxy, mod.Name, &mod.Version.Value)
 		if err != nil {
 			return err
 		}
@@ -100,8 +104,8 @@ func UpdateDependencies(ctx context.Context, w io.Writer, name string) error {
 
 // UpdateGoModule checks a Go module for updates,
 // using the proxy.golang.org Go module proxy API.
-func UpdateGoModule(ctx context.Context, w io.Writer, name string, version *string) (updated bool, err error) {
-	latest, err := gomodproxy.Latest(ctx, name)
+func UpdateGoModule(ctx context.Context, w io.Writer, proxy, name string, version *string) (updated bool, err error) {
+	latest, err := Latest(ctx, proxy, name)
 	if err != nil {
 		return false, err
 	}
@@ -119,4 +123,54 @@ func UpdateGoModule(ctx context.Context, w io.Writer, name string, version *stri
 		fmt.Fprintf(w, "WARN: Go module %s has version %s, but latest is %s, which is older.\n", name, *version, latest)
 		return false, nil
 	}
+}
+
+const goModuleProxy = "https://proxy.golang.org"
+
+// Latest returns the latest version of a Go module,
+// using the proxy.golang.org Go module proxy API.
+func Latest(ctx context.Context, proxy, modName string) (latest string, err error) {
+	// Fetch the module's latest version.
+	escaped, err := module.EscapePath(modName)
+	if err != nil {
+		return "", fmt.Errorf("failed to look up Go module %s: invalid module path: %v", modName, err)
+	}
+
+	latestURL := fmt.Sprintf("%s/%s/@latest", proxy, escaped)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, latestURL, nil)
+	if err != nil {
+		return "", fmt.Errorf("failed to look up Go module %s: %v", modName, err)
+	}
+
+	res, err := simplehttp.Request(req)
+	if err != nil {
+		return "", fmt.Errorf("failed to look up Go module %s: %v", modName, err)
+	}
+
+	data, err := io.ReadAll(res.Body)
+	if err != nil {
+		res.Body.Close()
+		return "", fmt.Errorf("failed to read response for Go module %s: %v", modName, err)
+	}
+
+	if err = res.Body.Close(); err != nil {
+		return "", fmt.Errorf("failed to close response for Go module %s: %v", modName, err)
+	}
+
+	// See https://go.dev/ref/mod#goproxy-protocol.
+	var info struct {
+		Version string
+		Time    time.Time
+	}
+
+	err = json.Unmarshal(data, &info)
+	if err != nil {
+		return "", fmt.Errorf("failed to parse response for Go module %s: %v", modName, err)
+	}
+
+	if info.Version == "" || !semver.IsValid(info.Version) {
+		return "", fmt.Errorf("failed to check Go module %s for updates: latest version %q is invalid", modName, info.Version)
+	}
+
+	return semver.Canonical(info.Version), nil
 }
