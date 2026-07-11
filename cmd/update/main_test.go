@@ -15,8 +15,6 @@ import (
 	"time"
 
 	"github.com/ProjectSerenity/vdm/internal/simplehttp"
-
-	"golang.org/x/time/rate"
 )
 
 func TestUpdateGoModule(t *testing.T) {
@@ -67,7 +65,7 @@ func TestUpdateGoModule(t *testing.T) {
 
 	simplehttp.Client = srv.Client()
 	simplehttp.UserAgent = "tests"
-	simplehttp.RateLimit = rate.NewLimiter(rate.Every(time.Millisecond), 1)
+	simplehttp.SetInterval(time.Millisecond)
 
 	for _, test := range tests {
 		t.Run(test.Name, func(t *testing.T) {
@@ -168,7 +166,7 @@ func TestLatest(t *testing.T) {
 
 	simplehttp.Client = srv.Client()
 	simplehttp.UserAgent = "tests"
-	simplehttp.RateLimit = rate.NewLimiter(rate.Every(time.Millisecond), 1)
+	simplehttp.SetInterval(time.Millisecond)
 
 	for _, test := range tests {
 		t.Run(test.Name, func(t *testing.T) {

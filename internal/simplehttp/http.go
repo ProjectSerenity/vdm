@@ -43,6 +43,12 @@ var UserAgent string
 // we do not overload the servers we use.
 var RateLimit = rate.NewLimiter(rate.Every(time.Second), 1) // 1 request per second.
 
+// SetInterval overrides the rate limit to allow
+// one request per interval.
+func SetInterval(interval time.Duration) {
+	RateLimit = rate.NewLimiter(rate.Every(interval), 1)
+}
+
 // Request performs the given HTTP request,
 // returning the response.
 func Request(req *http.Request) (*http.Response, error) {
