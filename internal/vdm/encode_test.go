@@ -189,7 +189,7 @@ func TestManifests_Encode(t *testing.T) {
 							},
 						},
 						Patches: ParsedString{
-							Value: " sha256:zeHhy1A/3rpHyenrSFE6TgQixKDzw9ZNM1dEHwAdN4I=",
+							Value: "sha256:zeHhy1A/3rpHyenrSFE6TgQixKDzw9ZNM1dEHwAdN4I=",
 							Pos: Pos{
 								File: "manifests.vdm",
 								Line: 5,

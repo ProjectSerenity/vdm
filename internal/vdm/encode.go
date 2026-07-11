@@ -90,7 +90,21 @@ func (m *Manifests) Encode() []byte {
 			fmt.Fprintf(&buf, "\tmodule %q %s\n", mod.Name, mod.Version.string())
 			encodeParsedStringString(&buf, 2, "download", mod.Download)
 			encodeParsedStringString(&buf, 2, "vendored", mod.Vendored)
-			encodeParsedStringString(&buf, 2, "patches", mod.Patches)
+
+			// We do patches more manually to add an aligning space.
+			{
+				if mod.Patches.Value == "" {
+					continue
+				}
+
+				buf.WriteString(tabs[:2])
+				buf.WriteString("patches")
+				buf.WriteByte(':')
+				buf.WriteByte(' ')
+				buf.WriteByte(' ')
+				buf.WriteString(mod.Patches.string())
+				buf.WriteByte('\n')
+			}
 		}
 	}
 
