@@ -318,12 +318,22 @@
 							}
 						}
 					],
+					"directories": [
+						{
+							"value": "data",
+							"comment": "Extra test data.",
+							"pos": {
+								"file": "deps.vdm",
+								"line": 53
+							}
+						}
+					],
 					"binary": {
 						"value": true,
 						"comment": "Check we can comment bools too.",
 						"pos": {
 							"file": "deps.vdm",
-							"line": 52
+							"line": 54
 						}
 					},
 					"binary_deps": [
@@ -332,7 +342,7 @@
 							"comment": "We can comment these too.",
 							"pos": {
 								"file": "deps.vdm",
-								"line": 54
+								"line": 56
 							}
 						}
 					],
@@ -341,7 +351,7 @@
 						"comment": "Another boolean comment.",
 						"pos": {
 							"file": "deps.vdm",
-							"line": 55
+							"line": 57
 						}
 					},
 					"test_size": {
@@ -349,7 +359,7 @@
 						"comment": "This should be quick.",
 						"pos": {
 							"file": "deps.vdm",
-							"line": 56
+							"line": 58
 						}
 					},
 					"test_data": [
@@ -358,7 +368,7 @@
 							"comment": "An individual file.",
 							"pos": {
 								"file": "deps.vdm",
-								"line": 58
+								"line": 60
 							}
 						}
 					],
@@ -368,7 +378,7 @@
 							"comment": "A group of files.",
 							"pos": {
 								"file": "deps.vdm",
-								"line": 60
+								"line": 62
 							}
 						}
 					],
@@ -377,7 +387,7 @@
 							"value": "github.com/google/go-cmp/cmp",
 							"pos": {
 								"file": "deps.vdm",
-								"line": 62
+								"line": 64
 							}
 						}
 					],
@@ -387,7 +397,7 @@
 							"comment": "Order matters here.",
 							"pos": {
 								"file": "deps.vdm",
-								"line": 64
+								"line": 66
 							}
 						},
 						"second": {
@@ -395,7 +405,7 @@
 							"comment": "And here too.",
 							"pos": {
 								"file": "deps.vdm",
-								"line": 65
+								"line": 67
 							}
 						}
 					}
@@ -456,6 +466,8 @@ go-modules:
 					"foo.go"  // We want to embed this file.
 				embed-globs:
 					"*.pb.go"  // Globs can be useful for generated files.
+				directories:
+					"data"  // Extra test data.
 				binary: true  // Check we can comment bools too.
 				binary-deps:
 					"rsc.io/diff"  // We can comment these too.

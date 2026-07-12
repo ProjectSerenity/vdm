@@ -282,6 +282,19 @@ func (p *parser) ParseGoPackage() (*GoPackage, error) {
 			if err != nil {
 				return nil, err
 			}
+		case "directories":
+			if len(pkg.Directories) > 0 {
+				return nil, p.Errorf("duplicate directories, first found at %s", pkg.Directories[0].Pos)
+			}
+
+			pkg.Directories, err = p.FindQuotedStrings(5)
+			if err == io.EOF {
+				return nil, p.Errorf("expected a quoted string after directories:, got EOF")
+			}
+
+			if err != nil {
+				return nil, err
+			}
 		case "binary":
 			if pkg.Binary.Pos.File != "" {
 				return nil, p.Errorf("duplicate binary, first found at %s", pkg.Binary.Pos)

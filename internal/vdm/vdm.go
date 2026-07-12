@@ -91,9 +91,10 @@ type GoPackage struct {
 	BuildFile ParsedString `json:"build_file,omitzero"`
 
 	// Build configuration.
-	Deps       []ParsedString `json:"deps,omitzero"`
-	Embed      []ParsedString `json:"embed,omitzero"`
-	EmbedGlobs []ParsedString `json:"embed_globs,omitzero"`
+	Deps        []ParsedString `json:"deps,omitzero"`
+	Embed       []ParsedString `json:"embed,omitzero"`
+	EmbedGlobs  []ParsedString `json:"embed_globs,omitzero"`
+	Directories []ParsedString `json:"directories,omitzero"`
 
 	// Binary configuration.
 	Binary     ParsedBool     `json:"binary,omitzero"`

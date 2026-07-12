@@ -52,6 +52,7 @@ func (pkg *GoPackage) encode(buf *bytes.Buffer) {
 	encodeParsedStringsQuoted(buf, 4, "deps", pkg.Deps)
 	encodeParsedStringsQuoted(buf, 4, "embed", pkg.Embed)
 	encodeParsedStringsQuoted(buf, 4, "embed-globs", pkg.EmbedGlobs)
+	encodeParsedStringsQuoted(buf, 4, "directories", pkg.Directories)
 	encodeParsedBoolString(buf, 4, "binary", pkg.Binary)
 	encodeParsedStringsQuoted(buf, 4, "binary-deps", pkg.BinaryDeps)
 	encodeParsedBoolString(buf, 4, "no-tests", pkg.NoTests)

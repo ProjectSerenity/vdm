@@ -868,6 +868,64 @@ func TestParser_ParseGoPackage(t *testing.T) {
 			Next: "",
 		},
 
+		// directories
+		{
+			Name: "invalid-duplicate-directories",
+			Data: []string{
+				`			package "foo"`,
+				`				directories:`,
+				`					"first"`,
+				`				directories:`,
+			},
+			Error: "deps.vdm:4: duplicate directories, first found at deps.vdm:3",
+		},
+		{
+			Name: "invalid-missing-directories",
+			Data: []string{
+				`			package "foo"`,
+				`				directories:`,
+				``,
+			},
+			Error: "deps.vdm:3: expected a quoted string after directories:, got EOF",
+		},
+		{
+			Name: "invalid-bad-directories",
+			Data: []string{
+				`			package "foo"`,
+				`				directories:`,
+				`					"first"`,
+				`						"-second"`,
+			},
+			Error: "deps.vdm:4: expected a quoted string, got excessive indentation",
+		},
+		{
+			Name: "valid-simple-directories",
+			Data: []string{
+				`			package "foo"`,
+				`				directories:`,
+				`					"first"`,
+				`					"second" // Check comments work.`,
+			},
+			Want: &GoPackage{
+				Name: ParsedString{
+					Value: "foo",
+					Pos:   Pos{File: "deps.vdm", Line: 1},
+				},
+				Directories: []ParsedString{
+					{
+						Value: "first",
+						Pos:   Pos{File: "deps.vdm", Line: 3},
+					},
+					{
+						Value:   "second",
+						Pos:     Pos{File: "deps.vdm", Line: 4},
+						Comment: "Check comments work.",
+					},
+				},
+			},
+			Next: "",
+		},
+
 		// binary
 		{
 			Name: "invalid-abutting-binary",
