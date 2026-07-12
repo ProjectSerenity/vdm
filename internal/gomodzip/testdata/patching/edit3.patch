@@ -1,0 +1,9 @@
+diff --git a/nonexistant/text.txt b/text.txt
+index 64a3081..a6efb8d 100644
+--- a/nonexistant/text.txt
++++ b/text.txt
+@@ -1,2 +1,3 @@
+ More text goes here.
+-And on this line too.
++And even more after the patch.
++And on this line as well.

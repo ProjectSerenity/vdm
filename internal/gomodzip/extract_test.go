@@ -1,0 +1,1365 @@
+// Copyright 2026 The Firefly Authors.
+//
+// Use of this source code is governed by a BSD 3-clause
+// license that can be found in the LICENSE file.
+
+package gomodzip
+
+import (
+	"bytes"
+	"errors"
+	"fmt"
+	"io"
+	"io/fs"
+	"os"
+	"path/filepath"
+	"slices"
+	"strings"
+	"testing"
+
+	"github.com/ProjectSerenity/vdm/internal/vdm"
+
+	"github.com/google/go-cmp/cmp"
+	"golang.org/x/tools/txtar"
+	"rsc.io/diff"
+	"rsc.io/tmp/patch"
+)
+
+func TestExtract(t *testing.T) {
+	tests := []struct {
+		Name     string
+		ZIP      string
+		Module   *vdm.GoModule
+		Manifest *vdm.GoModuleManifest
+		Want     string
+		Error    string
+	}{
+		{
+			Name: "invalid-bad-checksum",
+			ZIP:  filepath.FromSlash("testdata/zips/golang.org/x/arch/@v/v0.13.0.zip"),
+			Module: &vdm.GoModule{
+				Name:    "golang.org/x/arch",
+				Version: vdm.ParsedString{Value: "v0.13.0"},
+				Packages: []*vdm.GoPackage{
+					{Name: vdm.ParsedString{Value: "golang.org/x/arch/x86/x86asm"}},
+				},
+			},
+			Manifest: &vdm.GoModuleManifest{
+				Name:     "golang.org/x/arch",
+				Version:  vdm.ParsedString{Value: "v0.13.0"},
+				Download: vdm.ParsedString{Value: "sha256:checksum"},
+			},
+			Error: `got checksum sha256:KCkqVVV1kGg0X87TFysjCJ8MxtZEIU4Ja/yXGeoECdA=, want sha256:checksum`,
+		},
+		{
+			Name: "invalid-bad-target",
+			ZIP:  filepath.FromSlash("testdata/zips/golang.org/x/arch/@v/v0.13.0.zip"),
+			Module: &vdm.GoModule{
+				Name:    "golang.org/x/arch",
+				Version: vdm.ParsedString{Value: "v0.13.0"},
+				Packages: []*vdm.GoPackage{
+					{Name: vdm.ParsedString{Value: "golang.org/x/arch/x86/x86asm"}},
+				},
+			},
+			Manifest: &vdm.GoModuleManifest{
+				Name:     "golang.org/x/arch",
+				Version:  vdm.ParsedString{Value: "v0.14.0"},
+				Download: vdm.ParsedString{Value: "sha256:KCkqVVV1kGg0X87TFysjCJ8MxtZEIU4Ja/yXGeoECdA="},
+			},
+			Error: `path does not have prefix "golang.org/x/arch@v0.14.0/"`,
+		},
+		{
+			Name: "invalid-bad-patches",
+			ZIP:  filepath.FromSlash("testdata/zips/golang.org/x/arch/@v/v0.13.0.zip"),
+			Module: &vdm.GoModule{
+				Name:    "golang.org/x/arch",
+				Version: vdm.ParsedString{Value: "v0.13.0"},
+				Patches: []vdm.ParsedString{
+					{Value: "testdata/nonexistant.patch"},
+				},
+				Packages: []*vdm.GoPackage{
+					{Name: vdm.ParsedString{Value: "golang.org/x/arch/x86/x86asm"}},
+				},
+			},
+			Manifest: &vdm.GoModuleManifest{
+				Name:     "golang.org/x/arch",
+				Version:  vdm.ParsedString{Value: "v0.13.0"},
+				Download: vdm.ParsedString{Value: "sha256:KCkqVVV1kGg0X87TFysjCJ8MxtZEIU4Ja/yXGeoECdA="},
+			},
+			Error: `failed to open patch path "testdata/nonexistant.patch"`,
+		},
+		{
+			Name: "valid-complex-no-patches",
+			ZIP:  filepath.FromSlash("testdata/zips/golang.org/x/arch/@v/v0.13.0.zip"),
+			Module: &vdm.GoModule{
+				Name:    "golang.org/x/arch",
+				Version: vdm.ParsedString{Value: "v0.13.0"},
+				Packages: []*vdm.GoPackage{
+					{Name: vdm.ParsedString{Value: "golang.org/x/arch/x86/x86asm"}},
+				},
+			},
+			Manifest: &vdm.GoModuleManifest{
+				Name:     "golang.org/x/arch",
+				Version:  vdm.ParsedString{Value: "v0.13.0"},
+				Download: vdm.ParsedString{Value: "sha256:KCkqVVV1kGg0X87TFysjCJ8MxtZEIU4Ja/yXGeoECdA="},
+			},
+			Want: filepath.FromSlash("testdata/zips/golang.org/x/arch/@v/v0.13.0-pruned.zip"),
+		},
+		{
+			Name: "valid-complex-with-patches",
+			ZIP:  filepath.FromSlash("testdata/zips/golang.org/x/arch/@v/v0.13.0.zip"),
+			Module: &vdm.GoModule{
+				Name:    "golang.org/x/arch",
+				Version: vdm.ParsedString{Value: "v0.13.0"},
+				Patches: []vdm.ParsedString{
+					{Value: "testdata/patching/golang.org_x_arch.patch"},
+				},
+				Packages: []*vdm.GoPackage{
+					{Name: vdm.ParsedString{Value: "golang.org/x/arch/x86/x86asm"}},
+				},
+			},
+			Manifest: &vdm.GoModuleManifest{
+				Name:     "golang.org/x/arch",
+				Version:  vdm.ParsedString{Value: "v0.13.0"},
+				Download: vdm.ParsedString{Value: "sha256:KCkqVVV1kGg0X87TFysjCJ8MxtZEIU4Ja/yXGeoECdA="},
+			},
+			Want: filepath.FromSlash("testdata/zips/golang.org/x/arch/@v/v0.13.0-patched.zip"),
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.Name, func(t *testing.T) {
+			x := new(extractor)
+			gotTarget := filepath.Join(t.ArtifactDir(), "got")
+			dst := filepath.Join(gotTarget, filepath.FromSlash(test.Manifest.Name))
+			err := os.MkdirAll(dst, 0o777)
+			if err != nil {
+				t.Fatalf("Extract(): failed to create %s: %v", dst, err)
+			}
+
+			err = Extract(gotTarget, test.ZIP, test.Module, test.Manifest)
+			if test.Error != "" {
+				if err == nil {
+					t.Fatalf("Extract(): unexpected lack of error")
+				}
+
+				e := err.Error()
+				if !strings.Contains(e, test.Error) {
+					t.Fatalf("Extract(): got wrong error:\nGot:  %s\nWant: %s", e, test.Error)
+				}
+
+				// All good.
+				return
+			}
+
+			if err != nil {
+				t.Fatalf("Extract(): got unexpected error: %v", err)
+			}
+
+			// First, check the filenames match, as it
+			// will then simplify checking the content
+			// matches.
+			got := getFilenames(t, gotTarget, test.Manifest.Name)
+
+			wantTarget := filepath.Join(t.ArtifactDir(), "want")
+			dst = filepath.Join(wantTarget, filepath.FromSlash(test.Manifest.Name))
+			err = os.MkdirAll(dst, 0o777)
+			if err != nil {
+				t.Fatalf("Extract(): failed to create %s: %v", dst, err)
+			}
+
+			err = x.ExtractAndPrune(wantTarget, test.Want, test.Module, test.Manifest)
+			if err != nil {
+				t.Fatalf("Extract(): failed to extract %s: %v", test.Manifest.Name, err)
+			}
+
+			want := getFilenames(t, wantTarget, test.Manifest.Name)
+			if diff := cmp.Diff(want, got); diff != "" {
+				t.Errorf("Extract(): filenames mismatch (-want, +got)\n%s", diff)
+			}
+
+			// Now that we know the filenames match,
+			// we can easily compare their contents.
+			for _, filename := range got {
+				name := filepath.FromSlash(filename)
+				got, err := os.ReadFile(filepath.Join(gotTarget, name))
+				if err != nil {
+					t.Fatalf("Extract(): failed to read got %s: %v", name, err)
+				}
+
+				want, err := os.ReadFile(filepath.Join(wantTarget, name))
+				if err != nil {
+					t.Fatalf("Extract(): failed to read want %s: %v", name, err)
+				}
+
+				if !bytes.Equal(got, want) {
+					t.Errorf("Extract(): content mismatch for %s:\n%s", name, diff.Format(string(want), string(got)))
+				}
+			}
+		})
+	}
+}
+
+func TestExtractor_SaveError(t *testing.T) {
+	tests := []struct {
+		Name  string
+		X     *extractor
+		Err   error
+		Error string
+	}{
+		{
+			Name:  "keep-saved",
+			X:     &extractor{SavedError: errors.New("first error")},
+			Err:   errors.New("second error"),
+			Error: "first error",
+		},
+		{
+			Name:  "keep-new",
+			X:     &extractor{},
+			Err:   errors.New("second error"),
+			Error: "second error",
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.Name, func(t *testing.T) {
+			test.X.SaveError(test.Err)
+			err := test.X.SavedError
+			if test.Error != "" {
+				if err == nil {
+					t.Fatalf("SaveError(): unexpected lack of error")
+				}
+
+				e := err.Error()
+				if e != test.Error {
+					t.Fatalf("SaveError(): got wrong error:\nGot:  %s\nWant: %s", e, test.Error)
+				}
+
+				// All good.
+				return
+			}
+
+			if err != nil {
+				t.Fatalf("SaveError(): got unexpected error: %v", err)
+			}
+		})
+	}
+}
+
+func TestExtractor_CompareChecksum(t *testing.T) {
+	tests := []struct {
+		Name     string
+		Got      string
+		Manifest *vdm.GoModuleManifest
+		Error    string
+	}{
+		{
+			Name:     "invalid-bad-format",
+			Got:      "checksum",
+			Manifest: &vdm.GoModuleManifest{Name: "rsc.io/diff"},
+			Error:    `failed to verify Go module rsc.io/diff: invalid checksum "checksum": missing colon`,
+		},
+		{
+			Name: "invalid-mismatch",
+			Got:  "h1:asdf",
+			Manifest: &vdm.GoModuleManifest{
+				Name:     "rsc.io/diff",
+				Version:  vdm.ParsedString{Value: "v0.0.0-20190621135850-fe3479844c3c"},
+				Download: vdm.ParsedString{Value: "sha256:/WCDjRGIVDjKlhtSc1PEApp2fR58gfSVK62dr/yQNyQ="},
+			},
+			Error: `failed to verify Go module rsc.io/diff: got checksum sha256:asdf, want sha256:/WCDjRGIVDjKlhtSc1PEApp2fR58gfSVK62dr/yQNyQ=`,
+		},
+		{
+			Name: "valid-simple",
+			Got:  "h1:/WCDjRGIVDjKlhtSc1PEApp2fR58gfSVK62dr/yQNyQ=",
+			Manifest: &vdm.GoModuleManifest{
+				Name:     "rsc.io/diff",
+				Version:  vdm.ParsedString{Value: "v0.0.0-20190621135850-fe3479844c3c"},
+				Download: vdm.ParsedString{Value: "sha256:/WCDjRGIVDjKlhtSc1PEApp2fR58gfSVK62dr/yQNyQ="},
+			},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.Name, func(t *testing.T) {
+			x := new(extractor)
+			err := x.CompareChecksum(test.Got, test.Manifest)
+			if test.Error != "" {
+				if err == nil {
+					t.Fatalf("VerifyChecksum(): unexpected lack of error")
+				}
+
+				e := err.Error()
+				if e != test.Error {
+					t.Fatalf("VerifyChecksum(): got wrong error:\nGot:  %s\nWant: %s", e, test.Error)
+				}
+
+				// All good.
+				return
+			}
+
+			if err != nil {
+				t.Fatalf("VerifyChecksum(): got unexpected error: %v", err)
+			}
+		})
+	}
+}
+
+func TestExtractor_VerifyChecksum(t *testing.T) {
+	tests := []struct {
+		Name     string
+		Path     string
+		Manifest *vdm.GoModuleManifest
+		Error    string
+	}{
+		{
+			Name: "invalid-bad-path",
+			Path: filepath.FromSlash("testdata/nonexistant.zip"),
+			Manifest: &vdm.GoModuleManifest{
+				Name:     "rsc.io/diff",
+				Version:  vdm.ParsedString{Value: "v0.0.0-20190621135850-fe3479844c3c"},
+				Download: vdm.ParsedString{Value: "sha256:/WCDjRGIVDjKlhtSc1PEApp2fR58gfSVK62dr/yQNyQ="},
+			},
+			Error: `failed to verify Go module rsc.io/diff: open testdata/nonexistant.zip: no such file or directory`,
+		},
+		{
+			Name: "valid-simple",
+			Path: filepath.FromSlash("testdata/zips/rsc.io/diff/@v/v0.0.0-20190621135850-fe3479844c3c.zip"),
+			Manifest: &vdm.GoModuleManifest{
+				Name:     "rsc.io/diff",
+				Version:  vdm.ParsedString{Value: "v0.0.0-20190621135850-fe3479844c3c"},
+				Download: vdm.ParsedString{Value: "sha256:/WCDjRGIVDjKlhtSc1PEApp2fR58gfSVK62dr/yQNyQ="},
+			},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.Name, func(t *testing.T) {
+			x := new(extractor)
+			err := x.VerifyChecksum(test.Path, test.Manifest)
+			if test.Error != "" {
+				if err == nil {
+					t.Fatalf("VerifyChecksum(): unexpected lack of error")
+				}
+
+				e := err.Error()
+				if e != test.Error {
+					t.Fatalf("VerifyChecksum(): got wrong error:\nGot:  %s\nWant: %s", e, test.Error)
+				}
+
+				// All good.
+				return
+			}
+
+			if err != nil {
+				t.Fatalf("VerifyChecksum(): got unexpected error: %v", err)
+			}
+		})
+	}
+}
+
+func TestExtractor_Extract(t *testing.T) {
+	tests := []struct {
+		Name     string
+		Dst      string
+		Path     string
+		Manifest *vdm.GoModuleManifest
+		Error    string
+	}{
+		{
+			Name: "invalid-missing-zip",
+			Dst:  t.ArtifactDir(),
+			Path: filepath.FromSlash("testdata/nonexistant.zip"),
+			Manifest: &vdm.GoModuleManifest{
+				Name:    "rsc.io/diff",
+				Version: vdm.ParsedString{Value: "v0.0.0-20190621135850-fe3479844c3c"},
+			},
+			Error: `failed to unzip Go module rsc.io/diff: unzip testdata/nonexistant.zip: open testdata/nonexistant.zip: no such file or directory`,
+		},
+		{
+			Name: "valid-simple",
+			Dst:  t.ArtifactDir(),
+			Path: filepath.FromSlash("testdata/zips/rsc.io/diff/@v/v0.0.0-20190621135850-fe3479844c3c.zip"),
+			Manifest: &vdm.GoModuleManifest{
+				Name:    "rsc.io/diff",
+				Version: vdm.ParsedString{Value: "v0.0.0-20190621135850-fe3479844c3c"},
+			},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.Name, func(t *testing.T) {
+			x := new(extractor)
+			err := x.Extract(test.Dst, test.Path, test.Manifest)
+			if test.Error != "" {
+				if err == nil {
+					t.Fatalf("Extract(): unexpected lack of error")
+				}
+
+				e := err.Error()
+				if e != test.Error {
+					t.Fatalf("Extract(): got wrong error:\nGot:  %s\nWant: %s", e, test.Error)
+				}
+
+				// All good.
+				return
+			}
+
+			if err != nil {
+				t.Fatalf("Extract(): got unexpected error: %v", err)
+			}
+		})
+	}
+}
+
+type badFS struct{}
+
+var (
+	_ fs.FS = badFS{}
+)
+
+func (badFS) Open(name string) (fs.File, error) {
+	switch name {
+	case "open":
+		return nil, fmt.Errorf("bad open")
+	default:
+		return nil, fs.ErrNotExist
+	}
+}
+
+func txtarFS(t *testing.T, name string) fs.FS {
+	t.Helper()
+	ar, err := txtar.ParseFile(filepath.FromSlash(name))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	fsys, err := txtar.FS(ar)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	return fsys
+}
+
+func TestParentDirectories(t *testing.T) {
+	tests := []struct {
+		Dir  string
+		Want []string
+	}{
+		{"github.com/SlyMarbo/marbo", []string{"github.com/SlyMarbo", "github.com"}},
+		{"github.com/SlyMarbo/marbo/foo", []string{"github.com/SlyMarbo/marbo", "github.com/SlyMarbo", "github.com"}},
+	}
+
+	for _, test := range tests {
+		got := slices.Collect(parentDirectories(test.Dir))
+		if diff := cmp.Diff(test.Want, got); diff != "" {
+			t.Errorf("parentDirectories(%q): modules mismatch (-want, +got)\n%s", test.Dir, diff)
+		}
+
+		// Increase test coverage.
+		for range parentDirectories(test.Dir) {
+			break
+		}
+	}
+}
+
+func TestExtractor_IdentifyDeletions(t *testing.T) {
+	tests := []struct {
+		Name   string
+		FS     fs.FS
+		Module *vdm.GoModule
+		Want   []string
+		Error  string
+	}{
+		{
+			Name: "invalid-bad-fs",
+			FS:   badFS{},
+			Module: &vdm.GoModule{
+				Name:    "rsc.io/diff",
+				Version: vdm.ParsedString{Value: "v1.2.3"},
+			},
+			Error: `failed to identify unused Go packages to delete in rsc.io/diff: file does not exist`,
+		},
+		{
+			Name: "valid-single-module",
+			FS:   txtarFS(t, "testdata/pruning/complex.txtar"),
+			Module: &vdm.GoModule{
+				Name:    "rsc.io/diff",
+				Version: vdm.ParsedString{Value: "v1.2.3"},
+				Packages: []*vdm.GoPackage{
+					{Name: vdm.ParsedString{Value: "rsc.io/diff"}},
+					{Name: vdm.ParsedString{Value: "rsc.io/diff/deeply/nested/pkg"}},
+				},
+			},
+			Want: []string{
+				"rsc.io/diff/BUILD.bazel",
+				"rsc.io/diff/deeply/nested/other",
+				"rsc.io/diff/deeply/nested/pkg/child",
+			},
+		},
+		{
+			Name: "valid-multi-module",
+			FS:   txtarFS(t, "testdata/pruning/complex.txtar"),
+			Module: &vdm.GoModule{
+				Name:    "rsc.io/diff",
+				Version: vdm.ParsedString{Value: "v1.2.3"},
+				Packages: []*vdm.GoPackage{
+					{Name: vdm.ParsedString{Value: "rsc.io/diff"}},
+					{
+						Name: vdm.ParsedString{Value: "rsc.io/diff/deeply/nested/pkg"},
+						Directories: []vdm.ParsedString{
+							{Value: "nonexistant"},
+						},
+					},
+				},
+			},
+			Want: []string{
+				"rsc.io/diff/BUILD.bazel",
+				"rsc.io/diff/deeply/nested/other",
+				"rsc.io/diff/deeply/nested/pkg/child",
+			},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.Name, func(t *testing.T) {
+			x := new(extractor)
+			got, err := x.IdentifyDeletions(test.FS, test.Module)
+			if test.Error != "" {
+				if err == nil {
+					t.Fatalf("IdentifyDeletions(): unexpected lack of error")
+				}
+
+				e := err.Error()
+				if e != test.Error {
+					t.Fatalf("IdentifyDeletions(): got wrong error:\nGot:  %s\nWant: %s", e, test.Error)
+				}
+
+				// All good.
+				return
+			}
+
+			if err != nil {
+				t.Fatalf("IdentifyDeletions(): got unexpected error: %v", err)
+			}
+
+			if diff := cmp.Diff(test.Want, got); diff != "" {
+				t.Errorf("IdentifyDeletions(): deletions mismatch (-want, +got)\n%s", diff)
+			}
+		})
+	}
+}
+
+func getFilenames(t *testing.T, dir, name string) []string {
+	t.Helper()
+	var filenames []string
+	err := fs.WalkDir(os.DirFS(dir), name, func(name string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+
+		if d.IsDir() {
+			return nil
+		}
+
+		filenames = append(filenames, name)
+		return nil
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	return filenames
+}
+
+func TestExtractor_ExtractAndPrune(t *testing.T) {
+	tests := []struct {
+		Name     string
+		Path     string
+		Module   *vdm.GoModule
+		Manifest *vdm.GoModuleManifest
+		Want     string
+		Error    string
+	}{
+		{
+			Name: "invalid-missing-zip",
+			Path: filepath.FromSlash("testdata/nonexistant.zip"),
+			Manifest: &vdm.GoModuleManifest{
+				Name:    "rsc.io/diff",
+				Version: vdm.ParsedString{Value: "v0.0.0-20190621135850-fe3479844c3c"},
+			},
+			Error: `failed to unzip Go module rsc.io/diff: unzip testdata/nonexistant.zip: open testdata/nonexistant.zip: no such file or directory`,
+		},
+		{
+			Name: "valid-golang.org-x-arch",
+			Path: filepath.FromSlash("testdata/zips/golang.org/x/arch/@v/v0.13.0.zip"),
+			Module: &vdm.GoModule{
+				Name:    "golang.org/x/arch",
+				Version: vdm.ParsedString{Value: "v0.13.0"},
+				Packages: []*vdm.GoPackage{
+					{Name: vdm.ParsedString{Value: "golang.org/x/arch/x86/x86asm"}},
+				},
+			},
+			Manifest: &vdm.GoModuleManifest{
+				Name:    "golang.org/x/arch",
+				Version: vdm.ParsedString{Value: "v0.13.0"},
+			},
+			Want: filepath.FromSlash("testdata/zips/golang.org/x/arch/@v/v0.13.0-pruned.zip"),
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.Name, func(t *testing.T) {
+			x := new(extractor)
+			gotTarget := filepath.Join(t.ArtifactDir(), "got")
+			dst := filepath.Join(gotTarget, filepath.FromSlash(test.Manifest.Name))
+			err := os.MkdirAll(dst, 0o777)
+			if err != nil {
+				t.Fatalf("failed to create %s: %v", dst, err)
+			}
+
+			err = x.ExtractAndPrune(gotTarget, test.Path, test.Module, test.Manifest)
+			if test.Error != "" {
+				if err == nil {
+					t.Fatalf("ExtractAndPrune(): unexpected lack of error")
+				}
+
+				e := err.Error()
+				if e != test.Error {
+					t.Fatalf("ExtractAndPrune(): got wrong error:\nGot:  %s\nWant: %s", e, test.Error)
+				}
+
+				// All good.
+				return
+			}
+
+			if err != nil {
+				t.Fatalf("ExtractAndPrune(): got unexpected error: %v", err)
+			}
+
+			got := getFilenames(t, gotTarget, test.Manifest.Name)
+
+			wantTarget := filepath.Join(t.ArtifactDir(), "want")
+			dst = filepath.Join(wantTarget, filepath.FromSlash(test.Manifest.Name))
+			err = os.MkdirAll(dst, 0o777)
+			if err != nil {
+				t.Fatalf("failed to create %s: %v", dst, err)
+			}
+
+			err = x.Extract(dst, test.Want, test.Manifest)
+			if err != nil {
+				t.Fatalf("failed to extract want: %v", err)
+			}
+
+			want := getFilenames(t, wantTarget, test.Manifest.Name)
+			if diff := cmp.Diff(want, got); diff != "" {
+				t.Errorf("ExtractAndPrune(): filenames mismatch (-want, +got)\n%s", diff)
+			}
+		})
+	}
+}
+
+func TestExtractor_CloseClosers(t *testing.T) {
+	tests := []struct {
+		Name    string
+		Closers []io.Closer
+		Names   []string
+		Context string
+		Error   string
+	}{
+		{
+			Name: "invalid-error",
+			Closers: []io.Closer{
+				readCloser{err: errors.New("close error")},
+			},
+			Names: []string{
+				"foo",
+			},
+			Context: "test case",
+			Error:   "failed to close test case foo: close error",
+		},
+		{
+			Name: "valid-no-error",
+			Closers: []io.Closer{
+				readCloser{},
+			},
+			Names: []string{
+				"foo",
+			},
+			Context: "test case",
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.Name, func(t *testing.T) {
+			x := new(extractor)
+			x.CloseClosers(test.Closers, test.Names, test.Context)
+			err := x.SavedError
+			if test.Error != "" {
+				if err == nil {
+					t.Fatalf("CloseClosers(): unexpected lack of error")
+				}
+
+				e := err.Error()
+				if e != test.Error {
+					t.Fatalf("CloseClosers(): got wrong error:\nGot:  %s\nWant: %s", e, test.Error)
+				}
+
+				// All good.
+				return
+			}
+
+			if err != nil {
+				t.Fatalf("CloseClosers(): got unexpected error: %v", err)
+			}
+		})
+	}
+}
+
+func TestExtractor_PatchWithBinary(t *testing.T) {
+	tests := []struct {
+		Name     string
+		Path     string
+		ZIP      string
+		Module   *vdm.GoModule
+		Manifest *vdm.GoModuleManifest
+		FS       fs.FS
+		Patches  []string
+		Want     string
+		Error    string
+	}{
+		{
+			Name:    "invalid-bad-filesystem",
+			FS:      badFS{},
+			Patches: []string{"open"},
+			Error:   `failed to open patch path "open": bad open`,
+		},
+		{
+			Name:    "invalid-bad-path",
+			Path:    filepath.FromSlash("testdata/nonexistant"),
+			FS:      os.DirFS("testdata"),
+			Patches: []string{"patching/golang.org_x_arch.patch"},
+			Error:   `failed to run patch: chdir testdata/nonexistant: no such file or directory`,
+		},
+		{
+			Name: "valid-complex",
+			ZIP:  filepath.FromSlash("testdata/zips/golang.org/x/arch/@v/v0.13.0.zip"),
+			Module: &vdm.GoModule{
+				Name:    "golang.org/x/arch",
+				Version: vdm.ParsedString{Value: "v0.13.0"},
+				Packages: []*vdm.GoPackage{
+					{Name: vdm.ParsedString{Value: "golang.org/x/arch/x86/x86asm"}},
+				},
+			},
+			Manifest: &vdm.GoModuleManifest{
+				Name:    "golang.org/x/arch",
+				Version: vdm.ParsedString{Value: "v0.13.0"},
+			},
+			FS:      os.DirFS("testdata"),
+			Patches: []string{"patching/golang.org_x_arch.patch"},
+			Want:    filepath.FromSlash("testdata/zips/golang.org/x/arch/@v/v0.13.0-patched.zip"),
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.Name, func(t *testing.T) {
+			x := new(extractor)
+			var gotTarget, path string
+			if test.ZIP != "" {
+				gotTarget = filepath.Join(t.ArtifactDir(), "got")
+				dst := filepath.Join(gotTarget, filepath.FromSlash(test.Manifest.Name))
+				err := os.MkdirAll(dst, 0o777)
+				if err != nil {
+					t.Fatalf("PatchWithBinary(): failed to create %s: %v", dst, err)
+				}
+
+				err = x.ExtractAndPrune(gotTarget, test.ZIP, test.Module, test.Manifest)
+				if err != nil {
+					t.Fatalf("PatchWithBinary(): failed to extract %s: %v", test.Manifest.Name, err)
+				}
+
+				path = dst
+			}
+
+			if test.Path != "" {
+				path = test.Path
+			}
+
+			err := x.PatchWithBinary(io.Discard, test.FS, path, test.Patches)
+			if test.Error != "" {
+				if err == nil {
+					t.Fatalf("PatchWithBinary(): unexpected lack of error")
+				}
+
+				e := err.Error()
+				if e != test.Error {
+					t.Fatalf("PatchWithBinary(): got wrong error:\nGot:  %s\nWant: %s", e, test.Error)
+				}
+
+				// All good.
+				return
+			}
+
+			if err != nil {
+				t.Fatalf("PatchWithBinary(): got unexpected error: %v", err)
+			}
+
+			// First, check the filenames match, as it
+			// will then simplify checking the content
+			// matches.
+			got := getFilenames(t, gotTarget, test.Manifest.Name)
+
+			wantTarget := filepath.Join(t.ArtifactDir(), "want")
+			dst := filepath.Join(wantTarget, filepath.FromSlash(test.Manifest.Name))
+			err = os.MkdirAll(dst, 0o777)
+			if err != nil {
+				t.Fatalf("PatchWithBinary(): failed to create %s: %v", dst, err)
+			}
+
+			err = x.ExtractAndPrune(wantTarget, test.Want, test.Module, test.Manifest)
+			if err != nil {
+				t.Fatalf("PatchWithBinary(): failed to extract %s: %v", test.Manifest.Name, err)
+			}
+
+			want := getFilenames(t, wantTarget, test.Manifest.Name)
+			if diff := cmp.Diff(want, got); diff != "" {
+				t.Errorf("PatchWithBinary(): filenames mismatch (-want, +got)\n%s", diff)
+			}
+
+			// Now that we know the filenames match,
+			// we can easily compare their contents.
+			for _, filename := range got {
+				name := filepath.FromSlash(filename)
+				got, err := os.ReadFile(filepath.Join(gotTarget, name))
+				if err != nil {
+					t.Fatalf("PatchWithBinary(): failed to read got %s: %v", name, err)
+				}
+
+				want, err := os.ReadFile(filepath.Join(wantTarget, name))
+				if err != nil {
+					t.Fatalf("PatchWithBinary(): failed to read want %s: %v", name, err)
+				}
+
+				if !bytes.Equal(got, want) {
+					t.Errorf("PatchWithBinary(): content mismatch for %s:\n%s", name, diff.Format(string(want), string(got)))
+				}
+			}
+		})
+	}
+}
+
+func readPatch(t *testing.T, name string) *patch.File {
+	t.Helper()
+	data, err := os.ReadFile(filepath.Join("testdata", filepath.FromSlash(name)))
+	if err != nil {
+		t.Fatalf("failed to read patch %s: %v", name, err)
+	}
+
+	set, err := patch.Parse([]byte(data))
+	if err != nil {
+		t.Fatalf("failed to parse patch: %v", err)
+	}
+
+	if len(set.File) != 1 {
+		t.Fatalf("patch has %d files, want %d", len(set.File), 1)
+	}
+
+	return set.File[0]
+}
+
+func extractTxtar(t *testing.T, prefix, dir, archive, context string) {
+	t.Helper()
+	ar, err := txtar.ParseFile(filepath.Join("testdata", archive))
+	if err != nil {
+		t.Fatalf("%sfailed to parse %s: %v", prefix, context, err)
+	}
+
+	for _, file := range ar.Files {
+		err = os.WriteFile(filepath.Join(dir, filepath.FromSlash(file.Name)), file.Data, 0o644)
+		if err != nil {
+			t.Fatalf("%sfailed to write %s %s: %v", prefix, context, file.Name, err)
+		}
+	}
+}
+
+func TestExtractor_SinglePatchWithPackage(t *testing.T) {
+	tests := []struct {
+		Name  string
+		File  *patch.File
+		Init  string
+		Want  string
+		Error string
+	}{
+		{
+			Name:  "invalid-add-bad-destination",
+			File:  readPatch(t, "patching/add1.patch"),
+			Error: `nonexistant/added.txt: no such file or directory`,
+		},
+		{
+			Name: "valid-add-simple",
+			File: readPatch(t, "patching/add2.patch"),
+			Want: "patching/add2-want.txtar",
+		},
+		{
+			Name:  "invalid-remove-missing",
+			File:  readPatch(t, "patching/remove1.patch"),
+			Error: `redundant.txt: no such file or directory`,
+		},
+		{
+			Name: "valid-remove-simple",
+			File: readPatch(t, "patching/remove2.patch"),
+			Init: "patching/remove2-init.txtar",
+			Want: "patching/remove2-want.txtar",
+		},
+		{
+			Name:  "invalid-edit-missing",
+			File:  readPatch(t, "patching/edit1.patch"),
+			Error: `nonexistant/text.txt: no such file or directory`,
+		},
+		{
+			Name:  "invalid-edit-wrong-content",
+			File:  readPatch(t, "patching/edit2.patch"),
+			Init:  "patching/edit2-init.txtar",
+			Error: `failed to edit "text.txt": patch did not apply cleanly`,
+		},
+		{
+			Name: "invalid-edit-bad-destination",
+			File: func() *patch.File {
+				base := readPatch(t, "patching/edit3.patch")
+				base.Dst = "nonexistant/text.txt" // The parser uses the same file for both, so we have to modify it.
+				return base
+			}(),
+			Init:  "patching/edit3-init.txtar",
+			Error: `nonexistant/text.txt: no such file or directory`,
+		},
+		{
+			Name: "valid-edit-simple",
+			File: readPatch(t, "patching/edit4.patch"),
+			Init: "patching/edit4-init.txtar",
+			Want: "patching/edit4-want.txtar",
+		},
+		{
+			Name:  "invalid-rename-missing",
+			File:  readPatch(t, "patching/rename1.patch"),
+			Error: `no such file or directory`,
+		},
+		{
+			Name: "valid-rename-simple",
+			File: readPatch(t, "patching/rename2.patch"),
+			Init: "patching/rename2-init.txtar",
+			Want: "patching/rename2-want.txtar",
+		},
+		{
+			Name:  "invalid-bad-verb",
+			File:  &patch.File{Verb: "wibble"},
+			Error: `unexpected patch operation "wibble"`,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.Name, func(t *testing.T) {
+			x := new(extractor)
+			dir := t.ArtifactDir()
+			if test.Init != "" {
+				extractTxtar(t, "SinglePatchWithPackage(): ", dir, filepath.FromSlash(test.Init), "init txtar")
+			}
+
+			err := x.SinglePatchWithPackage(dir, test.File)
+			if test.Error != "" {
+				if err == nil {
+					t.Fatalf("SinglePatchWithPackage(): unexpected lack of error")
+				}
+
+				e := err.Error()
+				if !strings.Contains(e, test.Error) {
+					t.Fatalf("SinglePatchWithPackage(): got wrong error:\nGot:  %s\nWant: %s", e, test.Error)
+				}
+
+				// All good.
+				return
+			}
+
+			if err != nil {
+				t.Fatalf("SinglePatchWithPackage(): got unexpected error: %v", err)
+			}
+
+			ar, err := txtar.ParseFile(filepath.Join("testdata", test.Want))
+			if err != nil {
+				t.Fatalf("SinglePatchWithPackage(): failed to read want txtar: %v", err)
+			}
+
+			done := make(map[string]bool)
+			for _, file := range ar.Files {
+				done[file.Name] = true
+				got, err := os.ReadFile(filepath.Join(dir, filepath.FromSlash(file.Name)))
+				if err != nil {
+					t.Errorf("SinglePatchWithPackage(): failed to read wanted file %s: %v", file.Name, err)
+					continue
+				}
+
+				if !bytes.Equal(file.Data, got) {
+					delta := diff.Format(string(file.Data), string(got))
+					t.Errorf("SinglePatchWithPackage(): wrong contents for %s:\n%s", file.Name, delta)
+					continue
+				}
+			}
+
+			filenames := getFilenames(t, dir, ".")
+			extra := make([]string, 0, len(filenames))
+			for _, filename := range filenames {
+				if !done[filename] {
+					extra = append(extra, filename)
+				}
+			}
+
+			if len(extra) != 0 {
+				t.Fatalf("SinglePatchWithPackage(): extra files:\n  %s", strings.Join(extra, "\n  "))
+			}
+		})
+	}
+}
+
+func TestExtractor_PatchWithPackage(t *testing.T) {
+	tests := []struct {
+		Name     string
+		Path     string
+		ZIP      string
+		Manifest *vdm.GoModuleManifest
+		FS       fs.FS
+		Patches  []string
+		Want     string
+		Error    string
+	}{
+		{
+			Name:    "invalid-bad-filesystem",
+			FS:      badFS{},
+			Patches: []string{"open"},
+			Error:   `failed to open patch path "open": bad open`,
+		},
+		{
+			Name:    "invalid-bad-patch",
+			FS:      os.DirFS("testdata"),
+			Patches: []string{"patching/invalid.patch"},
+			Error:   `unexpected patch header line: diff XXX`,
+		},
+		{
+			Name: "invalid-bad-removal",
+			ZIP:  filepath.FromSlash("testdata/zips/example.com/foo/@v/v1.2.3.zip"),
+			Manifest: &vdm.GoModuleManifest{
+				Name:    "example.com/foo",
+				Version: vdm.ParsedString{Value: "v1.2.3"},
+			},
+			FS:      os.DirFS("testdata"),
+			Patches: []string{"patching/remove1.patch"},
+			Error:   `foo/redundant.txt: no such file or directory`,
+		},
+		{
+			Name: "valid-constructed",
+			ZIP:  filepath.FromSlash("testdata/zips/example.com/foo/@v/v1.2.3.zip"),
+			Manifest: &vdm.GoModuleManifest{
+				Name:    "example.com/foo",
+				Version: vdm.ParsedString{Value: "v1.2.3"},
+			},
+			FS:      os.DirFS("testdata"),
+			Patches: []string{"patching/constructed.patch"},
+			Want:    filepath.FromSlash("testdata/zips/example.com/foo/@v/v1.2.3-patched.zip"),
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.Name, func(t *testing.T) {
+			x := new(extractor)
+			var gotTarget, path string
+			if test.ZIP != "" {
+				gotTarget = filepath.Join(t.ArtifactDir(), "got")
+				dst := filepath.Join(gotTarget, filepath.FromSlash(test.Manifest.Name))
+				err := os.MkdirAll(dst, 0o777)
+				if err != nil {
+					t.Fatalf("PatchWithPackage(): failed to create %s: %v", dst, err)
+				}
+
+				err = x.Extract(dst, test.ZIP, test.Manifest)
+				if err != nil {
+					t.Fatalf("PatchWithPackage(): failed to extract %s: %v", test.Manifest.Name, err)
+				}
+
+				path = dst
+			}
+
+			if test.Path != "" {
+				path = test.Path
+			}
+
+			err := x.PatchWithPackage(test.FS, path, test.Patches)
+			if test.Error != "" {
+				if err == nil {
+					t.Fatalf("PatchWithPackage(): unexpected lack of error")
+				}
+
+				e := err.Error()
+				if !strings.Contains(e, test.Error) {
+					t.Fatalf("PatchWithPackage(): got wrong error:\nGot:  %s\nWant: %s", e, test.Error)
+				}
+
+				// All good.
+				return
+			}
+
+			if err != nil {
+				t.Fatalf("PatchWithPackage(): got unexpected error: %v", err)
+			}
+
+			// First, check the filenames match, as it
+			// will then simplify checking the content
+			// matches.
+			got := getFilenames(t, gotTarget, test.Manifest.Name)
+
+			wantTarget := filepath.Join(t.ArtifactDir(), "want")
+			dst := filepath.Join(wantTarget, filepath.FromSlash(test.Manifest.Name))
+			err = os.MkdirAll(dst, 0o777)
+			if err != nil {
+				t.Fatalf("PatchWithPackage(): failed to create %s: %v", dst, err)
+			}
+
+			err = x.Extract(dst, test.Want, test.Manifest)
+			if err != nil {
+				t.Fatalf("PatchWithPackage(): failed to extract %s: %v", test.Manifest.Name, err)
+			}
+
+			want := getFilenames(t, wantTarget, test.Manifest.Name)
+			if diff := cmp.Diff(want, got); diff != "" {
+				t.Errorf("PatchWithPackage(): filenames mismatch (-want, +got)\n%s", diff)
+			}
+
+			// Now that we know the filenames match,
+			// we can easily compare their contents.
+			for _, filename := range got {
+				name := filepath.FromSlash(filename)
+				got, err := os.ReadFile(filepath.Join(gotTarget, name))
+				if err != nil {
+					t.Fatalf("PatchWithPackage(): failed to read got %s: %v", name, err)
+				}
+
+				want, err := os.ReadFile(filepath.Join(wantTarget, name))
+				if err != nil {
+					t.Fatalf("PatchWithPackage(): failed to read want %s: %v", name, err)
+				}
+
+				if !bytes.Equal(got, want) {
+					t.Errorf("PatchWithPackage(): content mismatch for %s:\n%s", name, diff.Format(string(want), string(got)))
+				}
+			}
+		})
+	}
+}
+
+func TestExtractor_ApplyPatches(t *testing.T) {
+	tests := []struct {
+		Name     string
+		Path     string
+		ZIP      string
+		Module   *vdm.GoModule
+		Manifest *vdm.GoModuleManifest
+		FS       fs.FS
+		Patches  []string
+		Want     string
+		Error    string
+	}{
+		{
+			Name: "valid-complex",
+			ZIP:  filepath.FromSlash("testdata/zips/golang.org/x/arch/@v/v0.13.0.zip"),
+			Module: &vdm.GoModule{
+				Name:    "golang.org/x/arch",
+				Version: vdm.ParsedString{Value: "v0.13.0"},
+				Packages: []*vdm.GoPackage{
+					{Name: vdm.ParsedString{Value: "golang.org/x/arch/x86/x86asm"}},
+				},
+			},
+			Manifest: &vdm.GoModuleManifest{
+				Name:    "golang.org/x/arch",
+				Version: vdm.ParsedString{Value: "v0.13.0"},
+			},
+			FS:      os.DirFS("testdata"),
+			Patches: []string{"patching/golang.org_x_arch.patch"},
+			Want:    filepath.FromSlash("testdata/zips/golang.org/x/arch/@v/v0.13.0-patched.zip"),
+		},
+	}
+
+	for _, test := range tests {
+		doTest := func(t *testing.T, usePackage bool) {
+			x := new(extractor)
+			var gotTarget, path string
+			if test.ZIP != "" {
+				gotTarget = filepath.Join(t.ArtifactDir(), "got")
+				dst := filepath.Join(gotTarget, filepath.FromSlash(test.Manifest.Name))
+				err := os.MkdirAll(dst, 0o777)
+				if err != nil {
+					t.Fatalf("ApplyPatches(): failed to create %s: %v", dst, err)
+				}
+
+				err = x.ExtractAndPrune(gotTarget, test.ZIP, test.Module, test.Manifest)
+				if err != nil {
+					t.Fatalf("ApplyPatches(): failed to extract %s: %v", test.Manifest.Name, err)
+				}
+
+				path = dst
+			}
+
+			if test.Path != "" {
+				path = test.Path
+			}
+
+			err := x.ApplyPatches(test.FS, path, test.Patches, usePackage)
+			if test.Error != "" {
+				if err == nil {
+					t.Fatalf("ApplyPatches(): unexpected lack of error")
+				}
+
+				e := err.Error()
+				if e != test.Error {
+					t.Fatalf("ApplyPatches(): got wrong error:\nGot:  %s\nWant: %s", e, test.Error)
+				}
+
+				// All good.
+				return
+			}
+
+			if err != nil {
+				t.Fatalf("ApplyPatches(): got unexpected error: %v", err)
+			}
+
+			// First, check the filenames match, as it
+			// will then simplify checking the content
+			// matches.
+			got := getFilenames(t, gotTarget, test.Manifest.Name)
+
+			wantTarget := filepath.Join(t.ArtifactDir(), "want")
+			dst := filepath.Join(wantTarget, filepath.FromSlash(test.Manifest.Name))
+			err = os.MkdirAll(dst, 0o777)
+			if err != nil {
+				t.Fatalf("ApplyPatches(): failed to create %s: %v", dst, err)
+			}
+
+			err = x.ExtractAndPrune(wantTarget, test.Want, test.Module, test.Manifest)
+			if err != nil {
+				t.Fatalf("ApplyPatches(): failed to extract %s: %v", test.Manifest.Name, err)
+			}
+
+			want := getFilenames(t, wantTarget, test.Manifest.Name)
+			if diff := cmp.Diff(want, got); diff != "" {
+				t.Errorf("ApplyPatches(): filenames mismatch (-want, +got)\n%s", diff)
+			}
+
+			// Now that we know the filenames match,
+			// we can easily compare their contents.
+			for _, filename := range got {
+				name := filepath.FromSlash(filename)
+				got, err := os.ReadFile(filepath.Join(gotTarget, name))
+				if err != nil {
+					t.Fatalf("ApplyPatches(): failed to read got %s: %v", name, err)
+				}
+
+				want, err := os.ReadFile(filepath.Join(wantTarget, name))
+				if err != nil {
+					t.Fatalf("ApplyPatches(): failed to read want %s: %v", name, err)
+				}
+
+				if !bytes.Equal(got, want) {
+					t.Errorf("ApplyPatches(): content mismatch for %s:\n%s", name, diff.Format(string(want), string(got)))
+				}
+			}
+		}
+
+		t.Run(test.Name, func(t *testing.T) {
+			t.Run("Binary", func(t *testing.T) { doTest(t, false) })
+			t.Run("Package", func(t *testing.T) { doTest(t, true) })
+		})
+	}
+}
+
+func BenchmarkExtractor_ApplyPatches(b *testing.B) {
+	tests := []struct {
+		Name     string
+		ZIP      string
+		Module   *vdm.GoModule
+		Manifest *vdm.GoModuleManifest
+		FS       fs.FS
+		Patches  []string
+		Error    string
+	}{
+		{
+			Name: "valid-complex",
+			ZIP:  filepath.FromSlash("testdata/zips/golang.org/x/arch/@v/v0.13.0.zip"),
+			Module: &vdm.GoModule{
+				Name:    "golang.org/x/arch",
+				Version: vdm.ParsedString{Value: "v0.13.0"},
+				Packages: []*vdm.GoPackage{
+					{Name: vdm.ParsedString{Value: "golang.org/x/arch/x86/x86asm"}},
+				},
+			},
+			Manifest: &vdm.GoModuleManifest{
+				Name:    "golang.org/x/arch",
+				Version: vdm.ParsedString{Value: "v0.13.0"},
+			},
+			FS:      os.DirFS("testdata"),
+			Patches: []string{"patching/golang.org_x_arch.patch"},
+		},
+	}
+
+	for _, test := range tests {
+		doTest := func(b *testing.B, useBinary bool) {
+			for b.Loop() {
+				b.StopTimer()
+				x := new(extractor)
+				var gotTarget, path string
+				if test.ZIP != "" {
+					gotTarget = filepath.Join(b.ArtifactDir(), "got")
+					dst := filepath.Join(gotTarget, filepath.FromSlash(test.Manifest.Name))
+					err := os.RemoveAll(dst)
+					if err != nil {
+						b.Fatalf("ApplyPatches(): failed to delete %s: %v", dst, err)
+					}
+
+					err = os.MkdirAll(dst, 0o777)
+					if err != nil {
+						b.Fatalf("ApplyPatches(): failed to create %s: %v", dst, err)
+					}
+
+					err = x.ExtractAndPrune(gotTarget, test.ZIP, test.Module, test.Manifest)
+					if err != nil {
+						b.Fatalf("ApplyPatches(): failed to extract %s: %v", test.Manifest.Name, err)
+					}
+
+					path = dst
+				}
+
+				b.StartTimer()
+
+				err := x.ApplyPatches(test.FS, path, test.Patches, useBinary)
+				if test.Error != "" {
+					if err == nil {
+						b.Fatalf("ApplyPatches(): unexpected lack of error")
+					}
+
+					e := err.Error()
+					if e != test.Error {
+						b.Fatalf("ApplyPatches(): got wrong error:\nGot:  %s\nWant: %s", e, test.Error)
+					}
+
+					// All good.
+					return
+				}
+
+				if err != nil {
+					b.Fatalf("ApplyPatches(): got unexpected error: %v", err)
+				}
+			}
+		}
+
+		b.Run(test.Name, func(b *testing.B) {
+			b.Run("Binary", func(b *testing.B) { doTest(b, true) })
+			b.Run("Package", func(b *testing.B) { doTest(b, false) })
+		})
+	}
+}

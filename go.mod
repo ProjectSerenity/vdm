@@ -10,6 +10,7 @@ require (
 	golang.org/x/time v0.15.0
 	golang.org/x/tools v0.47.0
 	rsc.io/diff v0.0.0-20190621135850-fe3479844c3c
+	rsc.io/tmp v0.0.0-20260706223531-5a501281bc9f
 )
 
 require (

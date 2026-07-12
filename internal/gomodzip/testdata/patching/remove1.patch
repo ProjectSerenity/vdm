@@ -1,0 +1,7 @@
+diff --git a/redundant.txt b/redundant.txt
+deleted file mode 100644
+index 5967903..0000000
+--- a/redundant.txt
++++ /dev/null
+@@ -1 +0,0 @@
+-This one will be deleted.

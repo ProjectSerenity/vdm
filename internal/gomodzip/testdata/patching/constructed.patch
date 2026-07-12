@@ -1,0 +1,36 @@
+diff --git a/bar/baz/initial.txt b/bar/baz/moved.txt
+similarity index 100%
+rename from bar/baz/initial.txt
+rename to bar/baz/moved.txt
+diff --git a/bar/baz/redundant.txt b/bar/baz/redundant.txt
+deleted file mode 100644
+index 5967903..0000000
+--- a/bar/baz/redundant.txt
++++ /dev/null
+@@ -1 +0,0 @@
+-This one will be deleted.
+diff --git a/bar/copied.txt b/bar/copied.txt
+new file mode 100644
+index 0000000..1093a76
+--- /dev/null
++++ b/bar/copied.txt
+@@ -0,0 +1,3 @@
++Some text goes here.
++And then some more.
++But for real this time.
+diff --git a/bar/text.txt b/bar/text.txt
+index 64a3081..a6efb8d 100644
+--- a/bar/text.txt
++++ b/bar/text.txt
+@@ -1,2 +1,3 @@
+ More text goes here.
+-And on this line too.
++And even more after the patch.
++And on this line as well.
+diff --git a/new.txt b/new.txt
+new file mode 100644
+index 0000000..5ca0e10
+--- /dev/null
++++ b/new.txt
+@@ -0,0 +1 @@
++This one is new in the patched version.

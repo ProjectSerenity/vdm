@@ -1,0 +1,12 @@
+-- rsc.io/diff/BUILD.bazel --
+-- rsc.io/diff/main.go --
+-- rsc.io/diff/deeply/foo.go --
+-- rsc.io/diff/deeply/nested/other.go --
+-- rsc.io/diff/deeply/nested/README.md --
+-- rsc.io/diff/deeply/nested/other/other.go --
+-- rsc.io/diff/deeply/nested/pkg/pkg.go --
+-- rsc.io/diff/deeply/nested/pkg/child/foo.go --
+-- rsc.io/diff/deeply/nested/pkg/child/grandchild/grandchild.go --
+-- rsc.io/diff/testdata/foo.txt --
+-- rsc.io/diff/testdata/arbitrary/depth/more.txt --
+-- sibling/sibling.go --
