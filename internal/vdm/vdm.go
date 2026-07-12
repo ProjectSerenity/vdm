@@ -13,8 +13,10 @@ import (
 )
 
 const (
+	BuildBazel   = "BUILD.bazel"
 	DepsVDM      = "deps.vdm"
 	ManifestsVDM = "manifests.vdm"
+	Vendor       = "vendor"
 )
 
 const (
