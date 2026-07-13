@@ -12,7 +12,10 @@ import (
 	"strings"
 )
 
-const goModuleProxy = "https://proxy.golang.org"
+// ModuleProxy is the address of the standard Go
+// module proxy. Most callers of [Download] should
+// supply this string.
+const ModuleProxy = "https://proxy.golang.org"
 
 func extractChecksum(sum string) (string, error) {
 	format, checksum, ok := strings.Cut(sum, ":")

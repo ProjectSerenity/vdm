@@ -25,6 +25,10 @@ import (
 // writes it to disk at the given path. The path
 // is normally determined using [Path].
 //
+// The proxy is the URL scheme and host of the Go
+// module proxy. In most cases, this will be the
+// string [ModuleProxy].
+//
 // Download then fetches the zip file's checksum.
 //
 // Download checks the [module cache] for an existing
@@ -36,11 +40,11 @@ import (
 // exist.
 //
 // [module cache]: https://go.dev/ref/mod#module-cache
-func Download(ctx context.Context, path string, manifest *vdm.GoModuleManifest) error {
+func Download(ctx context.Context, proxy, path string, manifest *vdm.GoModuleManifest) error {
 	dl := &downloader{
 		logWriter:  os.Stdout,
 		gopath:     os.Getenv("GOPATH"),
-		gomodproxy: goModuleProxy,
+		gomodproxy: proxy,
 	}
 
 	return dl.Download(ctx, path, manifest)

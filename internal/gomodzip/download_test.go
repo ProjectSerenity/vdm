@@ -55,7 +55,7 @@ func TestDownload(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.Name, func(t *testing.T) {
-			err := Download(test.Context, test.Path, test.Manifest)
+			err := Download(test.Context, ModuleProxy, test.Path, test.Manifest)
 			if test.Error != "" {
 				if err == nil {
 					t.Fatalf("Download(): unexpected lack of error")
