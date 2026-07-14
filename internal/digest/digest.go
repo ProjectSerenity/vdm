@@ -187,3 +187,27 @@ func Directory(fsys fs.FS, dir string, ignore ...string) (string, error) {
 
 	return result, nil
 }
+
+// Lines produces the digest for a sequence of textual
+// lines.
+//
+// Filenames containing a newline (\x0a) are not allowed.
+//
+// The final digest is formatted as the hash algorithm
+// name, a colon (\x3a), and the hexadecimal digest.
+func Lines(lines iter.Seq[string]) (string, error) {
+	h := digestHash.New()
+	newline := []byte{'\n'}
+	for line := range lines {
+		if strings.Contains(line, "\n") {
+			return "", fmt.Errorf("lines with newlines are not allowed: found %q", line)
+		}
+
+		io.WriteString(h, line)
+		h.Write(newline)
+	}
+
+	result := digestName + ":" + base64.StdEncoding.EncodeToString(h.Sum(nil))
+
+	return result, nil
+}

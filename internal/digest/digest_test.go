@@ -6,12 +6,15 @@
 package digest
 
 import (
+	"crypto/sha256"
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"io"
 	"io/fs"
 	"iter"
 	"path/filepath"
+	"slices"
 	"testing"
 	"testing/fstest"
 	"time"
@@ -279,6 +282,64 @@ func TestDirectory(t *testing.T) {
 
 			if got != test.Want {
 				t.Fatalf("Directory(): digest mismatch:\nGot:  %s\nWant: %s", got, test.Want)
+			}
+		})
+	}
+}
+
+func TestLines(t *testing.T) {
+	tests := []struct {
+		Name  string
+		Lines []string
+		Want  string
+		Error string
+	}{
+		{
+			Name: "invalid-newline",
+			Lines: []string{
+				"foo",
+				"b\nar",
+				"baz",
+			},
+			Error: `lines with newlines are not allowed: found "b\nar"`,
+		},
+		{
+			Name: "valid",
+			Lines: []string{
+				"foo",
+				"bar",
+				"baz",
+			},
+			Want: func() string {
+				sum := sha256.Sum256([]byte("foo\nbar\nbaz\n"))
+				return "sha256:" + base64.StdEncoding.EncodeToString(sum[:])
+			}(),
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.Name, func(t *testing.T) {
+			got, err := Lines(slices.Values(test.Lines))
+			if test.Error != "" {
+				if err == nil {
+					t.Fatalf("Lines(): unexpected lack of error")
+				}
+
+				e := err.Error()
+				if e != test.Error {
+					t.Fatalf("Lines(): got wrong error:\nGot:  %s\nWant: %s", e, test.Error)
+				}
+
+				// All good.
+				return
+			}
+
+			if err != nil {
+				t.Fatalf("Lines(): %v", err)
+			}
+
+			if got != test.Want {
+				t.Fatalf("Lines(): digest mismatch:\nGot:  %s\nWant: %s", got, test.Want)
 			}
 		})
 	}
