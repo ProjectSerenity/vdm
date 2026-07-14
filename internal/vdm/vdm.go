@@ -8,8 +8,13 @@ package vdm
 
 import (
 	"cmp"
+	"fmt"
+	"iter"
+	"path"
 	"slices"
 	"strconv"
+
+	"github.com/ProjectSerenity/vdm/internal/digest"
 )
 
 const (
@@ -111,6 +116,48 @@ type GoPackage struct {
 	TestEnv       map[string]ParsedString `json:"test_env,omitzero"`
 }
 
+// Directories returns the cryptographic digest of
+// the set of directories produced by the module.
+//
+// This can be used to determine whether the set of
+// dependencies has added a new package, which may
+// not have been stored in the vendor directory.
+func (mod *GoModule) Directories() string {
+	// We'll never get an error, as we can never
+	// produce a line with a newline, as we quote
+	// the package/directory name.
+	result, _ := digest.Lines(mod.directories())
+	return result
+}
+
+// directories returns an iterator that will yield
+// the explicit directories produced by the module.
+// This can be used to detect changes to the
+// configuration over time.
+//
+// Each package will yield a line of the form `package "example.com/foo"`
+// and each directory it declares will yield a line of
+// the form `directory "example.com/foo/bar"`.
+func (mod *GoModule) directories() iter.Seq[string] {
+	return func(yield func(string) bool) {
+		if mod == nil {
+			return
+		}
+
+		for _, pkg := range mod.Packages {
+			if !yield(fmt.Sprintf("package %q", pkg.Name.Value)) {
+				return
+			}
+
+			for _, dir := range pkg.Directories {
+				if !yield(fmt.Sprintf("directory %q", path.Join(pkg.Name.Value, dir.Value))) {
+					return
+				}
+			}
+		}
+	}
+}
+
 // Sort ensures that all order-insensitive data
 // is sorted into alphabetical order.
 func (d *Deps) Sort() {
@@ -150,12 +197,38 @@ type Manifests struct {
 // GoModuleManifest records information about
 // a Go module that has been vendored. This
 // includes the checksum of the module's code
-// (as recorded in the Go checksum database)
-// and the checksum of the vendored directory,
-// which may include omissions.
+// (as recorded in the Go checksum database),
+// the list of packages and directories to be
+// vendored (so we know when we need to extract
+// more contents), and the checksum of the
+// vendored directory, which may include omissions.
 //
 // Optionally, the manifest will also include
 // a checksum of any patches applied.
+//
+// In other words, the checksums help us to
+// identify different scenarios where we may
+// need to re-vendor a module. [GoModuleManifest.Packages]
+// helps us to identify cases where a package
+// or directory that wasn't previously being
+// used (and so isn't present in the vendor
+// directory) has now been added to deps.vdm,
+// meaning we need to re-extract the module,
+// as the directory may exist but it will be
+// empty. [GoModuleManifest.Vendored] helps
+// us to identify cases where the the config
+// is different in more subtle ways, such as
+// tests being disabled or the module's set
+// of dependencies changing. [GoModuleManifest.Patches]
+// helps us identify cases where the patches
+// being applied have changed, so we need to
+// start from a fresh copy to ensure the new
+// patches are applied cleanly.
+//
+// [GoModuleManifest.Download] is used to
+// ensure the integrity of our supply chain,
+// making sure we get the same contents of
+// the module as everyone else.
 type GoModuleManifest struct {
 	// Dependency details.
 	Name    string       `json:"name,omitzero"`
@@ -163,6 +236,7 @@ type GoModuleManifest struct {
 
 	// Checksums.
 	Download ParsedString `json:"download,omitzero"` // Downloaded content, as in the Go checksum database.
+	Packages ParsedString `json:"packages,omitzero"` // Set of packages and directories to be vendored.
 	Vendored ParsedString `json:"vendored,omitzero"` // Vendored content, after omitting packages.
 	Patches  ParsedString `json:"patches,omitzero"`  // Patch file contents (optional).
 }

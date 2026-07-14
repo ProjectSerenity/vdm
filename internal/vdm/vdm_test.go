@@ -6,9 +6,13 @@
 package vdm
 
 import (
+	"crypto/sha256"
+	"encoding/base64"
 	"path/filepath"
+	"slices"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
 	"golang.org/x/tools/txtar"
 	"rsc.io/diff"
 )
@@ -46,6 +50,159 @@ func TestPos_String(t *testing.T) {
 			got := test.Pos.String()
 			if got != test.Want {
 				t.Fatalf("%#v.String():\nGot:  %q\nWant: %q", test.Pos, got, test.Want)
+			}
+		})
+	}
+}
+
+func TestGoModule_Directories(t *testing.T) {
+	tests := []struct {
+		Name   string
+		Module *GoModule
+		Want   string
+	}{
+		{
+			Name:   "nil",
+			Module: nil,
+			Want: func() string {
+				sum := sha256.Sum256([]byte(nil))
+				return "sha256:" + base64.StdEncoding.EncodeToString(sum[:])
+			}(),
+		},
+		{
+			Name: "simple",
+			Module: &GoModule{
+				Name: "rsc.io/diff",
+				Packages: []*GoPackage{
+					{
+						Name: ParsedString{Value: "rsc.io/diff"},
+					},
+				},
+			},
+			Want: "sha256:8VGfNFMK4xqwLc8Mkm7zdIwtlTkuBgEp+V1zG6j5C5c=",
+		},
+		{
+			Name: "complex",
+			Module: &GoModule{
+				Name: "rsc.io/diff",
+				Packages: []*GoPackage{
+					{
+						Name: ParsedString{Value: "rsc.io/diff"},
+						Directories: []ParsedString{
+							{Value: "foo"},
+							{Value: "bar"},
+						},
+					},
+					{
+						Name: ParsedString{Value: "rsc.io/quote"},
+					},
+				},
+			},
+			Want: "sha256:cOClr3lDh2FMO7KPCLTA2S0pasdS6NS1OXocSRSyhno=",
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.Name, func(t *testing.T) {
+			got := test.Module.Directories()
+			if got != test.Want {
+				t.Errorf("GoModule.Directories(): digest mismatch:\nGot:  %s\nWant: %s", got, test.Want)
+			}
+		})
+	}
+}
+
+func TestGoModule_directories(t *testing.T) {
+	tests := []struct {
+		Name   string
+		Module *GoModule
+		Want   []string
+	}{
+		{
+			Name:   "nil",
+			Module: nil,
+			Want:   nil,
+		},
+		{
+			Name: "simple",
+			Module: &GoModule{
+				Name: "rsc.io/diff",
+				Packages: []*GoPackage{
+					{
+						Name: ParsedString{Value: "rsc.io/diff"},
+					},
+				},
+			},
+			Want: []string{
+				`package "rsc.io/diff"`,
+			},
+		},
+		{
+			Name: "complex",
+			Module: &GoModule{
+				Name: "rsc.io/diff",
+				Packages: []*GoPackage{
+					{
+						Name: ParsedString{Value: "rsc.io/diff"},
+						Directories: []ParsedString{
+							{Value: "foo"},
+							{Value: "bar"},
+						},
+					},
+					{
+						Name: ParsedString{Value: "rsc.io/quote"},
+					},
+				},
+			},
+			Want: []string{
+				`package "rsc.io/diff"`,
+				`directory "rsc.io/diff/foo"`,
+				`directory "rsc.io/diff/bar"`,
+				`package "rsc.io/quote"`,
+			},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.Name, func(t *testing.T) {
+			got := slices.Collect(test.Module.directories())
+			if diff := cmp.Diff(test.Want, got); diff != "" {
+				t.Errorf("GoModule.directories(): lines mismatch (-want, +got)\n%s", diff)
+			}
+
+			// Check we can use the iterator to get the
+			// first entry only.
+			if len(test.Want) > 0 {
+				var first string
+				for line := range test.Module.directories() {
+					first = line
+					break
+				}
+
+				if first != test.Want[0] {
+					t.Errorf("GoModule.directories(): first line mismatch:\nGot:  %q\nWant: %q", first, test.Want[0])
+				}
+			}
+
+			// And again for the second.
+			if len(test.Want) > 1 {
+				var first, second string
+				for line := range test.Module.directories() {
+					if first == "" {
+						first = line
+					} else if second == "" {
+						second = line
+						break
+					}
+				}
+
+				if first != test.Want[0] {
+					t.Errorf("GoModule.directories(): first line mismatch:\nGot:  %q\nWant: %q", first, test.Want[0])
+				}
+
+				if second != test.Want[1] {
+					t.Errorf("GoModule.directories(): second line mismatch:\nGot:  %q\nWant: %q", second, test.Want[1])
+				}
 			}
 		})
 	}

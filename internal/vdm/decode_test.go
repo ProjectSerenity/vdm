@@ -1454,9 +1454,13 @@ func TestReadManifests(t *testing.T) {
 							Value: "sha256:/WCDjRGIVDjKlhtSc1PEApp2fR58gfSVK62dr/yQNyQ=",
 							Pos:   Pos{File: "fuzz-seeds/simple-manifest.vdm", Line: 3},
 						},
+						Packages: ParsedString{
+							Value: "sha256:ZABkO14uCuVxBHAXAfKG+bqNz+aa1bGPAg8jkI0Nk8Y=",
+							Pos:   Pos{File: "fuzz-seeds/simple-manifest.vdm", Line: 4},
+						},
 						Vendored: ParsedString{
 							Value: "sha256:AB6TWADCiFzYx4nzfwjeNQBxOA+FM7yLQGFe0PKx38k=",
-							Pos:   Pos{File: "fuzz-seeds/simple-manifest.vdm", Line: 4},
+							Pos:   Pos{File: "fuzz-seeds/simple-manifest.vdm", Line: 5},
 						},
 					},
 				},
@@ -1787,6 +1791,61 @@ func TestParser_ParseGoModuleManifest(t *testing.T) {
 					Pos:   Pos{File: "manifests.vdm", Line: 1},
 				},
 				Download: ParsedString{
+					Value:   "BUILD.bazel",
+					Pos:     Pos{File: "manifests.vdm", Line: 2},
+					Comment: "Check comments work.",
+				},
+			},
+			Next: "",
+		},
+
+		// packages
+		{
+			Name: "invalid-abutting-packages",
+			Data: []string{
+				`	module "foo" v1.2.3`,
+				`		packages:first`,
+			},
+			Error: `manifests.vdm:2: expected a space after packages:, got "first"`,
+		},
+		{
+			Name: "invalid-duplicate-packages",
+			Data: []string{
+				`	module "foo" v1.2.3`,
+				`		packages: first`,
+				`		packages: second`,
+			},
+			Error: `manifests.vdm:3: duplicate packages, first found at manifests.vdm:2`,
+		},
+		{
+			Name: "invalid-missing-packages",
+			Data: []string{
+				`	module "foo" v1.2.3`,
+				`		packages: `,
+			},
+			Error: `manifests.vdm:2: expected a string after packages:, got EOF`,
+		},
+		{
+			Name: "invalid-bad-packages",
+			Data: []string{
+				`	module "foo" v1.2.3`,
+				`		packages: "first"`,
+			},
+			Error: `manifests.vdm:2: expected a string, got '"'`,
+		},
+		{
+			Name: "valid-simple-packages",
+			Data: []string{
+				`	module "foo" v1.2.3`,
+				`		packages: BUILD.bazel // Check comments work.`,
+			},
+			Want: &GoModuleManifest{
+				Name: "foo",
+				Version: ParsedString{
+					Value: "v1.2.3",
+					Pos:   Pos{File: "manifests.vdm", Line: 1},
+				},
+				Packages: ParsedString{
 					Value:   "BUILD.bazel",
 					Pos:     Pos{File: "manifests.vdm", Line: 2},
 					Comment: "Check comments work.",

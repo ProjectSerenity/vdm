@@ -552,6 +552,23 @@ func (p *parser) ParseGoModuleManifest() (*GoModuleManifest, error) {
 			if err != nil {
 				return nil, err
 			}
+		case "packages":
+			if module.Packages.Value != "" {
+				return nil, p.Errorf("duplicate packages, first found at %s", module.Packages.Pos)
+			}
+
+			if !p.SkipSpaces() {
+				return nil, p.Errorf("expected a space after packages:, got %q", p.Tokenise(p.Data))
+			}
+
+			module.Packages, err = p.ParseParsedString()
+			if err == io.EOF {
+				return nil, p.Errorf("expected a string after packages:, got EOF")
+			}
+
+			if err != nil {
+				return nil, err
+			}
 		case "vendored":
 			if module.Vendored.Value != "" {
 				return nil, p.Errorf("duplicate vendored, first found at %s", module.Vendored.Pos)

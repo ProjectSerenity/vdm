@@ -90,6 +90,7 @@ func (m *Manifests) Encode() []byte {
 		for _, mod := range m.GoModules {
 			fmt.Fprintf(&buf, "\tmodule %q %s\n", mod.Name, mod.Version.string())
 			encodeParsedStringString(&buf, 2, "download", mod.Download)
+			encodeParsedStringString(&buf, 2, "packages", mod.Packages)
 			encodeParsedStringString(&buf, 2, "vendored", mod.Vendored)
 
 			// We do patches more manually to add an aligning space.
