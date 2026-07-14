@@ -81,7 +81,7 @@ func digestFile(fsys fs.FS, prefix string, filenames iter.Seq2[string, error]) i
 }
 
 // iterateFilenames is a simple iterator that returns
-// each filename in sequence wiht a nil errors.
+// each filename in sequence with a nil error.
 func iterateFilenames(filenames []string) iter.Seq2[string, error] {
 	return func(yield func(string, error) bool) {
 		for _, filename := range filenames {
