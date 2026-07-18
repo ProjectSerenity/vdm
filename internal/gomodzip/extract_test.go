@@ -8,7 +8,6 @@ package gomodzip
 import (
 	"bytes"
 	"errors"
-	"fmt"
 	"io"
 	"io/fs"
 	"os"
@@ -18,6 +17,7 @@ import (
 	"testing"
 
 	"github.com/ProjectSerenity/vdm/internal/vdm"
+	"github.com/ProjectSerenity/vdm/internal/vdmtest"
 
 	"github.com/google/go-cmp/cmp"
 	"golang.org/x/tools/txtar"
@@ -156,11 +156,7 @@ func TestExtract(t *testing.T) {
 				t.Fatalf("Extract(): got unexpected error: %v", err)
 			}
 
-			// First, check the filenames match, as it
-			// will then simplify checking the content
-			// matches.
-			got := getFilenames(t, gotTarget, test.Manifest.Name)
-
+			// Check we got the files we wanted.
 			wantTarget := filepath.Join(t.ArtifactDir(), "want")
 			dst = filepath.Join(wantTarget, filepath.FromSlash(test.Manifest.Name))
 			err = os.MkdirAll(dst, 0o777)
@@ -173,28 +169,9 @@ func TestExtract(t *testing.T) {
 				t.Fatalf("Extract(): failed to extract %s: %v", test.Manifest.Name, err)
 			}
 
-			want := getFilenames(t, wantTarget, test.Manifest.Name)
-			if diff := cmp.Diff(want, got); diff != "" {
-				t.Errorf("Extract(): filenames mismatch (-want, +got)\n%s", diff)
-			}
-
-			// Now that we know the filenames match,
-			// we can easily compare their contents.
-			for _, filename := range got {
-				name := filepath.FromSlash(filename)
-				got, err := os.ReadFile(filepath.Join(gotTarget, name))
-				if err != nil {
-					t.Fatalf("Extract(): failed to read got %s: %v", name, err)
-				}
-
-				want, err := os.ReadFile(filepath.Join(wantTarget, name))
-				if err != nil {
-					t.Fatalf("Extract(): failed to read want %s: %v", name, err)
-				}
-
-				if !bytes.Equal(got, want) {
-					t.Errorf("Extract(): content mismatch for %s:\n%s", name, diff.Format(string(want), string(got)))
-				}
+			err = vdmtest.DiffTextDirectories(vdmtest.DirFS(t), "got", "want")
+			if err != nil {
+				t.Fatalf("Extract(): %v", err)
 			}
 		})
 	}
@@ -412,36 +389,6 @@ func TestExtractor_Extract(t *testing.T) {
 	}
 }
 
-type badFS struct{}
-
-var (
-	_ fs.FS = badFS{}
-)
-
-func (badFS) Open(name string) (fs.File, error) {
-	switch name {
-	case "open":
-		return nil, fmt.Errorf("bad open")
-	default:
-		return nil, fs.ErrNotExist
-	}
-}
-
-func txtarFS(t *testing.T, name string) fs.FS {
-	t.Helper()
-	ar, err := txtar.ParseFile(filepath.FromSlash(name))
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	fsys, err := txtar.FS(ar)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	return fsys
-}
-
 func TestParentDirectories(t *testing.T) {
 	tests := []struct {
 		Dir  string
@@ -474,7 +421,7 @@ func TestExtractor_IdentifyDeletions(t *testing.T) {
 	}{
 		{
 			Name: "invalid-bad-fs",
-			FS:   badFS{},
+			FS:   vdmtest.TestFS(t, vdmtest.WithErrors("rsc.io/diff", "file does not exist")),
 			Module: &vdm.GoModule{
 				Name:    "rsc.io/diff",
 				Version: vdm.ParsedString{Value: "v1.2.3"},
@@ -483,7 +430,7 @@ func TestExtractor_IdentifyDeletions(t *testing.T) {
 		},
 		{
 			Name: "valid-single-module",
-			FS:   txtarFS(t, "testdata/pruning/complex.txtar"),
+			FS:   vdmtest.TxtarFS(t, "testdata/pruning/complex.txtar"),
 			Module: &vdm.GoModule{
 				Name:    "rsc.io/diff",
 				Version: vdm.ParsedString{Value: "v1.2.3"},
@@ -500,7 +447,7 @@ func TestExtractor_IdentifyDeletions(t *testing.T) {
 		},
 		{
 			Name: "valid-multi-module",
-			FS:   txtarFS(t, "testdata/pruning/complex.txtar"),
+			FS:   vdmtest.TxtarFS(t, "testdata/pruning/complex.txtar"),
 			Module: &vdm.GoModule{
 				Name:    "rsc.io/diff",
 				Version: vdm.ParsedString{Value: "v1.2.3"},
@@ -549,28 +496,6 @@ func TestExtractor_IdentifyDeletions(t *testing.T) {
 			}
 		})
 	}
-}
-
-func getFilenames(t *testing.T, dir, name string) []string {
-	t.Helper()
-	var filenames []string
-	err := fs.WalkDir(os.DirFS(dir), name, func(name string, d fs.DirEntry, err error) error {
-		if err != nil {
-			return err
-		}
-
-		if d.IsDir() {
-			return nil
-		}
-
-		filenames = append(filenames, name)
-		return nil
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	return filenames
 }
 
 func TestExtractor_ExtractAndPrune(t *testing.T) {
@@ -638,8 +563,6 @@ func TestExtractor_ExtractAndPrune(t *testing.T) {
 				t.Fatalf("ExtractAndPrune(): got unexpected error: %v", err)
 			}
 
-			got := getFilenames(t, gotTarget, test.Manifest.Name)
-
 			wantTarget := filepath.Join(t.ArtifactDir(), "want")
 			dst = filepath.Join(wantTarget, filepath.FromSlash(test.Manifest.Name))
 			err = os.MkdirAll(dst, 0o777)
@@ -652,9 +575,9 @@ func TestExtractor_ExtractAndPrune(t *testing.T) {
 				t.Fatalf("failed to extract want: %v", err)
 			}
 
-			want := getFilenames(t, wantTarget, test.Manifest.Name)
-			if diff := cmp.Diff(want, got); diff != "" {
-				t.Errorf("ExtractAndPrune(): filenames mismatch (-want, +got)\n%s", diff)
+			err = vdmtest.DiffFilenames(vdmtest.DirFS(t), "got", "want")
+			if err != nil {
+				t.Fatalf("ExtractAndPrune(): %v", err)
 			}
 		})
 	}
@@ -731,7 +654,7 @@ func TestExtractor_PatchWithBinary(t *testing.T) {
 	}{
 		{
 			Name:    "invalid-bad-filesystem",
-			FS:      badFS{},
+			FS:      vdmtest.TestFS(t, vdmtest.WithErrors("open", "bad open")),
 			Patches: []string{"open"},
 			Error:   `failed to open patch path "open": bad open`,
 		},
@@ -805,11 +728,6 @@ func TestExtractor_PatchWithBinary(t *testing.T) {
 				t.Fatalf("PatchWithBinary(): got unexpected error: %v", err)
 			}
 
-			// First, check the filenames match, as it
-			// will then simplify checking the content
-			// matches.
-			got := getFilenames(t, gotTarget, test.Manifest.Name)
-
 			wantTarget := filepath.Join(t.ArtifactDir(), "want")
 			dst := filepath.Join(wantTarget, filepath.FromSlash(test.Manifest.Name))
 			err = os.MkdirAll(dst, 0o777)
@@ -822,28 +740,9 @@ func TestExtractor_PatchWithBinary(t *testing.T) {
 				t.Fatalf("PatchWithBinary(): failed to extract %s: %v", test.Manifest.Name, err)
 			}
 
-			want := getFilenames(t, wantTarget, test.Manifest.Name)
-			if diff := cmp.Diff(want, got); diff != "" {
-				t.Errorf("PatchWithBinary(): filenames mismatch (-want, +got)\n%s", diff)
-			}
-
-			// Now that we know the filenames match,
-			// we can easily compare their contents.
-			for _, filename := range got {
-				name := filepath.FromSlash(filename)
-				got, err := os.ReadFile(filepath.Join(gotTarget, name))
-				if err != nil {
-					t.Fatalf("PatchWithBinary(): failed to read got %s: %v", name, err)
-				}
-
-				want, err := os.ReadFile(filepath.Join(wantTarget, name))
-				if err != nil {
-					t.Fatalf("PatchWithBinary(): failed to read want %s: %v", name, err)
-				}
-
-				if !bytes.Equal(got, want) {
-					t.Errorf("PatchWithBinary(): content mismatch for %s:\n%s", name, diff.Format(string(want), string(got)))
-				}
+			err = vdmtest.DiffTextDirectories(vdmtest.DirFS(t), "got", "want")
+			if err != nil {
+				t.Fatalf("PatchWithBinary(): %v", err)
 			}
 		})
 	}
@@ -868,21 +767,6 @@ func readPatch(t *testing.T, name string) *patch.File {
 	return set.File[0]
 }
 
-func extractTxtar(t *testing.T, prefix, dir, archive, context string) {
-	t.Helper()
-	ar, err := txtar.ParseFile(filepath.Join("testdata", archive))
-	if err != nil {
-		t.Fatalf("%sfailed to parse %s: %v", prefix, context, err)
-	}
-
-	for _, file := range ar.Files {
-		err = os.WriteFile(filepath.Join(dir, filepath.FromSlash(file.Name)), file.Data, 0o644)
-		if err != nil {
-			t.Fatalf("%sfailed to write %s %s: %v", prefix, context, file.Name, err)
-		}
-	}
-}
-
 func TestExtractor_SinglePatchWithPackage(t *testing.T) {
 	tests := []struct {
 		Name  string
@@ -899,7 +783,7 @@ func TestExtractor_SinglePatchWithPackage(t *testing.T) {
 		{
 			Name: "valid-add-simple",
 			File: readPatch(t, "patching/add2.patch"),
-			Want: "patching/add2-want.txtar",
+			Want: "testdata/patching/add2-want.txtar",
 		},
 		{
 			Name:  "invalid-remove-missing",
@@ -909,8 +793,8 @@ func TestExtractor_SinglePatchWithPackage(t *testing.T) {
 		{
 			Name: "valid-remove-simple",
 			File: readPatch(t, "patching/remove2.patch"),
-			Init: "patching/remove2-init.txtar",
-			Want: "patching/remove2-want.txtar",
+			Init: "testdata/patching/remove2-init.txtar",
+			Want: "testdata/patching/remove2-want.txtar",
 		},
 		{
 			Name:  "invalid-edit-missing",
@@ -920,7 +804,7 @@ func TestExtractor_SinglePatchWithPackage(t *testing.T) {
 		{
 			Name:  "invalid-edit-wrong-content",
 			File:  readPatch(t, "patching/edit2.patch"),
-			Init:  "patching/edit2-init.txtar",
+			Init:  "testdata/patching/edit2-init.txtar",
 			Error: `failed to edit "text.txt": patch did not apply cleanly`,
 		},
 		{
@@ -930,14 +814,14 @@ func TestExtractor_SinglePatchWithPackage(t *testing.T) {
 				base.Dst = "nonexistant/text.txt" // The parser uses the same file for both, so we have to modify it.
 				return base
 			}(),
-			Init:  "patching/edit3-init.txtar",
+			Init:  "testdata/patching/edit3-init.txtar",
 			Error: `nonexistant/text.txt: no such file or directory`,
 		},
 		{
 			Name: "valid-edit-simple",
 			File: readPatch(t, "patching/edit4.patch"),
-			Init: "patching/edit4-init.txtar",
-			Want: "patching/edit4-want.txtar",
+			Init: "testdata/patching/edit4-init.txtar",
+			Want: "testdata/patching/edit4-want.txtar",
 		},
 		{
 			Name:  "invalid-rename-missing",
@@ -947,8 +831,8 @@ func TestExtractor_SinglePatchWithPackage(t *testing.T) {
 		{
 			Name: "valid-rename-simple",
 			File: readPatch(t, "patching/rename2.patch"),
-			Init: "patching/rename2-init.txtar",
-			Want: "patching/rename2-want.txtar",
+			Init: "testdata/patching/rename2-init.txtar",
+			Want: "testdata/patching/rename2-want.txtar",
 		},
 		{
 			Name:  "invalid-bad-verb",
@@ -962,7 +846,7 @@ func TestExtractor_SinglePatchWithPackage(t *testing.T) {
 			x := new(extractor)
 			dir := t.ArtifactDir()
 			if test.Init != "" {
-				extractTxtar(t, "SinglePatchWithPackage(): ", dir, filepath.FromSlash(test.Init), "init txtar")
+				vdmtest.ExtractTxtar(t, dir, test.Init)
 			}
 
 			err := x.SinglePatchWithPackage(dir, test.File)
@@ -984,7 +868,7 @@ func TestExtractor_SinglePatchWithPackage(t *testing.T) {
 				t.Fatalf("SinglePatchWithPackage(): got unexpected error: %v", err)
 			}
 
-			ar, err := txtar.ParseFile(filepath.Join("testdata", test.Want))
+			ar, err := txtar.ParseFile(filepath.FromSlash(test.Want))
 			if err != nil {
 				t.Fatalf("SinglePatchWithPackage(): failed to read want txtar: %v", err)
 			}
@@ -1005,7 +889,11 @@ func TestExtractor_SinglePatchWithPackage(t *testing.T) {
 				}
 			}
 
-			filenames := getFilenames(t, dir, ".")
+			filenames, err := vdmtest.Filenames(os.DirFS(dir), ".")
+			if err != nil {
+				t.Fatalf("SinglePatchWithPackage(): %v", err)
+			}
+
 			extra := make([]string, 0, len(filenames))
 			for _, filename := range filenames {
 				if !done[filename] {
@@ -1033,7 +921,7 @@ func TestExtractor_PatchWithPackage(t *testing.T) {
 	}{
 		{
 			Name:    "invalid-bad-filesystem",
-			FS:      badFS{},
+			FS:      vdmtest.TestFS(t, vdmtest.WithErrors("open", "bad open")),
 			Patches: []string{"open"},
 			Error:   `failed to open patch path "open": bad open`,
 		},
@@ -1110,11 +998,6 @@ func TestExtractor_PatchWithPackage(t *testing.T) {
 				t.Fatalf("PatchWithPackage(): got unexpected error: %v", err)
 			}
 
-			// First, check the filenames match, as it
-			// will then simplify checking the content
-			// matches.
-			got := getFilenames(t, gotTarget, test.Manifest.Name)
-
 			wantTarget := filepath.Join(t.ArtifactDir(), "want")
 			dst := filepath.Join(wantTarget, filepath.FromSlash(test.Manifest.Name))
 			err = os.MkdirAll(dst, 0o777)
@@ -1127,28 +1010,9 @@ func TestExtractor_PatchWithPackage(t *testing.T) {
 				t.Fatalf("PatchWithPackage(): failed to extract %s: %v", test.Manifest.Name, err)
 			}
 
-			want := getFilenames(t, wantTarget, test.Manifest.Name)
-			if diff := cmp.Diff(want, got); diff != "" {
-				t.Errorf("PatchWithPackage(): filenames mismatch (-want, +got)\n%s", diff)
-			}
-
-			// Now that we know the filenames match,
-			// we can easily compare their contents.
-			for _, filename := range got {
-				name := filepath.FromSlash(filename)
-				got, err := os.ReadFile(filepath.Join(gotTarget, name))
-				if err != nil {
-					t.Fatalf("PatchWithPackage(): failed to read got %s: %v", name, err)
-				}
-
-				want, err := os.ReadFile(filepath.Join(wantTarget, name))
-				if err != nil {
-					t.Fatalf("PatchWithPackage(): failed to read want %s: %v", name, err)
-				}
-
-				if !bytes.Equal(got, want) {
-					t.Errorf("PatchWithPackage(): content mismatch for %s:\n%s", name, diff.Format(string(want), string(got)))
-				}
+			err = vdmtest.DiffTextDirectories(vdmtest.DirFS(t), "got", "want")
+			if err != nil {
+				t.Fatalf("PatchWithPackage(): %v", err)
 			}
 		})
 	}
@@ -1229,11 +1093,6 @@ func TestExtractor_ApplyPatches(t *testing.T) {
 				t.Fatalf("ApplyPatches(): got unexpected error: %v", err)
 			}
 
-			// First, check the filenames match, as it
-			// will then simplify checking the content
-			// matches.
-			got := getFilenames(t, gotTarget, test.Manifest.Name)
-
 			wantTarget := filepath.Join(t.ArtifactDir(), "want")
 			dst := filepath.Join(wantTarget, filepath.FromSlash(test.Manifest.Name))
 			err = os.MkdirAll(dst, 0o777)
@@ -1246,28 +1105,9 @@ func TestExtractor_ApplyPatches(t *testing.T) {
 				t.Fatalf("ApplyPatches(): failed to extract %s: %v", test.Manifest.Name, err)
 			}
 
-			want := getFilenames(t, wantTarget, test.Manifest.Name)
-			if diff := cmp.Diff(want, got); diff != "" {
-				t.Errorf("ApplyPatches(): filenames mismatch (-want, +got)\n%s", diff)
-			}
-
-			// Now that we know the filenames match,
-			// we can easily compare their contents.
-			for _, filename := range got {
-				name := filepath.FromSlash(filename)
-				got, err := os.ReadFile(filepath.Join(gotTarget, name))
-				if err != nil {
-					t.Fatalf("ApplyPatches(): failed to read got %s: %v", name, err)
-				}
-
-				want, err := os.ReadFile(filepath.Join(wantTarget, name))
-				if err != nil {
-					t.Fatalf("ApplyPatches(): failed to read want %s: %v", name, err)
-				}
-
-				if !bytes.Equal(got, want) {
-					t.Errorf("ApplyPatches(): content mismatch for %s:\n%s", name, diff.Format(string(want), string(got)))
-				}
+			err = vdmtest.DiffTextDirectories(vdmtest.DirFS(t), "got", "want")
+			if err != nil {
+				t.Fatalf("ApplyPatches(): %v", err)
 			}
 		}
 
