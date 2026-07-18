@@ -15,41 +15,51 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
-func TestModulePath(t *testing.T) {
+func TestModuleCacheFromEnv(t *testing.T) {
 	tests := []struct {
 		Name       string
 		GOMODCACHE string
 		GOPATH     string
-		Manifest   *vdm.GoModuleManifest
-		Want       string
+		Want       *ModuleCache
 		Error      string
 	}{
 		{
 			Name:       "GOMODCACHE",
 			GOMODCACHE: filepath.FromSlash("/home/user/go/pkg/mod"),
-			Manifest: &vdm.GoModuleManifest{
-				Name:    "rsc.io/diff",
-				Version: vdm.ParsedString{Value: "v1.2.3"},
-			},
-			Want: filepath.FromSlash("/home/user/go/pkg/mod/cache/download/rsc.io/diff/@v/v1.2.3.zip"),
+			Want:       &ModuleCache{base: "/home/user/go/pkg/mod"},
 		},
 		{
 			Name:   "GOPATH",
 			GOPATH: filepath.FromSlash("/home/user/go"),
-			Manifest: &vdm.GoModuleManifest{
-				Name:    "rsc.io/diff",
-				Version: vdm.ParsedString{Value: "v1.2.3"},
-			},
-			Want: filepath.FromSlash("/home/user/go/pkg/mod/cache/download/rsc.io/diff/@v/v1.2.3.zip"),
+			Want:   &ModuleCache{base: "/home/user/go/pkg/mod"},
 		},
 		{
 			Name: "fallback",
-			Manifest: &vdm.GoModuleManifest{
-				Name:    "rsc.io/diff",
-				Version: vdm.ParsedString{Value: "v1.2.3"},
-			},
-			Want: filepath.Join(os.TempDir(), filepath.FromSlash("cache/download/rsc.io/diff/@v/v1.2.3.zip")),
+			Want: &ModuleCache{base: os.TempDir()},
 		},
+	}
+
+	// Check the full version doesn't panic.
+	ModuleCacheFromEnv()
+
+	for _, test := range tests {
+		t.Run(test.Name, func(t *testing.T) {
+			got := moduleCacheFromEnv(test.GOMODCACHE, test.GOPATH)
+			if diff := cmp.Diff(test.Want, got, cmp.AllowUnexported(ModuleCache{})); diff != "" {
+				t.Errorf("moduleCacheFromEnv(): mismatch (-want, +got)\n%s", diff)
+			}
+		})
+	}
+}
+
+func TestModuleCache_Path(t *testing.T) {
+	tests := []struct {
+		Name     string
+		Base     string
+		Manifest *vdm.GoModuleManifest
+		Want     string
+		Error    string
+	}{
 		{
 			Name: "bad-module-name",
 			Manifest: &vdm.GoModuleManifest{
@@ -66,19 +76,29 @@ func TestModulePath(t *testing.T) {
 			},
 			Error: `version "v1!" invalid: disallowed version string`,
 		},
+		{
+			Name: "valid-simple",
+			Base: filepath.FromSlash("/home/user/go/pkg/mod"),
+			Manifest: &vdm.GoModuleManifest{
+				Name:    "rsc.io/diff",
+				Version: vdm.ParsedString{Value: "v1.2.3"},
+			},
+			Want: filepath.FromSlash("/home/user/go/pkg/mod/cache/download/rsc.io/diff/@v/v1.2.3.zip"),
+		},
 	}
 
 	for _, test := range tests {
 		t.Run(test.Name, func(t *testing.T) {
-			got, err := modulePath(test.GOMODCACHE, test.GOPATH, test.Manifest)
+			cache := ModuleCacheFromBase(test.Base)
+			got, err := cache.Path(test.Manifest)
 			if test.Error != "" {
 				if err == nil {
-					t.Fatalf("modulePath(): unexpected lack of error")
+					t.Fatalf("ModuleCache.Path(): unexpected lack of error")
 				}
 
 				e := err.Error()
 				if e != test.Error {
-					t.Fatalf("modulePath(): got wrong error:\nGot:  %s\nWant: %s", e, test.Error)
+					t.Fatalf("ModuleCache.Path(): got wrong error:\nGot:  %s\nWant: %s", e, test.Error)
 				}
 
 				// All good.
@@ -86,15 +106,12 @@ func TestModulePath(t *testing.T) {
 			}
 
 			if err != nil {
-				t.Fatalf("modulePath(): got unexpected error: %v", err)
+				t.Fatalf("ModuleCache.Path(): got unexpected error: %v", err)
 			}
 
 			if diff := cmp.Diff(test.Want, got); diff != "" {
-				t.Errorf("modulePath(): module mismatch (-want, +got)\n%s", diff)
+				t.Errorf("ModuleCache.Path(): module mismatch (-want, +got)\n%s", diff)
 			}
-
-			// Check Path doesn't panic.
-			Path(test.Manifest)
 		})
 	}
 }
