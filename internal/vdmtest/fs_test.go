@@ -18,6 +18,98 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
+func TestExtractFS(t *testing.T) {
+	tests := []struct {
+		Name  string
+		FS    fs.FS
+		Want  fs.FS
+		Error string
+	}{
+		{
+			Name:  "invalid-bad-read",
+			FS:    TestFS(t, WithError(io.EOF)),
+			Error: `EOF`,
+		},
+		{
+			Name: "invalid-bad-open",
+			FS: TestFS(t,
+				WithStat(map[string]fs.FileInfo{
+					".": TestFileInfo(".", 0, 0o755, testTime, true, nil),
+				}),
+				WithReadDir(map[string][]fs.DirEntry{
+					".": {TestDirEntry("foo.txt", false, 0o644, TestFileInfo("foo.txt", 1, 0o644, testTime, false, nil), nil)},
+				}),
+				WithOpenErrors("foo.txt", "bad file"),
+			),
+			Error: `failed to open foo.txt: bad file`,
+		},
+		{
+			Name: "invalid-bad-read",
+			FS: TestFS(t,
+				WithStat(map[string]fs.FileInfo{
+					".": TestFileInfo(".", 0, 0o755, testTime, true, nil),
+				}),
+				WithReadDir(map[string][]fs.DirEntry{
+					".": {TestDirEntry("foo.txt", false, 0o644, TestFileInfo("foo.txt", 1, 0o644, testTime, false, nil), nil)},
+				}),
+				WithFiles(map[string]fs.File{
+					"foo.txt": TestFile(nil, nil, ErrReader("bad read"), nil),
+				}),
+			),
+			Error: `failed to copy foo.txt: bad read`,
+		},
+		{
+			Name: "invalid-bad-close",
+			FS: TestFS(t,
+				WithStat(map[string]fs.FileInfo{
+					".": TestFileInfo(".", 0, 0o755, testTime, true, nil),
+				}),
+				WithReadDir(map[string][]fs.DirEntry{
+					".": {TestDirEntry("foo.txt", false, 0o644, TestFileInfo("foo.txt", 1, 0o644, testTime, false, nil), nil)},
+				}),
+				WithFiles(map[string]fs.File{
+					"foo.txt": TestFile(nil, nil, strings.NewReader("foo"), errors.New("bad close")),
+				}),
+			),
+			Error: `failed to close foo.txt: bad close`,
+		},
+		{
+			Name: "valid-simple",
+			FS:   TxtarFS(t, "testdata/filesystems/base.txtar"),
+			Want: TxtarFS(t, "testdata/filesystems/base.txtar"),
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.Name, func(t *testing.T) {
+			target := t.ArtifactDir()
+			err := ExtractFS(test.FS, target)
+			if test.Error != "" {
+				if err == nil {
+					t.Fatalf("ExtractFS(): unexpected lack of error")
+				}
+
+				e := err.Error()
+				if e != test.Error {
+					t.Fatalf("ExtractFS(): got wrong error:\nGot:  %s\nWant: %s", e, test.Error)
+				}
+
+				// All good.
+				return
+			}
+
+			if err != nil {
+				t.Fatalf("ExtractFS(): got unexpected error: %v", err)
+			}
+
+			err = DiffTextFilesystems(DirFS(t), test.Want, ".")
+			if err != nil {
+				t.Fatalf("ExtractFS(): %v", err)
+			}
+		})
+	}
+}
+
 func TestTestFS_nonerrors(t *testing.T) {
 	tests := []struct {
 		Name  string

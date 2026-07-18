@@ -11,6 +11,7 @@ import (
 	"io"
 	"io/fs"
 	"os"
+	"path/filepath"
 	"slices"
 	"testing"
 	"testing/iotest"
@@ -21,6 +22,57 @@ import (
 // test's [testing.T.ArtifactDir].
 func DirFS(t *testing.T) fs.FS {
 	return os.DirFS(t.ArtifactDir())
+}
+
+// ExtractFS copies the contents of the
+// given filesystem into the target
+// directory.
+func ExtractFS(fsys fs.FS, target string) error {
+	return fs.WalkDir(fsys, ".", func(name string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+
+		if d.IsDir() {
+			mode := d.Type().Perm()
+			if mode == 0 {
+				mode = 0o755
+			}
+
+			return os.MkdirAll(filepath.Join(target, filepath.FromSlash(name)), mode)
+		}
+
+		w, err := os.Create(filepath.Join(target, filepath.FromSlash(name)))
+		if err != nil {
+			return fmt.Errorf("failed to create %s: %v", name, err)
+		}
+
+		r, err := fsys.Open(name)
+		if err != nil {
+			w.Close()
+			return fmt.Errorf("failed to open %s: %v", name, err)
+		}
+
+		_, err = io.Copy(w, r)
+		if err != nil {
+			w.Close()
+			r.Close()
+			return fmt.Errorf("failed to copy %s: %v", name, err)
+		}
+
+		err = w.Close()
+		if err != nil {
+			r.Close()
+			return fmt.Errorf("failed to close %s: %v", name, err)
+		}
+
+		err = r.Close()
+		if err != nil {
+			return fmt.Errorf("failed to close %s: %v", name, err)
+		}
+
+		return nil
+	})
 }
 
 // ErrReader returns an [io.Reader] that
