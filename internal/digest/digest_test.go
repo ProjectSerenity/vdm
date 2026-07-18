@@ -9,18 +9,17 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"errors"
-	"fmt"
-	"io"
 	"io/fs"
 	"iter"
-	"path/filepath"
 	"slices"
+	"strings"
 	"testing"
 	"testing/fstest"
 	"time"
 
+	"github.com/ProjectSerenity/vdm/internal/vdmtest"
+
 	"github.com/google/go-cmp/cmp"
-	"golang.org/x/tools/txtar"
 )
 
 func TestDigestFile(t *testing.T) {
@@ -33,7 +32,7 @@ func TestDigestFile(t *testing.T) {
 	}{
 		{
 			Name: "straightforward",
-			FS:   txtarFS(t, "subdirectories"),
+			FS:   vdmtest.TxtarFS(t, "testdata/subdirectories.txtar"),
 			Entries: []testEntry{
 				{E: errors.New("input error")},
 				{S: "nonexistant.txt"},
@@ -65,7 +64,12 @@ func TestDigestFile(t *testing.T) {
 		},
 		{
 			Name: "errors",
-			FS:   badFS{},
+			FS: vdmtest.TestFS(t,
+				vdmtest.WithOpenErrors("open", "bad open"),
+				vdmtest.WithFiles(map[string]fs.File{
+					"read":  vdmtest.TestFile(nil, nil, vdmtest.ErrReader("bad read"), nil),
+					"close": vdmtest.TestFile(nil, nil, strings.NewReader("foo"), errors.New("bad close")),
+				})),
 			Entries: []testEntry{
 				{S: "open"},
 				{S: "read"},
@@ -108,19 +112,19 @@ func TestFiles(t *testing.T) {
 	}{
 		{
 			Name:  "nonexistant",
-			FS:    txtarFS(t, "small"),
+			FS:    vdmtest.TxtarFS(t, "testdata/small.txtar"),
 			Files: []string{"nonexistant.txt"},
 			Error: "failed to open nonexistant.txt: open nonexistant.txt: file does not exist",
 		},
 		{
 			Name:  "small",
-			FS:    txtarFS(t, "small"),
+			FS:    vdmtest.TxtarFS(t, "testdata/small.txtar"),
 			Files: []string{"foo/bar.txt"},
 			Want:  "sha256:nXbUeK5RNiJs1oQQWJa3D5t0HpyVd6lqNMUcYaIS5hQ=",
 		},
 		{
 			Name: "subdirectories",
-			FS:   txtarFS(t, "subdirectories"),
+			FS:   vdmtest.TxtarFS(t, "testdata/subdirectories.txtar"),
 			Files: []string{
 				"foo/bar/a/b/c.txt",
 				"foo/bar/baz.txt",
@@ -129,7 +133,7 @@ func TestFiles(t *testing.T) {
 		},
 		{
 			Name: "unsorted",
-			FS:   txtarFS(t, "subdirectories"),
+			FS:   vdmtest.TxtarFS(t, "testdata/subdirectories.txtar"),
 			Files: []string{
 				"foo/bar/baz.txt",
 				"foo/bar/a/b/c.txt",
@@ -177,7 +181,7 @@ func TestIterateDir(t *testing.T) {
 	}{
 		{
 			Name: "small",
-			FS:   txtarFS(t, "small"),
+			FS:   vdmtest.TxtarFS(t, "testdata/small.txtar"),
 			Dir:  "foo",
 			Want: []testEntry{
 				{S: "foo/bar.txt"},
@@ -185,7 +189,7 @@ func TestIterateDir(t *testing.T) {
 		},
 		{
 			Name:   "subdirectories",
-			FS:     txtarFS(t, "subdirectories"),
+			FS:     vdmtest.TxtarFS(t, "testdata/subdirectories.txtar"),
 			Dir:    "foo/bar",
 			Prefix: "foo/",
 			Ignore: []string{
@@ -198,7 +202,7 @@ func TestIterateDir(t *testing.T) {
 		},
 		{
 			Name: "errors",
-			FS:   badFS{},
+			FS:   vdmtest.TestFS(t, vdmtest.WithErrors(".", "file does not exist")),
 			Dir:  ".",
 			Ignore: []string{
 				"read",
@@ -238,19 +242,19 @@ func TestDirectory(t *testing.T) {
 	}{
 		{
 			Name:  "nonexistant",
-			FS:    txtarFS(t, "small"),
+			FS:    vdmtest.TxtarFS(t, "testdata/small.txtar"),
 			Dir:   "bar",
 			Error: "open bar: file does not exist",
 		},
 		{
 			Name: "small",
-			FS:   txtarFS(t, "small"),
+			FS:   vdmtest.TxtarFS(t, "testdata/small.txtar"),
 			Dir:  "foo",
 			Want: "sha256:nXbUeK5RNiJs1oQQWJa3D5t0HpyVd6lqNMUcYaIS5hQ=",
 		},
 		{
 			Name: "subdirectories",
-			FS:   txtarFS(t, "subdirectories"),
+			FS:   vdmtest.TxtarFS(t, "testdata/subdirectories.txtar"),
 			Dir:  "foo/bar",
 			Ignore: []string{
 				"foo/bar/ignored.txt",
@@ -345,21 +349,6 @@ func TestLines(t *testing.T) {
 	}
 }
 
-func txtarFS(t *testing.T, name string) fs.FS {
-	t.Helper()
-	ar, err := txtar.ParseFile(filepath.Join("testdata", name+".txtar"))
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	fsys, err := txtar.FS(ar)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	return fsys
-}
-
 // The error types we're using have unexported
 // fields. Annoyingly, the least clumsy fix is
 // to write a custom comparer that just looks
@@ -412,72 +401,4 @@ func collectSingle(entries iter.Seq2[string, error]) testEntry {
 	}
 
 	panic("got no values from iterator")
-}
-
-type badFS struct{}
-
-var (
-	_ fs.FS        = badFS{}
-	_ fs.ReadDirFS = badFS{}
-)
-
-func (badFS) Open(name string) (fs.File, error) {
-	switch name {
-	case "open":
-		return nil, fmt.Errorf("bad open")
-	case "read":
-		return badReadFile{}, nil
-	case "close":
-		return badCloseFile{}, nil
-	default:
-		return nil, fs.ErrNotExist
-	}
-}
-
-func (badFS) ReadDir(name string) ([]fs.DirEntry, error) {
-	if name != "." {
-		return nil, fs.ErrNotExist
-	}
-
-	entries := []fs.DirEntry{
-		simpleDirEntry{"open", false, 0o644},
-		simpleDirEntry{"read", false, 0o644},
-		simpleDirEntry{"close", false, 0o644},
-	}
-
-	return entries, nil
-}
-
-type simpleDirEntry struct {
-	name  string
-	isDir bool
-	mode  fs.FileMode
-}
-
-var _ fs.DirEntry = simpleDirEntry{}
-
-func (e simpleDirEntry) Name() string               { return e.name }
-func (e simpleDirEntry) IsDir() bool                { return e.isDir }
-func (e simpleDirEntry) Type() fs.FileMode          { return e.mode }
-func (e simpleDirEntry) Info() (fs.FileInfo, error) { return nil, fs.ErrInvalid }
-
-type badReadFile struct{}
-
-var _ fs.File = badReadFile{}
-
-func (badReadFile) Stat() (fs.FileInfo, error) { return nil, nil }
-func (badReadFile) Close() error               { return nil }
-func (badReadFile) Read(b []byte) (int, error) {
-	return 0, errors.New("bad read")
-}
-
-type badCloseFile struct{}
-
-var _ fs.File = badCloseFile{}
-
-func (badCloseFile) Stat() (fs.FileInfo, error) { return nil, nil }
-func (badCloseFile) Close() error               { return errors.New("bad close") }
-func (badCloseFile) Read(b []byte) (int, error) {
-	n := copy(b, "foo")
-	return n, io.EOF
 }
