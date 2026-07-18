@@ -6,6 +6,7 @@
 package vdmtest
 
 import (
+	"errors"
 	"io/fs"
 	"strings"
 	"testing"
@@ -317,6 +318,119 @@ func TestDiffTextDirectories(t *testing.T) {
 
 			if err != nil {
 				t.Fatalf("DiffTextDirectories(): got unexpected error: %v", err)
+			}
+		})
+	}
+}
+
+func TestDiffTextFilesystems(t *testing.T) {
+	tests := []struct {
+		Name  string
+		Want  fs.FS
+		Got   fs.FS
+		Dir   string
+		Error []string
+	}{
+		{
+			Name:  "bad-want-dir",
+			Want:  TestFS(t, WithError(errors.New("bad FS"))),
+			Got:   TxtarFS(t, "testdata/filesystems/base.txtar"),
+			Dir:   ".",
+			Error: []string{`failed to list want filenames: bad FS`},
+		},
+		{
+			Name:  "bad-got-dir",
+			Want:  TxtarFS(t, "testdata/filesystems/base.txtar"),
+			Got:   TestFS(t, WithError(errors.New("bad FS"))),
+			Dir:   ".",
+			Error: []string{`failed to list got filenames: bad FS`},
+		},
+		{
+			Name: "invalid-different-filenames",
+			Want: TxtarFS(t, "testdata/filesystems/base.txtar"),
+			Got:  TxtarFS(t, "testdata/filesystems/different-filenames.txtar"),
+			Dir:  ".",
+			Error: []string{
+				`filenames mismatch (-want, +got)`,
+				`  []string{`,
+				`  	"bar.txt",`,
+				`  	"foo/baz.txt",`,
+				`- 	"foo/third.txt",`,
+				`+ 	"foo/other.txt",`,
+				`  }`,
+				``,
+			},
+		},
+		{
+			Name: "invalid-bad-got-read",
+			Want: TestFS(t,
+				WithStat(map[string]fs.FileInfo{
+					".": TestFileInfo(".", 0, 0o755, testTime, true, nil),
+				}),
+				WithReadDir(map[string][]fs.DirEntry{
+					".": {TestDirEntry("foo.txt", false, 0o644, TestFileInfo("foo.txt", 1, 0o644, testTime, false, nil), nil)},
+				}),
+				WithReadFileErrors("foo.txt", "bad read file"),
+			),
+			Got:   TxtarFS(t, "testdata/filesystems/foo.txtar"),
+			Dir:   ".",
+			Error: []string{`failed to open want file in "foo.txt": bad read file`},
+		},
+		{
+			Name: "invalid-bad-want-read",
+			Want: TxtarFS(t, "testdata/filesystems/foo.txtar"),
+			Got: TestFS(t,
+				WithStat(map[string]fs.FileInfo{
+					".": TestFileInfo(".", 0, 0o755, testTime, true, nil),
+				}),
+				WithReadDir(map[string][]fs.DirEntry{
+					".": {TestDirEntry("foo.txt", false, 0o644, TestFileInfo("foo.txt", 1, 0o644, testTime, false, nil), nil)},
+				}),
+				WithReadFileErrors("foo.txt", "bad read file"),
+			),
+			Dir:   ".",
+			Error: []string{`failed to open got file in "foo.txt": bad read file`},
+		},
+		{
+			Name: "invalid-different-contents",
+			Want: TxtarFS(t, "testdata/filesystems/base.txtar"),
+			Got:  TxtarFS(t, "testdata/filesystems/different-contents.txtar"),
+			Dir:  ".",
+			Error: []string{
+				`data mismatch in "foo/baz.txt" (-want, +got)`,
+				`-This is the second file.`,
+				`+This is the second file, but with new content.`,
+				``,
+			},
+		},
+		{
+			Name: "valid-identical",
+			Want: TxtarFS(t, "testdata/filesystems/base.txtar"),
+			Got:  TxtarFS(t, "testdata/filesystems/base.txtar"),
+			Dir:  ".",
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.Name, func(t *testing.T) {
+			err := DiffTextFilesystems(test.Got, test.Want, test.Dir)
+			if test.Error != nil {
+				if err == nil {
+					t.Fatalf("DiffTextFilesystems(): unexpected lack of error")
+				}
+
+				e := fixError(err.Error())
+				want := strings.Join(test.Error, "\n")
+				if e != want {
+					t.Fatalf("DiffTextFilesystems(): got wrong error:\nGot:  %s\nWant: %s", e, want)
+				}
+
+				// All good.
+				return
+			}
+
+			if err != nil {
+				t.Fatalf("DiffTextFilesystems(): got unexpected error: %v", err)
 			}
 		})
 	}

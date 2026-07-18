@@ -1,0 +1,6 @@
+-- bar.txt --
+This is the first file.
+-- foo/baz.txt --
+This is the second file.
+-- foo/other.txt --
+Here we go again.

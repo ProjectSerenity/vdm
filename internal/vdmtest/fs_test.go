@@ -24,6 +24,7 @@ func TestTestFS_nonerrors(t *testing.T) {
 		Opt   Option
 		Error string
 	}{
+		{"WithError", WithError(io.EOF), "WithError provided more than once for a single filesystem"},
 		{"WithFiles", WithFiles(map[string]fs.File{}), "WithFiles provided more than once for a single filesystem"},
 		{"WithGlob", WithGlob(map[string][]string{}), "WithGlob provided more than once for a single filesystem"},
 		{"WithReadDir", WithReadDir(map[string][]fs.DirEntry{}), "WithReadDir provided more than once for a single filesystem"},

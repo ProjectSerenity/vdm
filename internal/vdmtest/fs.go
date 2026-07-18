@@ -121,6 +121,7 @@ func TestDirEntry(name string, isDir bool, typ fs.FileMode, info fs.FileInfo, in
 }
 
 type testFS struct {
+	baseError      error
 	errors         map[string]error
 	files          map[string]fs.File
 	openErrors     map[string]error
@@ -189,7 +190,11 @@ func newTestFS(options ...Option) (*testFS, error) {
 func (fsys *testFS) err(special map[string]error, name string) error {
 	err, ok := special[name]
 	if !ok {
-		err = fsys.errors[name]
+		err, ok = fsys.errors[name]
+	}
+
+	if !ok {
+		err = fsys.baseError
 	}
 
 	return err
@@ -254,6 +259,26 @@ func (fsys *testFS) Sub(dir string) (fs.FS, error) {
 // Option is a function that configures the behaviour
 // of a [TestFS].
 type Option func(*testFS) error
+
+// WithError configures the filesystem to use the given
+// error in response to any operations. If an error is
+// also configured using a more specific method error,
+// then that error is returned instead.
+//
+// For example, an error configured using [WithErrors]
+// or [WithReadDirErrors] will take precedence for calls
+// to [fs.ReadDir].
+func WithError(err error) Option {
+	return func(fsys *testFS) error {
+		if fsys.baseError != nil {
+			return fmt.Errorf("WithError provided more than once for a single filesystem")
+		}
+
+		fsys.baseError = err
+
+		return nil
+	}
+}
 
 // WithErrors configures the filesystem to use the given
 // error in response to any operation using the given

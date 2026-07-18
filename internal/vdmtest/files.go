@@ -28,7 +28,7 @@ func Filenames(fsys fs.FS, dir string) ([]string, error) {
 			return err
 		}
 
-		if d.IsDir() {
+		if d == nil || d.IsDir() {
 			return nil
 		}
 
@@ -119,4 +119,49 @@ func DiffTextDirectories(fsys fs.FS, got, want string) error {
 	}
 
 	return DiffTextFiles(fsys, got, want, gotFiles)
+}
+
+// DiffTextFilesystems iterates through the two given filesystems.
+// If any files have different contents, the diff(s) are returned
+// as an error.
+//
+// Note that DiffTextFilesystems expects file contents to be printable
+// text. If any files have differing contents that are not text,
+// the resulting error's text is undefined.
+func DiffTextFilesystems(got, want fs.FS, dir string) error {
+	wantFiles, err := Filenames(want, dir)
+	if err != nil {
+		return fmt.Errorf("failed to list want filenames: %v", err)
+	}
+
+	gotFiles, err := Filenames(got, dir)
+	if err != nil {
+		return fmt.Errorf("failed to list got filenames: %v", err)
+	}
+
+	if diff := cmp.Diff(wantFiles, gotFiles); diff != "" {
+		return fmt.Errorf("filenames mismatch (-want, +got)\n%s", diff)
+	}
+
+	results := make([]error, len(gotFiles))
+	for i, name := range gotFiles {
+		dataWant, err := fs.ReadFile(want, path.Join(dir, name))
+		if err != nil {
+			results[i] = fmt.Errorf("failed to open want file in %q: %v", name, err)
+			continue
+		}
+
+		dataGot, err := fs.ReadFile(got, path.Join(dir, name))
+		if err != nil {
+			results[i] = fmt.Errorf("failed to open got file in %q: %v", name, err)
+			continue
+		}
+
+		if !bytes.Equal(dataGot, dataWant) {
+			results[i] = fmt.Errorf("data mismatch in %q (-want, +got)\n%s", name, diff.Format(string(dataWant), string(dataGot)))
+			continue
+		}
+	}
+
+	return errors.Join(results...)
 }
