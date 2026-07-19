@@ -68,12 +68,13 @@ type DownloadGoModule struct {
 var _ Action = DownloadGoModule{}
 
 func (c DownloadGoModule) clearTarget() error {
-	err := os.RemoveAll(c.Path)
+	target := filepath.Join(c.Dir, filepath.FromSlash(c.Module.Name))
+	err := os.RemoveAll(target)
 	if err != nil {
 		return err
 	}
 
-	err = os.MkdirAll(c.Path, 0o755)
+	err = os.MkdirAll(target, 0o755)
 	if err != nil {
 		return err
 	}
