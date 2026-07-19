@@ -12,7 +12,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/ProjectSerenity/vdm/internal/vdm"
+	"github.com/ProjectSerenity/vdm/internal/ves"
 
 	"golang.org/x/mod/sumdb"
 )
@@ -30,7 +30,7 @@ import (
 // exist.
 //
 // [module cache]: https://go.dev/ref/mod#module-cache
-func DownloadDigest(path string, manifest *vdm.GoModuleManifest) error {
+func DownloadDigest(path string, manifest *ves.GoModuleManifest) error {
 	d := &digester{
 		logWriter: os.Stdout,
 		gopath:    os.Getenv("GOPATH"),
@@ -67,7 +67,7 @@ func (d *digester) ChecksumClient() *sumdb.Client {
 	return d.sumdb
 }
 
-func (d *digester) FindChecksum(path string, manifest *vdm.GoModuleManifest, lines []string) error {
+func (d *digester) FindChecksum(path string, manifest *ves.GoModuleManifest, lines []string) error {
 	// Find the line consisting of "importpath version checksum".
 	for _, line := range lines {
 		parts := strings.Fields(line)
@@ -97,7 +97,7 @@ func (d *digester) FindChecksum(path string, manifest *vdm.GoModuleManifest, lin
 	return nil
 }
 
-func (d *digester) Digest(path string, manifest *vdm.GoModuleManifest) error {
+func (d *digester) Digest(path string, manifest *ves.GoModuleManifest) error {
 	// This is generally used in testing.
 	if manifest.Download.Value != "" {
 		return nil

@@ -3,10 +3,10 @@ package gomodzip
 import (
 	"testing"
 
-	"github.com/ProjectSerenity/vdm/internal/vdm"
+	"github.com/ProjectSerenity/vdm/internal/ves"
 )
 
-func s(str string) vdm.ParsedString { return vdm.ParsedString{Value: str} }
+func s(str string) ves.ParsedString { return ves.ParsedString{Value: str} }
 
 func TestExtractChecksum(t *testing.T) {
 	tests := []struct {

@@ -17,7 +17,7 @@ import (
 	"path/filepath"
 	"slices"
 
-	"github.com/ProjectSerenity/vdm/internal/vdm"
+	"github.com/ProjectSerenity/vdm/internal/ves"
 
 	"golang.org/x/mod/module"
 	"golang.org/x/mod/sumdb/dirhash"
@@ -30,7 +30,7 @@ import (
 // Extract checks its checksum against the manifest.
 //
 // Once the module has been extracted, any patches are applied.
-func Extract(target, path string, mod *vdm.GoModule, manifest *vdm.GoModuleManifest) error {
+func Extract(target, path string, mod *ves.GoModule, manifest *ves.GoModuleManifest) error {
 	var x extractor
 	err := x.VerifyChecksum(path, manifest)
 	if err != nil {
@@ -70,7 +70,7 @@ func (x *extractor) SaveError(err error) {
 	}
 }
 
-func (x *extractor) CompareChecksum(got string, manifest *vdm.GoModuleManifest) error {
+func (x *extractor) CompareChecksum(got string, manifest *ves.GoModuleManifest) error {
 	formatted, err := extractChecksum(got)
 	if err != nil {
 		return fmt.Errorf("failed to verify Go module %s: %v", manifest.Name, err)
@@ -83,7 +83,7 @@ func (x *extractor) CompareChecksum(got string, manifest *vdm.GoModuleManifest) 
 	return nil
 }
 
-func (x *extractor) VerifyChecksum(path string, manifest *vdm.GoModuleManifest) error {
+func (x *extractor) VerifyChecksum(path string, manifest *ves.GoModuleManifest) error {
 	got, err := dirhash.HashZip(path, dirhash.Hash1)
 	if err != nil {
 		return fmt.Errorf("failed to verify Go module %s: %v", manifest.Name, err)
@@ -92,7 +92,7 @@ func (x *extractor) VerifyChecksum(path string, manifest *vdm.GoModuleManifest) 
 	return x.CompareChecksum(got, manifest)
 }
 
-func (x *extractor) Extract(dst, path string, manifest *vdm.GoModuleManifest) error {
+func (x *extractor) Extract(dst, path string, manifest *ves.GoModuleManifest) error {
 	id := module.Version{
 		Path:    manifest.Name,
 		Version: manifest.Version.Value,
@@ -119,7 +119,7 @@ func parentDirectories(dir string) iter.Seq[string] {
 }
 
 // Identify the set of directories that should be deleted.
-func (x *extractor) IdentifyDeletions(fsys fs.FS, mod *vdm.GoModule) ([]string, error) {
+func (x *extractor) IdentifyDeletions(fsys fs.FS, mod *ves.GoModule) ([]string, error) {
 	// Identify the set of directories to keep,
 	// based on the packages specified.
 	keep := make(map[string]bool)
@@ -205,7 +205,7 @@ func (x *extractor) IdentifyDeletions(fsys fs.FS, mod *vdm.GoModule) ([]string, 
 	return deletions, nil
 }
 
-func (x *extractor) ExtractAndPrune(target, path string, mod *vdm.GoModule, manifest *vdm.GoModuleManifest) error {
+func (x *extractor) ExtractAndPrune(target, path string, mod *ves.GoModule, manifest *ves.GoModuleManifest) error {
 	dst := filepath.Join(target, manifest.Name)
 	err := x.Extract(dst, path, manifest)
 	if err != nil {

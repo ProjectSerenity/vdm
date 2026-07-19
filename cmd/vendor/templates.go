@@ -12,7 +12,7 @@ import (
 	"path"
 	"text/template"
 
-	"github.com/ProjectSerenity/vdm/internal/vdm"
+	"github.com/ProjectSerenity/vdm/internal/ves"
 )
 
 // The templates used to render build files and
@@ -28,13 +28,13 @@ var templates = template.Must(template.New("").Funcs(template.FuncMap{
 
 // binaryName return the name in a form suitable
 // for use as a Go binary's package name.
-func binaryName(pkg *vdm.GoPackage) string {
+func binaryName(pkg *ves.GoPackage) string {
 	return path.Base(pkg.Name.Value)
 }
 
 // packageName return the name in a form suitable
 // for use as a Go package name.
-func packageName(pkg *vdm.GoPackage) string {
+func packageName(pkg *ves.GoPackage) string {
 	base := path.Base(pkg.Name.Value)
 	if pkg.Binary.Value {
 		base += "_lib"

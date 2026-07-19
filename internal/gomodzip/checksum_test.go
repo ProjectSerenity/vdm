@@ -19,7 +19,7 @@ import (
 	"time"
 
 	"github.com/ProjectSerenity/vdm/internal/simplehttp"
-	"github.com/ProjectSerenity/vdm/internal/vdm"
+	"github.com/ProjectSerenity/vdm/internal/ves"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
@@ -30,13 +30,13 @@ func TestDownloadDigest(t *testing.T) {
 	tests := []struct {
 		Name     string
 		Path     string
-		Manifest *vdm.GoModuleManifest
+		Manifest *ves.GoModuleManifest
 		Want     string
 		Error    string
 	}{
 		{
 			Name: "pre-loaded",
-			Manifest: &vdm.GoModuleManifest{
+			Manifest: &ves.GoModuleManifest{
 				Download: s("sha256:checksum"),
 			},
 			Want: "sha256:checksum",
@@ -201,9 +201,9 @@ func TestDigester_FindChecksum(t *testing.T) {
 				path = filepath.Join(path, test.PathSuffix)
 			}
 
-			manifest := &vdm.GoModuleManifest{
+			manifest := &ves.GoModuleManifest{
 				Name:    test.ModuleName,
-				Version: vdm.ParsedString{Value: test.ModuleVersion},
+				Version: ves.ParsedString{Value: test.ModuleVersion},
 			}
 
 			d := new(digester)
@@ -323,9 +323,9 @@ func TestDigester_Digest(t *testing.T) {
 				}
 			}
 
-			manifest := &vdm.GoModuleManifest{
+			manifest := &ves.GoModuleManifest{
 				Name:    test.ModuleName,
-				Version: vdm.ParsedString{Value: test.ModuleVersion},
+				Version: ves.ParsedString{Value: test.ModuleVersion},
 			}
 
 			if test.D == nil && test.MakeD != nil {

@@ -12,14 +12,14 @@ import (
 	"time"
 
 	"github.com/ProjectSerenity/vdm/internal/digest"
-	"github.com/ProjectSerenity/vdm/internal/vdm"
 	"github.com/ProjectSerenity/vdm/internal/vdmtest"
+	"github.com/ProjectSerenity/vdm/internal/ves"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 )
 
-func s(str string) vdm.ParsedString { return vdm.ParsedString{Value: str} }
+func s(str string) ves.ParsedString { return ves.ParsedString{Value: str} }
 
 func digestDirectory(t testing.TB, fsys fs.FS, dir string, ignore ...string) string {
 	got, err := digest.Directory(fsys, dir)
@@ -109,26 +109,26 @@ func TestVendor(t *testing.T) {
 				RemoveAll("vendor/a"),
 				// Download modules and generate package BUILD files.
 				DownloadGoModule{
-					Module: &vdm.GoModule{
+					Module: &ves.GoModule{
 						Name: "example.com/foo",
-						Version: vdm.ParsedString{
+						Version: ves.ParsedString{
 							Value: "v1.2.3",
-							Pos:   vdm.Pos{File: "deps.vdm", Line: 2},
+							Pos:   ves.Pos{File: "deps.vdm", Line: 2},
 						},
-						Packages: []*vdm.GoPackage{
+						Packages: []*ves.GoPackage{
 							{
-								Name: vdm.ParsedString{
+								Name: ves.ParsedString{
 									Value: "example.com/foo",
-									Pos:   vdm.Pos{File: "deps.vdm", Line: 4},
+									Pos:   ves.Pos{File: "deps.vdm", Line: 4},
 								},
 							},
 						},
 					},
-					Manifest: &vdm.GoModuleManifest{
+					Manifest: &ves.GoModuleManifest{
 						Name: "example.com/foo",
-						Version: vdm.ParsedString{
+						Version: ves.ParsedString{
 							Value: "v1.2.3",
-							Pos:   vdm.Pos{File: "deps.vdm", Line: 2},
+							Pos:   ves.Pos{File: "deps.vdm", Line: 2},
 						},
 						Packages: s("sha256:OWsM+RnT2U96NqEa73dOI5FvpDkJrP1sJYjlqKHUG6A="),
 					},
@@ -137,10 +137,10 @@ func TestVendor(t *testing.T) {
 					Path:        "vendor/example.com/foo",
 				},
 				&GenerateGoPackageBUILD{
-					Package: &vdm.GoPackage{
-						Name: vdm.ParsedString{
+					Package: &ves.GoPackage{
+						Name: ves.ParsedString{
 							Value: "example.com/foo",
-							Pos:   vdm.Pos{File: "deps.vdm", Line: 4},
+							Pos:   ves.Pos{File: "deps.vdm", Line: 4},
 						},
 					},
 					Dir:  "vendor/example.com/foo",
@@ -148,13 +148,13 @@ func TestVendor(t *testing.T) {
 				},
 				// Build cache manifest.
 				BuildCacheManifest{
-					Manifests: &vdm.Manifests{
-						GoModules: []*vdm.GoModuleManifest{
+					Manifests: &ves.Manifests{
+						GoModules: []*ves.GoModuleManifest{
 							{
 								Name: "example.com/foo",
-								Version: vdm.ParsedString{
+								Version: ves.ParsedString{
 									Value: "v1.2.3",
-									Pos:   vdm.Pos{File: "deps.vdm", Line: 2},
+									Pos:   ves.Pos{File: "deps.vdm", Line: 2},
 								},
 								Packages: s("sha256:OWsM+RnT2U96NqEa73dOI5FvpDkJrP1sJYjlqKHUG6A="),
 							},
@@ -175,30 +175,30 @@ func TestVendor(t *testing.T) {
 				RemoveAll("vendor/a"),
 				// Download modules and generate package BUILD files.
 				DownloadGoModule{
-					Module: &vdm.GoModule{
+					Module: &ves.GoModule{
 						Name: "example.com/foo",
-						Version: vdm.ParsedString{
+						Version: ves.ParsedString{
 							Value: "v1.2.3",
-							Pos:   vdm.Pos{File: "deps.vdm", Line: 2},
+							Pos:   ves.Pos{File: "deps.vdm", Line: 2},
 						},
-						Packages: []*vdm.GoPackage{
+						Packages: []*ves.GoPackage{
 							{
-								Name: vdm.ParsedString{
+								Name: ves.ParsedString{
 									Value: "example.com/foo",
-									Pos:   vdm.Pos{File: "deps.vdm", Line: 4},
+									Pos:   ves.Pos{File: "deps.vdm", Line: 4},
 								},
-								BuildFile: vdm.ParsedString{
+								BuildFile: ves.ParsedString{
 									Value: "bazel/example.com-foo.BUILD",
-									Pos:   vdm.Pos{File: "deps.vdm", Line: 5},
+									Pos:   ves.Pos{File: "deps.vdm", Line: 5},
 								},
 							},
 						},
 					},
-					Manifest: &vdm.GoModuleManifest{
+					Manifest: &ves.GoModuleManifest{
 						Name: "example.com/foo",
-						Version: vdm.ParsedString{
+						Version: ves.ParsedString{
 							Value: "v1.2.3",
-							Pos:   vdm.Pos{File: "deps.vdm", Line: 2},
+							Pos:   ves.Pos{File: "deps.vdm", Line: 2},
 						},
 						Packages: s("sha256:OWsM+RnT2U96NqEa73dOI5FvpDkJrP1sJYjlqKHUG6A="),
 					},
@@ -212,13 +212,13 @@ func TestVendor(t *testing.T) {
 				},
 				// Build cache manifest.
 				BuildCacheManifest{
-					Manifests: &vdm.Manifests{
-						GoModules: []*vdm.GoModuleManifest{
+					Manifests: &ves.Manifests{
+						GoModules: []*ves.GoModuleManifest{
 							{
 								Name: "example.com/foo",
-								Version: vdm.ParsedString{
+								Version: ves.ParsedString{
 									Value: "v1.2.3",
-									Pos:   vdm.Pos{File: "deps.vdm", Line: 2},
+									Pos:   ves.Pos{File: "deps.vdm", Line: 2},
 								},
 								Packages: s("sha256:OWsM+RnT2U96NqEa73dOI5FvpDkJrP1sJYjlqKHUG6A="),
 							},
@@ -269,14 +269,14 @@ func TestVendorGo(t *testing.T) {
 		Name    string
 		FS      fs.FS
 		Actions []Action
-		Deps    *vdm.Deps
+		Deps    *ves.Deps
 		Want    []Action
 		Error   string
 	}{
 		{
 			Name: "invalid-no-module-name",
-			Deps: &vdm.Deps{
-				GoModules: []*vdm.GoModule{
+			Deps: &ves.Deps{
+				GoModules: []*ves.GoModule{
 					{
 						Name: "",
 					},
@@ -286,11 +286,11 @@ func TestVendorGo(t *testing.T) {
 		},
 		{
 			Name: "invalid-no-module-version",
-			Deps: &vdm.Deps{
-				GoModules: []*vdm.GoModule{
+			Deps: &ves.Deps{
+				GoModules: []*ves.GoModule{
 					{
 						Name:    "example.com/foo",
-						Version: vdm.ParsedString{Value: ""},
+						Version: ves.ParsedString{Value: ""},
 					},
 				},
 			},
@@ -298,8 +298,8 @@ func TestVendorGo(t *testing.T) {
 		},
 		{
 			Name: "invalid-no-packages",
-			Deps: &vdm.Deps{
-				GoModules: []*vdm.GoModule{
+			Deps: &ves.Deps{
+				GoModules: []*ves.GoModule{
 					{
 						Name:    "example.com/foo",
 						Version: s("v1.2.3"),
@@ -310,14 +310,14 @@ func TestVendorGo(t *testing.T) {
 		},
 		{
 			Name: "invalid-no-package-path",
-			Deps: &vdm.Deps{
-				GoModules: []*vdm.GoModule{
+			Deps: &ves.Deps{
+				GoModules: []*ves.GoModule{
 					{
 						Name:    "example.com/foo",
 						Version: s("v1.2.3"),
-						Packages: []*vdm.GoPackage{
+						Packages: []*ves.GoPackage{
 							{
-								Name: vdm.ParsedString{Value: ""},
+								Name: ves.ParsedString{Value: ""},
 							},
 						},
 					},
@@ -328,12 +328,12 @@ func TestVendorGo(t *testing.T) {
 		{
 			Name: "invalid-bad-fs",
 			FS:   vdmtest.TestFS(t, vdmtest.WithErrors("vendor", "bad FS")),
-			Deps: &vdm.Deps{
-				GoModules: []*vdm.GoModule{
+			Deps: &ves.Deps{
+				GoModules: []*ves.GoModule{
 					{
 						Name:    "example.com/foo",
 						Version: s("v1.2.3"),
-						Packages: []*vdm.GoPackage{
+						Packages: []*ves.GoPackage{
 							{
 								Name: s("example.com/foo"),
 							},

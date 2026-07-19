@@ -13,7 +13,7 @@ import (
 	"os"
 
 	"github.com/ProjectSerenity/vdm/internal/simplehttp"
-	"github.com/ProjectSerenity/vdm/internal/vdm"
+	"github.com/ProjectSerenity/vdm/internal/ves"
 
 	"golang.org/x/mod/module"
 )
@@ -30,7 +30,7 @@ import (
 // exist.
 //
 // [module cache]: https://go.dev/ref/mod#module-cache
-func Download(ctx context.Context, proxy, path string, manifest *vdm.GoModuleManifest) error {
+func Download(ctx context.Context, proxy, path string, manifest *ves.GoModuleManifest) error {
 	dl := &downloader{
 		logWriter:  os.Stdout,
 		gomodproxy: proxy,
@@ -64,7 +64,7 @@ func (dl *downloader) WriteFile(w io.WriteCloser, r io.ReadCloser, name string) 
 	return nil
 }
 
-func (dl *downloader) Download(ctx context.Context, path string, manifest *vdm.GoModuleManifest) error {
+func (dl *downloader) Download(ctx context.Context, path string, manifest *ves.GoModuleManifest) error {
 	// Determine the request path.
 	escaped, err := module.EscapePath(manifest.Name)
 	if err != nil {

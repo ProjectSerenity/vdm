@@ -10,7 +10,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/ProjectSerenity/vdm/internal/vdm"
+	"github.com/ProjectSerenity/vdm/internal/ves"
 
 	"github.com/google/go-cmp/cmp"
 )
@@ -56,13 +56,13 @@ func TestModuleCache_Path(t *testing.T) {
 	tests := []struct {
 		Name     string
 		Base     string
-		Manifest *vdm.GoModuleManifest
+		Manifest *ves.GoModuleManifest
 		Want     string
 		Error    string
 	}{
 		{
 			Name: "bad-module-name",
-			Manifest: &vdm.GoModuleManifest{
+			Manifest: &ves.GoModuleManifest{
 				Name:    "-.",
 				Version: s("v1.2.3"),
 			},
@@ -70,7 +70,7 @@ func TestModuleCache_Path(t *testing.T) {
 		},
 		{
 			Name: "bad-module-version",
-			Manifest: &vdm.GoModuleManifest{
+			Manifest: &ves.GoModuleManifest{
 				Name:    "rsc.io/diff",
 				Version: s("v1!"),
 			},
@@ -79,7 +79,7 @@ func TestModuleCache_Path(t *testing.T) {
 		{
 			Name: "valid-simple",
 			Base: filepath.FromSlash("/home/user/go/pkg/mod"),
-			Manifest: &vdm.GoModuleManifest{
+			Manifest: &ves.GoModuleManifest{
 				Name:    "rsc.io/diff",
 				Version: s("v1.2.3"),
 			},

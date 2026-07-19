@@ -15,7 +15,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/ProjectSerenity/vdm/internal/vdm"
+	"github.com/ProjectSerenity/vdm/internal/ves"
 )
 
 var program = filepath.Base(os.Args[0])
@@ -40,7 +40,7 @@ func Main(ctx context.Context, w io.Writer, args []string) error {
 
 	// Start by parsing the dependency manifest.
 	fsys := os.DirFS(".")
-	deps, err := vdm.ReadDeps(fsys, vdm.DepsVDM)
+	deps, err := ves.ReadDeps(fsys, ves.DepsVDM)
 	if err != nil {
 		return err
 	}

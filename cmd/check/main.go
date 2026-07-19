@@ -23,7 +23,7 @@ import (
 	"github.com/google/osv-scanner/pkg/models"
 	"github.com/google/osv-scanner/pkg/osv"
 
-	"github.com/ProjectSerenity/vdm/internal/vdm"
+	"github.com/ProjectSerenity/vdm/internal/ves"
 )
 
 var program = filepath.Base(os.Args[0])
@@ -79,7 +79,7 @@ func Main(ctx context.Context, w io.Writer, args []string) error {
 // The given roots are used as Bazel path selectors
 // for packages that are checked for dependencies.
 func CheckDependencies(fsys fs.FS, roots []string) error {
-	deps, err := vdm.ReadDeps(fsys, vdm.DepsVDM)
+	deps, err := ves.ReadDeps(fsys, ves.DepsVDM)
 	if err != nil {
 		return err
 	}

@@ -9,7 +9,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/ProjectSerenity/vdm/internal/vdm"
+	"github.com/ProjectSerenity/vdm/internal/ves"
 
 	"golang.org/x/mod/module"
 )
@@ -52,7 +52,7 @@ func ModuleCacheFromBase(base string) *ModuleCache {
 // module within the module cache.
 //
 // The path may not exist.
-func (c *ModuleCache) Path(manifest *vdm.GoModuleManifest) (string, error) {
+func (c *ModuleCache) Path(manifest *ves.GoModuleManifest) (string, error) {
 	modName, err := module.EscapePath(manifest.Name)
 	if err != nil {
 		return "", err

@@ -19,7 +19,7 @@ import (
 	"path/filepath"
 	"text/tabwriter"
 
-	"github.com/ProjectSerenity/vdm/internal/vdm"
+	"github.com/ProjectSerenity/vdm/internal/ves"
 )
 
 var program = filepath.Base(os.Args[0])
@@ -70,7 +70,7 @@ type DependencyStats struct {
 // DependenciesStats assesses the dependency set
 // to produce statistics.
 func DependenciesStats(fsys fs.FS) (*DependencyStats, error) {
-	deps, err := vdm.ReadDeps(fsys, vdm.DepsVDM)
+	deps, err := ves.ReadDeps(fsys, ves.DepsVDM)
 	if err != nil {
 		return nil, err
 	}

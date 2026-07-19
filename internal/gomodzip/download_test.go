@@ -24,7 +24,7 @@ import (
 	"time"
 
 	"github.com/ProjectSerenity/vdm/internal/simplehttp"
-	"github.com/ProjectSerenity/vdm/internal/vdm"
+	"github.com/ProjectSerenity/vdm/internal/ves"
 )
 
 func TestDownload(t *testing.T) {
@@ -32,13 +32,13 @@ func TestDownload(t *testing.T) {
 		Name     string
 		Context  context.Context
 		Path     string
-		Manifest *vdm.GoModuleManifest
+		Manifest *ves.GoModuleManifest
 		Error    string
 	}{
 		{
 			Name: "invalid-bad-module-path",
 			Path: filepath.Join(t.ArtifactDir(), "foo.zip"),
-			Manifest: &vdm.GoModuleManifest{
+			Manifest: &ves.GoModuleManifest{
 				Name:     "-!",
 				Version:  s("v1.2.3"),
 				Download: s("h1:checksum"),
@@ -262,10 +262,10 @@ func TestDownloader_Download(t *testing.T) {
 				}
 			}
 
-			manifest := &vdm.GoModuleManifest{
+			manifest := &ves.GoModuleManifest{
 				Name:     test.ModuleName,
-				Version:  vdm.ParsedString{Value: test.ModuleVersion},
-				Download: vdm.ParsedString{Value: test.Checksum},
+				Version:  ves.ParsedString{Value: test.ModuleVersion},
+				Download: ves.ParsedString{Value: test.Checksum},
 			}
 
 			err := test.DL.Download(test.Context, path, manifest)

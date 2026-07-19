@@ -16,8 +16,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ProjectSerenity/vdm/internal/vdm"
 	"github.com/ProjectSerenity/vdm/internal/vdmtest"
+	"github.com/ProjectSerenity/vdm/internal/ves"
 
 	"github.com/google/go-cmp/cmp"
 	"golang.org/x/tools/txtar"
@@ -29,22 +29,22 @@ func TestExtract(t *testing.T) {
 	tests := []struct {
 		Name     string
 		ZIP      string
-		Module   *vdm.GoModule
-		Manifest *vdm.GoModuleManifest
+		Module   *ves.GoModule
+		Manifest *ves.GoModuleManifest
 		Want     string
 		Error    string
 	}{
 		{
 			Name: "invalid-bad-checksum",
 			ZIP:  filepath.FromSlash("testdata/zips/golang.org/x/arch/@v/v0.13.0.zip"),
-			Module: &vdm.GoModule{
+			Module: &ves.GoModule{
 				Name:    "golang.org/x/arch",
 				Version: s("v0.13.0"),
-				Packages: []*vdm.GoPackage{
+				Packages: []*ves.GoPackage{
 					{Name: s("golang.org/x/arch/x86/x86asm")},
 				},
 			},
-			Manifest: &vdm.GoModuleManifest{
+			Manifest: &ves.GoModuleManifest{
 				Name:     "golang.org/x/arch",
 				Version:  s("v0.13.0"),
 				Download: s("sha256:checksum"),
@@ -54,14 +54,14 @@ func TestExtract(t *testing.T) {
 		{
 			Name: "invalid-bad-target",
 			ZIP:  filepath.FromSlash("testdata/zips/golang.org/x/arch/@v/v0.13.0.zip"),
-			Module: &vdm.GoModule{
+			Module: &ves.GoModule{
 				Name:    "golang.org/x/arch",
 				Version: s("v0.13.0"),
-				Packages: []*vdm.GoPackage{
+				Packages: []*ves.GoPackage{
 					{Name: s("golang.org/x/arch/x86/x86asm")},
 				},
 			},
-			Manifest: &vdm.GoModuleManifest{
+			Manifest: &ves.GoModuleManifest{
 				Name:     "golang.org/x/arch",
 				Version:  s("v0.14.0"),
 				Download: s("sha256:KCkqVVV1kGg0X87TFysjCJ8MxtZEIU4Ja/yXGeoECdA="),
@@ -71,17 +71,17 @@ func TestExtract(t *testing.T) {
 		{
 			Name: "invalid-bad-patches",
 			ZIP:  filepath.FromSlash("testdata/zips/golang.org/x/arch/@v/v0.13.0.zip"),
-			Module: &vdm.GoModule{
+			Module: &ves.GoModule{
 				Name:    "golang.org/x/arch",
 				Version: s("v0.13.0"),
-				Patches: []vdm.ParsedString{
+				Patches: []ves.ParsedString{
 					{Value: "testdata/nonexistant.patch"},
 				},
-				Packages: []*vdm.GoPackage{
+				Packages: []*ves.GoPackage{
 					{Name: s("golang.org/x/arch/x86/x86asm")},
 				},
 			},
-			Manifest: &vdm.GoModuleManifest{
+			Manifest: &ves.GoModuleManifest{
 				Name:     "golang.org/x/arch",
 				Version:  s("v0.13.0"),
 				Download: s("sha256:KCkqVVV1kGg0X87TFysjCJ8MxtZEIU4Ja/yXGeoECdA="),
@@ -91,14 +91,14 @@ func TestExtract(t *testing.T) {
 		{
 			Name: "valid-complex-no-patches",
 			ZIP:  filepath.FromSlash("testdata/zips/golang.org/x/arch/@v/v0.13.0.zip"),
-			Module: &vdm.GoModule{
+			Module: &ves.GoModule{
 				Name:    "golang.org/x/arch",
 				Version: s("v0.13.0"),
-				Packages: []*vdm.GoPackage{
+				Packages: []*ves.GoPackage{
 					{Name: s("golang.org/x/arch/x86/x86asm")},
 				},
 			},
-			Manifest: &vdm.GoModuleManifest{
+			Manifest: &ves.GoModuleManifest{
 				Name:     "golang.org/x/arch",
 				Version:  s("v0.13.0"),
 				Download: s("sha256:KCkqVVV1kGg0X87TFysjCJ8MxtZEIU4Ja/yXGeoECdA="),
@@ -108,17 +108,17 @@ func TestExtract(t *testing.T) {
 		{
 			Name: "valid-complex-with-patches",
 			ZIP:  filepath.FromSlash("testdata/zips/golang.org/x/arch/@v/v0.13.0.zip"),
-			Module: &vdm.GoModule{
+			Module: &ves.GoModule{
 				Name:    "golang.org/x/arch",
 				Version: s("v0.13.0"),
-				Patches: []vdm.ParsedString{
+				Patches: []ves.ParsedString{
 					{Value: "testdata/patching/golang.org_x_arch.patch"},
 				},
-				Packages: []*vdm.GoPackage{
+				Packages: []*ves.GoPackage{
 					{Name: s("golang.org/x/arch/x86/x86asm")},
 				},
 			},
-			Manifest: &vdm.GoModuleManifest{
+			Manifest: &ves.GoModuleManifest{
 				Name:     "golang.org/x/arch",
 				Version:  s("v0.13.0"),
 				Download: s("sha256:KCkqVVV1kGg0X87TFysjCJ8MxtZEIU4Ja/yXGeoECdA="),
@@ -227,19 +227,19 @@ func TestExtractor_CompareChecksum(t *testing.T) {
 	tests := []struct {
 		Name     string
 		Got      string
-		Manifest *vdm.GoModuleManifest
+		Manifest *ves.GoModuleManifest
 		Error    string
 	}{
 		{
 			Name:     "invalid-bad-format",
 			Got:      "checksum",
-			Manifest: &vdm.GoModuleManifest{Name: "rsc.io/diff"},
+			Manifest: &ves.GoModuleManifest{Name: "rsc.io/diff"},
 			Error:    `failed to verify Go module rsc.io/diff: invalid checksum "checksum": missing colon`,
 		},
 		{
 			Name: "invalid-mismatch",
 			Got:  "h1:asdf",
-			Manifest: &vdm.GoModuleManifest{
+			Manifest: &ves.GoModuleManifest{
 				Name:     "rsc.io/diff",
 				Version:  s("v0.0.0-20190621135850-fe3479844c3c"),
 				Download: s("sha256:/WCDjRGIVDjKlhtSc1PEApp2fR58gfSVK62dr/yQNyQ="),
@@ -249,7 +249,7 @@ func TestExtractor_CompareChecksum(t *testing.T) {
 		{
 			Name: "valid-simple",
 			Got:  "h1:/WCDjRGIVDjKlhtSc1PEApp2fR58gfSVK62dr/yQNyQ=",
-			Manifest: &vdm.GoModuleManifest{
+			Manifest: &ves.GoModuleManifest{
 				Name:     "rsc.io/diff",
 				Version:  s("v0.0.0-20190621135850-fe3479844c3c"),
 				Download: s("sha256:/WCDjRGIVDjKlhtSc1PEApp2fR58gfSVK62dr/yQNyQ="),
@@ -286,13 +286,13 @@ func TestExtractor_VerifyChecksum(t *testing.T) {
 	tests := []struct {
 		Name     string
 		Path     string
-		Manifest *vdm.GoModuleManifest
+		Manifest *ves.GoModuleManifest
 		Error    string
 	}{
 		{
 			Name: "invalid-bad-path",
 			Path: filepath.FromSlash("testdata/nonexistant.zip"),
-			Manifest: &vdm.GoModuleManifest{
+			Manifest: &ves.GoModuleManifest{
 				Name:     "rsc.io/diff",
 				Version:  s("v0.0.0-20190621135850-fe3479844c3c"),
 				Download: s("sha256:/WCDjRGIVDjKlhtSc1PEApp2fR58gfSVK62dr/yQNyQ="),
@@ -302,7 +302,7 @@ func TestExtractor_VerifyChecksum(t *testing.T) {
 		{
 			Name: "valid-simple",
 			Path: filepath.FromSlash("testdata/zips/rsc.io/diff/@v/v0.0.0-20190621135850-fe3479844c3c.zip"),
-			Manifest: &vdm.GoModuleManifest{
+			Manifest: &ves.GoModuleManifest{
 				Name:     "rsc.io/diff",
 				Version:  s("v0.0.0-20190621135850-fe3479844c3c"),
 				Download: s("sha256:/WCDjRGIVDjKlhtSc1PEApp2fR58gfSVK62dr/yQNyQ="),
@@ -340,14 +340,14 @@ func TestExtractor_Extract(t *testing.T) {
 		Name     string
 		Dst      string
 		Path     string
-		Manifest *vdm.GoModuleManifest
+		Manifest *ves.GoModuleManifest
 		Error    string
 	}{
 		{
 			Name: "invalid-missing-zip",
 			Dst:  t.ArtifactDir(),
 			Path: filepath.FromSlash("testdata/nonexistant.zip"),
-			Manifest: &vdm.GoModuleManifest{
+			Manifest: &ves.GoModuleManifest{
 				Name:    "rsc.io/diff",
 				Version: s("v0.0.0-20190621135850-fe3479844c3c"),
 			},
@@ -357,7 +357,7 @@ func TestExtractor_Extract(t *testing.T) {
 			Name: "valid-simple",
 			Dst:  t.ArtifactDir(),
 			Path: filepath.FromSlash("testdata/zips/rsc.io/diff/@v/v0.0.0-20190621135850-fe3479844c3c.zip"),
-			Manifest: &vdm.GoModuleManifest{
+			Manifest: &ves.GoModuleManifest{
 				Name:    "rsc.io/diff",
 				Version: s("v0.0.0-20190621135850-fe3479844c3c"),
 			},
@@ -415,14 +415,14 @@ func TestExtractor_IdentifyDeletions(t *testing.T) {
 	tests := []struct {
 		Name   string
 		FS     fs.FS
-		Module *vdm.GoModule
+		Module *ves.GoModule
 		Want   []string
 		Error  string
 	}{
 		{
 			Name: "invalid-bad-fs",
 			FS:   vdmtest.TestFS(t, vdmtest.WithErrors("rsc.io/diff", "file does not exist")),
-			Module: &vdm.GoModule{
+			Module: &ves.GoModule{
 				Name:    "rsc.io/diff",
 				Version: s("v1.2.3"),
 			},
@@ -431,10 +431,10 @@ func TestExtractor_IdentifyDeletions(t *testing.T) {
 		{
 			Name: "valid-single-module",
 			FS:   vdmtest.TxtarFS(t, "testdata/pruning/complex.txtar"),
-			Module: &vdm.GoModule{
+			Module: &ves.GoModule{
 				Name:    "rsc.io/diff",
 				Version: s("v1.2.3"),
-				Packages: []*vdm.GoPackage{
+				Packages: []*ves.GoPackage{
 					{Name: s("rsc.io/diff")},
 					{Name: s("rsc.io/diff/deeply/nested/pkg")},
 				},
@@ -448,14 +448,14 @@ func TestExtractor_IdentifyDeletions(t *testing.T) {
 		{
 			Name: "valid-multi-module",
 			FS:   vdmtest.TxtarFS(t, "testdata/pruning/complex.txtar"),
-			Module: &vdm.GoModule{
+			Module: &ves.GoModule{
 				Name:    "rsc.io/diff",
 				Version: s("v1.2.3"),
-				Packages: []*vdm.GoPackage{
+				Packages: []*ves.GoPackage{
 					{Name: s("rsc.io/diff")},
 					{
 						Name: s("rsc.io/diff/deeply/nested/pkg"),
-						Directories: []vdm.ParsedString{
+						Directories: []ves.ParsedString{
 							{Value: "nonexistant"},
 						},
 					},
@@ -502,15 +502,15 @@ func TestExtractor_ExtractAndPrune(t *testing.T) {
 	tests := []struct {
 		Name     string
 		Path     string
-		Module   *vdm.GoModule
-		Manifest *vdm.GoModuleManifest
+		Module   *ves.GoModule
+		Manifest *ves.GoModuleManifest
 		Want     string
 		Error    string
 	}{
 		{
 			Name: "invalid-missing-zip",
 			Path: filepath.FromSlash("testdata/nonexistant.zip"),
-			Manifest: &vdm.GoModuleManifest{
+			Manifest: &ves.GoModuleManifest{
 				Name:    "rsc.io/diff",
 				Version: s("v0.0.0-20190621135850-fe3479844c3c"),
 			},
@@ -519,14 +519,14 @@ func TestExtractor_ExtractAndPrune(t *testing.T) {
 		{
 			Name: "valid-golang.org-x-arch",
 			Path: filepath.FromSlash("testdata/zips/golang.org/x/arch/@v/v0.13.0.zip"),
-			Module: &vdm.GoModule{
+			Module: &ves.GoModule{
 				Name:    "golang.org/x/arch",
 				Version: s("v0.13.0"),
-				Packages: []*vdm.GoPackage{
+				Packages: []*ves.GoPackage{
 					{Name: s("golang.org/x/arch/x86/x86asm")},
 				},
 			},
-			Manifest: &vdm.GoModuleManifest{
+			Manifest: &ves.GoModuleManifest{
 				Name:    "golang.org/x/arch",
 				Version: s("v0.13.0"),
 			},
@@ -645,8 +645,8 @@ func TestExtractor_PatchWithBinary(t *testing.T) {
 		Name     string
 		Path     string
 		ZIP      string
-		Module   *vdm.GoModule
-		Manifest *vdm.GoModuleManifest
+		Module   *ves.GoModule
+		Manifest *ves.GoModuleManifest
 		FS       fs.FS
 		Patches  []string
 		Want     string
@@ -668,14 +668,14 @@ func TestExtractor_PatchWithBinary(t *testing.T) {
 		{
 			Name: "valid-complex",
 			ZIP:  filepath.FromSlash("testdata/zips/golang.org/x/arch/@v/v0.13.0.zip"),
-			Module: &vdm.GoModule{
+			Module: &ves.GoModule{
 				Name:    "golang.org/x/arch",
 				Version: s("v0.13.0"),
-				Packages: []*vdm.GoPackage{
+				Packages: []*ves.GoPackage{
 					{Name: s("golang.org/x/arch/x86/x86asm")},
 				},
 			},
-			Manifest: &vdm.GoModuleManifest{
+			Manifest: &ves.GoModuleManifest{
 				Name:    "golang.org/x/arch",
 				Version: s("v0.13.0"),
 			},
@@ -913,7 +913,7 @@ func TestExtractor_PatchWithPackage(t *testing.T) {
 		Name     string
 		Path     string
 		ZIP      string
-		Manifest *vdm.GoModuleManifest
+		Manifest *ves.GoModuleManifest
 		FS       fs.FS
 		Patches  []string
 		Want     string
@@ -934,7 +934,7 @@ func TestExtractor_PatchWithPackage(t *testing.T) {
 		{
 			Name: "invalid-bad-removal",
 			ZIP:  filepath.FromSlash("testdata/zips/example.com/foo/@v/v1.2.3.zip"),
-			Manifest: &vdm.GoModuleManifest{
+			Manifest: &ves.GoModuleManifest{
 				Name:    "example.com/foo",
 				Version: s("v1.2.3"),
 			},
@@ -945,7 +945,7 @@ func TestExtractor_PatchWithPackage(t *testing.T) {
 		{
 			Name: "valid-constructed",
 			ZIP:  filepath.FromSlash("testdata/zips/example.com/foo/@v/v1.2.3.zip"),
-			Manifest: &vdm.GoModuleManifest{
+			Manifest: &ves.GoModuleManifest{
 				Name:    "example.com/foo",
 				Version: s("v1.2.3"),
 			},
@@ -1023,8 +1023,8 @@ func TestExtractor_ApplyPatches(t *testing.T) {
 		Name     string
 		Path     string
 		ZIP      string
-		Module   *vdm.GoModule
-		Manifest *vdm.GoModuleManifest
+		Module   *ves.GoModule
+		Manifest *ves.GoModuleManifest
 		FS       fs.FS
 		Patches  []string
 		Want     string
@@ -1033,14 +1033,14 @@ func TestExtractor_ApplyPatches(t *testing.T) {
 		{
 			Name: "valid-complex",
 			ZIP:  filepath.FromSlash("testdata/zips/golang.org/x/arch/@v/v0.13.0.zip"),
-			Module: &vdm.GoModule{
+			Module: &ves.GoModule{
 				Name:    "golang.org/x/arch",
 				Version: s("v0.13.0"),
-				Packages: []*vdm.GoPackage{
+				Packages: []*ves.GoPackage{
 					{Name: s("golang.org/x/arch/x86/x86asm")},
 				},
 			},
-			Manifest: &vdm.GoModuleManifest{
+			Manifest: &ves.GoModuleManifest{
 				Name:    "golang.org/x/arch",
 				Version: s("v0.13.0"),
 			},
@@ -1122,8 +1122,8 @@ func BenchmarkExtractor_ApplyPatches(b *testing.B) {
 	tests := []struct {
 		Name     string
 		ZIP      string
-		Module   *vdm.GoModule
-		Manifest *vdm.GoModuleManifest
+		Module   *ves.GoModule
+		Manifest *ves.GoModuleManifest
 		FS       fs.FS
 		Patches  []string
 		Error    string
@@ -1131,14 +1131,14 @@ func BenchmarkExtractor_ApplyPatches(b *testing.B) {
 		{
 			Name: "valid-complex",
 			ZIP:  filepath.FromSlash("testdata/zips/golang.org/x/arch/@v/v0.13.0.zip"),
-			Module: &vdm.GoModule{
+			Module: &ves.GoModule{
 				Name:    "golang.org/x/arch",
 				Version: s("v0.13.0"),
-				Packages: []*vdm.GoPackage{
+				Packages: []*ves.GoPackage{
 					{Name: s("golang.org/x/arch/x86/x86asm")},
 				},
 			},
-			Manifest: &vdm.GoModuleManifest{
+			Manifest: &ves.GoModuleManifest{
 				Name:    "golang.org/x/arch",
 				Version: s("v0.13.0"),
 			},

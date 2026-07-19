@@ -12,7 +12,7 @@ import (
 	"strings"
 
 	"github.com/ProjectSerenity/vdm/internal/digest"
-	"github.com/ProjectSerenity/vdm/internal/vdm"
+	"github.com/ProjectSerenity/vdm/internal/ves"
 )
 
 // StripCachedActions processes the action sequence,
@@ -26,7 +26,7 @@ func StripCachedActions(fsys fs.FS, actions []Action) []Action {
 	// Start by loading the cache manifest. If we
 	// fail to do so, we just return the unmodified
 	// action sequence.
-	cachedManifests, err := vdm.ReadManifests(fsys, path.Join(vdm.Vendor, vdm.ManifestsVDM))
+	cachedManifests, err := ves.ReadManifests(fsys, path.Join(ves.Vendor, ves.ManifestsVDM))
 	if err != nil {
 		return actions
 	}
@@ -37,7 +37,7 @@ func StripCachedActions(fsys fs.FS, actions []Action) []Action {
 
 	// Copy the manifest data into a map to make
 	// lookups quicker.
-	manifests := make(map[string]*vdm.GoModuleManifest)
+	manifests := make(map[string]*ves.GoModuleManifest)
 	for _, manifest := range cachedManifests.GoModules {
 		manifests[manifest.Name] = manifest
 	}
@@ -84,7 +84,7 @@ toNextAction:
 			ignore := make([]string, len(dl.Module.Packages))
 			root := strings.TrimSuffix(dl.Path, dl.Module.Name)
 			for i, pkg := range dl.Module.Packages {
-				ignore[i] = path.Join(root, pkg.Name.Value, vdm.BuildBazel)
+				ignore[i] = path.Join(root, pkg.Name.Value, ves.BuildBazel)
 			}
 
 			vendored, err := digest.Directory(fsys, dl.Path, ignore...)
@@ -156,7 +156,7 @@ func parentModules(mod string) iter.Seq[string] {
 	}
 }
 
-func cloneStrings(ss []vdm.ParsedString) []string {
+func cloneStrings(ss []ves.ParsedString) []string {
 	if ss == nil {
 		return nil
 	}

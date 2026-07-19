@@ -17,7 +17,7 @@ import (
 
 	"github.com/ProjectSerenity/vdm/internal/digest"
 	"github.com/ProjectSerenity/vdm/internal/gomodzip"
-	"github.com/ProjectSerenity/vdm/internal/vdm"
+	"github.com/ProjectSerenity/vdm/internal/ves"
 )
 
 // Action represents a logical action that should be
@@ -58,8 +58,8 @@ func (r RemoveAll) String() string {
 // the given path.
 type DownloadGoModule struct {
 	Cache       *gomodzip.ModuleCache
-	Module      *vdm.GoModule
-	Manifest    *vdm.GoModuleManifest
+	Module      *ves.GoModule
+	Manifest    *ves.GoModuleManifest
 	ModuleProxy string
 	Dir         string
 	Path        string
@@ -214,7 +214,7 @@ func (c CopyBUILD) String() string {
 // should have its BUILD file generated and written to
 // the given path.
 type GenerateGoPackageBUILD struct {
-	Package   *vdm.GoPackage
+	Package   *ves.GoPackage
 	Dir       string
 	Files     []string
 	TestFiles []string
@@ -303,7 +303,7 @@ func (c *GenerateGoPackageBUILD) String() string {
 // information necessary to avoid unnecessary future work,
 // writing it to the given path.
 type BuildCacheManifest struct {
-	Manifests *vdm.Manifests
+	Manifests *ves.Manifests
 	Path      string
 }
 

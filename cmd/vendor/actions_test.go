@@ -24,8 +24,8 @@ import (
 
 	"github.com/ProjectSerenity/vdm/internal/gomodzip"
 	"github.com/ProjectSerenity/vdm/internal/simplehttp"
-	"github.com/ProjectSerenity/vdm/internal/vdm"
 	"github.com/ProjectSerenity/vdm/internal/vdmtest"
+	"github.com/ProjectSerenity/vdm/internal/ves"
 
 	"github.com/google/go-cmp/cmp"
 )
@@ -98,7 +98,7 @@ func TestDownloadGoModule(t *testing.T) {
 		Name         string
 		Init         func(t *testing.T, action *DownloadGoModule) // Optional setup code.
 		Action       *DownloadGoModule
-		WantManifest *vdm.GoModuleManifest
+		WantManifest *ves.GoModuleManifest
 		WantFS       fs.FS
 		String       string
 		Error        string
@@ -107,10 +107,10 @@ func TestDownloadGoModule(t *testing.T) {
 		{
 			Name: "invalid-bad-module-name",
 			Action: &DownloadGoModule{
-				Module: &vdm.GoModule{
+				Module: &ves.GoModule{
 					Name: "-!",
 				},
-				Manifest: &vdm.GoModuleManifest{
+				Manifest: &ves.GoModuleManifest{
 					Name: "-!",
 				},
 				Path: "vendor/rsc.io/diff",
@@ -139,16 +139,16 @@ func TestDownloadGoModule(t *testing.T) {
 				}
 			},
 			Action: &DownloadGoModule{
-				Module: &vdm.GoModule{
+				Module: &ves.GoModule{
 					Name:    "rsc.io/diff",
 					Version: s("v0.0.0-20190621135850-fe3479844c3c"),
-					Packages: []*vdm.GoPackage{
+					Packages: []*ves.GoPackage{
 						{
 							Name: s("rsc.io/diff"),
 						},
 					},
 				},
-				Manifest: &vdm.GoModuleManifest{
+				Manifest: &ves.GoModuleManifest{
 					Name:     "rsc.io/diff",
 					Version:  s("v0.0.0-20190621135850-fe3479844c3c"),
 					Download: s("sha256:/WCDjRGIVDjKlhtSc1PEApp2fR58gfSVK62dr/yQNyQ="),
@@ -165,16 +165,16 @@ func TestDownloadGoModule(t *testing.T) {
 				action.ModuleProxy = "https://0.0.0.0:0"
 			},
 			Action: &DownloadGoModule{
-				Module: &vdm.GoModule{
+				Module: &ves.GoModule{
 					Name:    "rsc.io/diff",
 					Version: s("v0.0.0-20190621135850-fe3479844c3c"),
-					Packages: []*vdm.GoPackage{
+					Packages: []*ves.GoPackage{
 						{
 							Name: s("rsc.io/diff"),
 						},
 					},
 				},
-				Manifest: &vdm.GoModuleManifest{
+				Manifest: &ves.GoModuleManifest{
 					Name:     "rsc.io/diff",
 					Version:  s("v0.0.0-20190621135850-fe3479844c3c"),
 					Download: s("sha256:/WCDjRGIVDjKlhtSc1PEApp2fR58gfSVK62dr/yQNyQ="),
@@ -203,20 +203,20 @@ func TestDownloadGoModule(t *testing.T) {
 				}
 			},
 			Action: &DownloadGoModule{
-				Module: &vdm.GoModule{
+				Module: &ves.GoModule{
 					Name:    "rsc.io/diff",
 					Version: s("v0.0.0-20190621135850-fe3479844c3c"),
-					Patches: []vdm.ParsedString{
+					Patches: []ves.ParsedString{
 						{Value: "patches/foo.patch"},
 						{Value: "patches/bar.patch"},
 					},
-					Packages: []*vdm.GoPackage{
+					Packages: []*ves.GoPackage{
 						{
 							Name: s("rsc.io/diff"),
 						},
 					},
 				},
-				Manifest: &vdm.GoModuleManifest{
+				Manifest: &ves.GoModuleManifest{
 					Name:     "rsc.io/diff",
 					Version:  s("v0.0.0-20190621135850-fe3479844c3c"),
 					Download: s("sha256:AB6TWADCiFzYx4nzfwjeNQBxOA+FM7yLQGFe0PKx38k="), // This is wrong.
@@ -245,23 +245,23 @@ func TestDownloadGoModule(t *testing.T) {
 				}
 			},
 			Action: &DownloadGoModule{
-				Module: &vdm.GoModule{
+				Module: &ves.GoModule{
 					Name:    "rsc.io/diff",
 					Version: s("v0.0.0-20190621135850-fe3479844c3c"),
-					Packages: []*vdm.GoPackage{
+					Packages: []*ves.GoPackage{
 						{
 							Name: s("rsc.io/diff"),
 						},
 					},
 				},
-				Manifest: &vdm.GoModuleManifest{
+				Manifest: &ves.GoModuleManifest{
 					Name:     "rsc.io/diff",
 					Version:  s("v0.0.0-20190621135850-fe3479844c3c"),
 					Download: s("sha256:/WCDjRGIVDjKlhtSc1PEApp2fR58gfSVK62dr/yQNyQ="),
 				},
 				Path: "vendor/rsc.io/diff",
 			},
-			WantManifest: &vdm.GoModuleManifest{
+			WantManifest: &ves.GoModuleManifest{
 				Name:     "rsc.io/diff",
 				Version:  s("v0.0.0-20190621135850-fe3479844c3c"),
 				Download: s("sha256:/WCDjRGIVDjKlhtSc1PEApp2fR58gfSVK62dr/yQNyQ="),
@@ -273,23 +273,23 @@ func TestDownloadGoModule(t *testing.T) {
 		{
 			Name: "valid-download-and-extract",
 			Action: &DownloadGoModule{
-				Module: &vdm.GoModule{
+				Module: &ves.GoModule{
 					Name:    "rsc.io/diff",
 					Version: s("v0.0.0-20190621135850-fe3479844c3c"),
-					Packages: []*vdm.GoPackage{
+					Packages: []*ves.GoPackage{
 						{
 							Name: s("rsc.io/diff"),
 						},
 					},
 				},
-				Manifest: &vdm.GoModuleManifest{
+				Manifest: &ves.GoModuleManifest{
 					Name:     "rsc.io/diff",
 					Version:  s("v0.0.0-20190621135850-fe3479844c3c"),
 					Download: s("sha256:/WCDjRGIVDjKlhtSc1PEApp2fR58gfSVK62dr/yQNyQ="),
 				},
 				Path: "vendor/rsc.io/diff",
 			},
-			WantManifest: &vdm.GoModuleManifest{
+			WantManifest: &ves.GoModuleManifest{
 				Name:     "rsc.io/diff",
 				Version:  s("v0.0.0-20190621135850-fe3479844c3c"),
 				Download: s("sha256:/WCDjRGIVDjKlhtSc1PEApp2fR58gfSVK62dr/yQNyQ="),
@@ -326,7 +326,7 @@ func TestDownloadGoModule(t *testing.T) {
 			dirFS := vdmtest.DirFS(t)
 			test.Action.Cache = gomodzip.ModuleCacheFromBase(target)
 			test.Action.ModuleProxy = "https://example.com" // Use our test server instead of the real module proxy.
-			test.Action.Dir = filepath.Join(target, vdm.Vendor)
+			test.Action.Dir = filepath.Join(target, ves.Vendor)
 			err := os.MkdirAll(filepath.Join(target, filepath.FromSlash(test.Action.Path)), 0o777)
 			if err != nil {
 				t.Fatalf("failed to create vendor directory: %v", err)
@@ -362,7 +362,7 @@ func TestDownloadGoModule(t *testing.T) {
 			}
 
 			// Check the contents.
-			err = vdmtest.DiffTextFilesystems(dirFS, test.WantFS, vdm.Vendor)
+			err = vdmtest.DiffTextFilesystems(dirFS, test.WantFS, ves.Vendor)
 			if err != nil {
 				t.Fatalf("DownloadGoModule(): contents mismatch: %v", err)
 			}
@@ -512,7 +512,7 @@ func TestCopyBUILD(t *testing.T) {
 			}
 
 			// Check the contents.
-			err = vdmtest.DiffTextFilesystems(dirFS, test.Want, vdm.Vendor)
+			err = vdmtest.DiffTextFilesystems(dirFS, test.Want, ves.Vendor)
 			if err != nil {
 				t.Fatalf("CopyBUILD(): contents mismatch: %v", err)
 			}
@@ -535,7 +535,7 @@ func TestGenerateGoPackageBUILD(t *testing.T) {
 			Name: "invalid-bad-fs",
 			FS:   vdmtest.TestFS(t, vdmtest.WithErrors("vendor/rsc.io/diff", "bad dir")),
 			Action: &GenerateGoPackageBUILD{
-				Package: &vdm.GoPackage{
+				Package: &ves.GoPackage{
 					Name: s("rsc.io/diff"),
 				},
 				Dir:  "vendor/rsc.io/diff",
@@ -556,7 +556,7 @@ func TestGenerateGoPackageBUILD(t *testing.T) {
 			},
 			FS: vdmtest.TxtarFS(t, "testdata/actions/no-tests-package.txtar"),
 			Action: &GenerateGoPackageBUILD{
-				Package: &vdm.GoPackage{
+				Package: &ves.GoPackage{
 					Name: s("example.com/foo"),
 				},
 				Dir:  "vendor/example.com/foo",
@@ -570,7 +570,7 @@ func TestGenerateGoPackageBUILD(t *testing.T) {
 			Name: "valid-no-tests-package",
 			FS:   vdmtest.TxtarFS(t, "testdata/actions/no-tests-package.txtar"),
 			Action: &GenerateGoPackageBUILD{
-				Package: &vdm.GoPackage{
+				Package: &ves.GoPackage{
 					Name: s("example.com/foo"),
 				},
 				Dir:  "vendor/example.com/foo",
@@ -591,7 +591,7 @@ func TestGenerateGoPackageBUILD(t *testing.T) {
 			},
 			FS: vdmtest.TxtarFS(t, "testdata/actions/complex-package.txtar"),
 			Action: &GenerateGoPackageBUILD{
-				Package: &vdm.GoPackage{
+				Package: &ves.GoPackage{
 					Name: s("example.com/foo"),
 				},
 				Dir:  "vendor/example.com/foo",
@@ -604,38 +604,38 @@ func TestGenerateGoPackageBUILD(t *testing.T) {
 			Name: "valid-complex-binary",
 			FS:   vdmtest.TxtarFS(t, "testdata/actions/complex-binary.txtar"),
 			Action: &GenerateGoPackageBUILD{
-				Package: &vdm.GoPackage{
+				Package: &ves.GoPackage{
 					Name: s("example.com/foo"),
-					Deps: []vdm.ParsedString{
+					Deps: []ves.ParsedString{
 						s("rsc.io/diff"),
 						s("rsc.io/quote"),
 					},
-					Embed: []vdm.ParsedString{
+					Embed: []ves.ParsedString{
 						s("README.md"),
 						s("a.go"),
 					},
-					EmbedGlobs: []vdm.ParsedString{
+					EmbedGlobs: []ves.ParsedString{
 						s("templates/**/*.tmpl"),
 					},
 
-					Binary: vdm.ParsedBool{Value: true},
-					BinaryDeps: []vdm.ParsedString{
+					Binary: ves.ParsedBool{Value: true},
+					BinaryDeps: []ves.ParsedString{
 						s("github.com/spf13/cobra"),
 					},
 
 					TestSize: s("medium"),
-					TestData: []vdm.ParsedString{
+					TestData: []ves.ParsedString{
 						s("README.md"),
 					},
-					TestDataGlobs: []vdm.ParsedString{
+					TestDataGlobs: []ves.ParsedString{
 						s("*_test.go"),
 						s("templates/**/*.tmpl"),
 					},
-					TestDeps: []vdm.ParsedString{
+					TestDeps: []ves.ParsedString{
 						s("github.com/google/go-cmp/cmp"),
 						s("github.com/google/go-cmp/cmp/cmpopts"),
 					},
-					TestEnv: map[string]vdm.ParsedString{
+					TestEnv: map[string]ves.ParsedString{
 						"GOPATH": s("/home/test/go"),
 						"HOME":   s("/home/test"),
 					},
@@ -690,7 +690,7 @@ func TestGenerateGoPackageBUILD(t *testing.T) {
 			}
 
 			// Check the contents.
-			err = vdmtest.DiffTextFilesystems(dirFS, test.Want, vdm.Vendor)
+			err = vdmtest.DiffTextFilesystems(dirFS, test.Want, ves.Vendor)
 			if err != nil {
 				t.Fatalf("GenerateGoPackageBUILD(): contents mismatch: %v", err)
 			}

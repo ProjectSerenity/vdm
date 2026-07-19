@@ -10,8 +10,8 @@ import (
 	"slices"
 	"testing"
 
-	"github.com/ProjectSerenity/vdm/internal/vdm"
 	"github.com/ProjectSerenity/vdm/internal/vdmtest"
+	"github.com/ProjectSerenity/vdm/internal/ves"
 
 	"github.com/google/go-cmp/cmp"
 )
@@ -28,14 +28,14 @@ func TestStripCachedActions(t *testing.T) {
 			FS:   vdmtest.TxtarFS(t, "testdata/caching/no-cache.txtar"),
 			Actions: []Action{
 				DownloadGoModule{
-					Module: &vdm.GoModule{
+					Module: &ves.GoModule{
 						Name:    "rsc.io/quote",
 						Version: s("v1.2.3"),
-						Packages: []*vdm.GoPackage{
+						Packages: []*ves.GoPackage{
 							{Name: s("rsc.io/quote")},
 						},
 					},
-					Manifest: &vdm.GoModuleManifest{
+					Manifest: &ves.GoModuleManifest{
 						Name:    "rsc.io/quote",
 						Version: s("v1.2.3"),
 					},
@@ -44,14 +44,14 @@ func TestStripCachedActions(t *testing.T) {
 			},
 			Want: []Action{
 				DownloadGoModule{
-					Module: &vdm.GoModule{
+					Module: &ves.GoModule{
 						Name:    "rsc.io/quote",
 						Version: s("v1.2.3"),
-						Packages: []*vdm.GoPackage{
+						Packages: []*ves.GoPackage{
 							{Name: s("rsc.io/quote")},
 						},
 					},
-					Manifest: &vdm.GoModuleManifest{
+					Manifest: &ves.GoModuleManifest{
 						Name:    "rsc.io/quote",
 						Version: s("v1.2.3"),
 					},
@@ -64,14 +64,14 @@ func TestStripCachedActions(t *testing.T) {
 			FS:   vdmtest.TxtarFS(t, "testdata/caching/empty-cache.txtar"),
 			Actions: []Action{
 				DownloadGoModule{
-					Module: &vdm.GoModule{
+					Module: &ves.GoModule{
 						Name:    "rsc.io/quote",
 						Version: s("v1.2.3"),
-						Packages: []*vdm.GoPackage{
+						Packages: []*ves.GoPackage{
 							{Name: s("rsc.io/quote")},
 						},
 					},
-					Manifest: &vdm.GoModuleManifest{
+					Manifest: &ves.GoModuleManifest{
 						Name:    "rsc.io/quote",
 						Version: s("v1.2.3"),
 					},
@@ -80,14 +80,14 @@ func TestStripCachedActions(t *testing.T) {
 			},
 			Want: []Action{
 				DownloadGoModule{
-					Module: &vdm.GoModule{
+					Module: &ves.GoModule{
 						Name:    "rsc.io/quote",
 						Version: s("v1.2.3"),
-						Packages: []*vdm.GoPackage{
+						Packages: []*ves.GoPackage{
 							{Name: s("rsc.io/quote")},
 						},
 					},
-					Manifest: &vdm.GoModuleManifest{
+					Manifest: &ves.GoModuleManifest{
 						Name:    "rsc.io/quote",
 						Version: s("v1.2.3"),
 					},
@@ -116,15 +116,15 @@ func TestStripCachedActions(t *testing.T) {
 				rma := RemoveAll("vendor/example.com/foo")
 				dls := []DownloadGoModule{
 					{
-						Module: &vdm.GoModule{
+						Module: &ves.GoModule{
 							Name:    "example.com/bar",
 							Version: s("v1.2.3"),
-							Packages: []*vdm.GoPackage{
+							Packages: []*ves.GoPackage{
 								{Name: s("example.com/bar")},
 								{Name: s("example.com/bar/baz")},
 							},
 						},
-						Manifest: &vdm.GoModuleManifest{
+						Manifest: &ves.GoModuleManifest{
 							Name:     "example.com/bar",
 							Version:  s("v1.2.3"),
 							Packages: s("sha256:9nIFKNUR+Ycz3wTrCUEbPfQjw0s3D7nRvw/7N4bMRWc="),
@@ -132,77 +132,77 @@ func TestStripCachedActions(t *testing.T) {
 						Path: "vendor/example.com/bar",
 					},
 					{
-						Module: &vdm.GoModule{
+						Module: &ves.GoModule{
 							Name:    "golang.org/x/crypto",
 							Version: s("v1.2.3"),
-							Packages: []*vdm.GoPackage{
+							Packages: []*ves.GoPackage{
 								{Name: s("golang.org/x/crypto")},
 							},
 						},
-						Manifest: &vdm.GoModuleManifest{
+						Manifest: &ves.GoModuleManifest{
 							Name:    "golang.org/x/crypto",
 							Version: s("v1.2.3"),
 						},
 						Path: "vendor/golang.org/x/crypto",
 					},
 					{
-						Module: &vdm.GoModule{
+						Module: &ves.GoModule{
 							Name:    "golang.org/x/mod",
 							Version: s("v1.2.3"),
-							Packages: []*vdm.GoPackage{
+							Packages: []*ves.GoPackage{
 								{Name: s("golang.org/x/mod/module")},
 								{Name: s("golang.org/x/mod/zip")},
 							},
 						},
-						Manifest: &vdm.GoModuleManifest{
+						Manifest: &ves.GoModuleManifest{
 							Name:    "golang.org/x/mod",
 							Version: s("v1.2.3"),
 						},
 						Path: "vendor/golang.org/x/mod",
 					},
 					{
-						Module: &vdm.GoModule{
+						Module: &ves.GoModule{
 							Name:    "rsc.io/diff",
 							Version: s("v1.2.3"),
-							Packages: []*vdm.GoPackage{
+							Packages: []*ves.GoPackage{
 								{Name: s("rsc.io/diff")},
 							},
 						},
-						Manifest: &vdm.GoModuleManifest{
+						Manifest: &ves.GoModuleManifest{
 							Name:    "rsc.io/diff",
 							Version: s("v1.2.3"),
 						},
 						Path: "vendor/rsc.io/diff",
 					},
 					{
-						Module: &vdm.GoModule{
+						Module: &ves.GoModule{
 							Name:    "rsc.io/quote",
 							Version: s("v1.5.2"),
-							Patches: []vdm.ParsedString{
+							Patches: []ves.ParsedString{
 								{Value: "patches/quote.patch"},
 							},
-							Packages: []*vdm.GoPackage{
+							Packages: []*ves.GoPackage{
 								{Name: s("rsc.io/quote")},
 							},
 						},
-						Manifest: &vdm.GoModuleManifest{
+						Manifest: &ves.GoModuleManifest{
 							Name:    "rsc.io/quote",
 							Version: s("v1.5.2"),
 						},
 						Path: "vendor/rsc.io/quote",
 					},
 					{
-						Module: &vdm.GoModule{
+						Module: &ves.GoModule{
 							Name:    "rsc.io/tmp",
 							Version: s("v0.0.0-20260706223531-5a501281bc9f"),
-							Patches: []vdm.ParsedString{
+							Patches: []ves.ParsedString{
 								{Value: "patches/foo.patch"},
 							},
-							Packages: []*vdm.GoPackage{
+							Packages: []*ves.GoPackage{
 								{Name: s("rsc.io/tmp/patch")},
 							},
 						},
-						Manifest: &vdm.GoModuleManifest{
+						Manifest: &ves.GoModuleManifest{
 							Name:    "rsc.io/tmp",
 							Version: s("v0.0.0-20260706223531-5a501281bc9f"),
 						},
@@ -210,8 +210,8 @@ func TestStripCachedActions(t *testing.T) {
 					},
 				}
 				bcm := BuildCacheManifest{
-					Manifests: &vdm.Manifests{
-						GoModules: make([]*vdm.GoModuleManifest, len(dls)),
+					Manifests: &ves.Manifests{
+						GoModules: make([]*ves.GoModuleManifest, len(dls)),
 					},
 					Path: "vendor/manifests.vdm",
 				}
@@ -232,15 +232,15 @@ func TestStripCachedActions(t *testing.T) {
 			Want: []Action{
 				RemoveAll("vendor/example.com/foo"),
 				DownloadGoModule{
-					Module: &vdm.GoModule{
+					Module: &ves.GoModule{
 						Name:    "example.com/bar",
 						Version: s("v1.2.3"),
-						Packages: []*vdm.GoPackage{
+						Packages: []*ves.GoPackage{
 							{Name: s("example.com/bar")},
 							{Name: s("example.com/bar/baz")},
 						},
 					},
-					Manifest: &vdm.GoModuleManifest{
+					Manifest: &ves.GoModuleManifest{
 						Name:     "example.com/bar",
 						Version:  s("v1.2.3"),
 						Packages: s("sha256:9nIFKNUR+Ycz3wTrCUEbPfQjw0s3D7nRvw/7N4bMRWc="),
@@ -248,43 +248,43 @@ func TestStripCachedActions(t *testing.T) {
 					Path: "vendor/example.com/bar",
 				},
 				DownloadGoModule{
-					Module: &vdm.GoModule{
+					Module: &ves.GoModule{
 						Name:    "golang.org/x/crypto",
 						Version: s("v1.2.3"),
-						Packages: []*vdm.GoPackage{
+						Packages: []*ves.GoPackage{
 							{Name: s("golang.org/x/crypto")},
 						},
 					},
-					Manifest: &vdm.GoModuleManifest{
+					Manifest: &ves.GoModuleManifest{
 						Name:    "golang.org/x/crypto",
 						Version: s("v1.2.3"),
 					},
 					Path: "vendor/golang.org/x/crypto",
 				},
 				DownloadGoModule{
-					Module: &vdm.GoModule{
+					Module: &ves.GoModule{
 						Name:    "golang.org/x/mod",
 						Version: s("v1.2.3"),
-						Packages: []*vdm.GoPackage{
+						Packages: []*ves.GoPackage{
 							{Name: s("golang.org/x/mod/module")},
 							{Name: s("golang.org/x/mod/zip")},
 						},
 					},
-					Manifest: &vdm.GoModuleManifest{
+					Manifest: &ves.GoModuleManifest{
 						Name:    "golang.org/x/mod",
 						Version: s("v1.2.3"),
 					},
 					Path: "vendor/golang.org/x/mod",
 				},
 				DownloadGoModule{
-					Module: &vdm.GoModule{
+					Module: &ves.GoModule{
 						Name:    "rsc.io/diff",
 						Version: s("v1.2.3"),
-						Packages: []*vdm.GoPackage{
+						Packages: []*ves.GoPackage{
 							{Name: s("rsc.io/diff")},
 						},
 					},
-					Manifest: &vdm.GoModuleManifest{
+					Manifest: &ves.GoModuleManifest{
 						Name:    "rsc.io/diff",
 						Version: s("v1.2.3"),
 					},
@@ -292,25 +292,25 @@ func TestStripCachedActions(t *testing.T) {
 				},
 				// Strip the download for rsc.io/quote, as it's cached.
 				DownloadGoModule{
-					Module: &vdm.GoModule{
+					Module: &ves.GoModule{
 						Name:    "rsc.io/tmp",
 						Version: s("v0.0.0-20260706223531-5a501281bc9f"),
-						Patches: []vdm.ParsedString{
+						Patches: []ves.ParsedString{
 							{Value: "patches/foo.patch"},
 						},
-						Packages: []*vdm.GoPackage{
+						Packages: []*ves.GoPackage{
 							{Name: s("rsc.io/tmp/patch")},
 						},
 					},
-					Manifest: &vdm.GoModuleManifest{
+					Manifest: &ves.GoModuleManifest{
 						Name:    "rsc.io/tmp",
 						Version: s("v0.0.0-20260706223531-5a501281bc9f"),
 					},
 					Path: "vendor/rsc.io/tmp",
 				},
 				BuildCacheManifest{
-					Manifests: &vdm.Manifests{
-						GoModules: []*vdm.GoModuleManifest{
+					Manifests: &ves.Manifests{
+						GoModules: []*ves.GoModuleManifest{
 							{
 								Name:     "example.com/bar",
 								Version:  s("v1.2.3"),
@@ -350,14 +350,14 @@ func TestStripCachedActions(t *testing.T) {
 			FS:   vdmtest.TxtarFS(t, "testdata/caching/nested-modules.txtar"),
 			Actions: []Action{
 				DownloadGoModule{
-					Module: &vdm.GoModule{
+					Module: &ves.GoModule{
 						Name:    "example.com/foo",
 						Version: s("v1.2.3"),
-						Packages: []*vdm.GoPackage{
+						Packages: []*ves.GoPackage{
 							{Name: s("example.com/foo")},
 						},
 					},
-					Manifest: &vdm.GoModuleManifest{
+					Manifest: &ves.GoModuleManifest{
 						Name:     "example.com/foo",
 						Version:  s("v1.2.3"),
 						Packages: s("sha256:OWsM+RnT2U96NqEa73dOI5FvpDkJrP1sJYjlqKHUG6A="),
@@ -365,14 +365,14 @@ func TestStripCachedActions(t *testing.T) {
 					Path: "vendor/example.com/foo",
 				},
 				DownloadGoModule{
-					Module: &vdm.GoModule{
+					Module: &ves.GoModule{
 						Name:    "example.com/foo/bar",
 						Version: s("v1.2.3"),
-						Packages: []*vdm.GoPackage{
+						Packages: []*ves.GoPackage{
 							{Name: s("example.com/foo/bar")},
 						},
 					},
-					Manifest: &vdm.GoModuleManifest{
+					Manifest: &ves.GoModuleManifest{
 						Name:     "example.com/foo/bar",
 						Version:  s("v1.2.3"),
 						Packages: s("sha256:UNub1wOV86JWl0yt1GHvkF14UY1YNOf6qz/Hx3iLFko="),
@@ -382,14 +382,14 @@ func TestStripCachedActions(t *testing.T) {
 			},
 			Want: []Action{
 				DownloadGoModule{ // Keep because the packages digest doesn't match.
-					Module: &vdm.GoModule{
+					Module: &ves.GoModule{
 						Name:    "example.com/foo",
 						Version: s("v1.2.3"),
-						Packages: []*vdm.GoPackage{
+						Packages: []*ves.GoPackage{
 							{Name: s("example.com/foo")},
 						},
 					},
-					Manifest: &vdm.GoModuleManifest{
+					Manifest: &ves.GoModuleManifest{
 						Name:     "example.com/foo",
 						Version:  s("v1.2.3"),
 						Packages: s("sha256:OWsM+RnT2U96NqEa73dOI5FvpDkJrP1sJYjlqKHUG6A="),
@@ -397,14 +397,14 @@ func TestStripCachedActions(t *testing.T) {
 					Path: "vendor/example.com/foo",
 				},
 				DownloadGoModule{ // Keep because the parent module will be deleted.
-					Module: &vdm.GoModule{
+					Module: &ves.GoModule{
 						Name:    "example.com/foo/bar",
 						Version: s("v1.2.3"),
-						Packages: []*vdm.GoPackage{
+						Packages: []*ves.GoPackage{
 							{Name: s("example.com/foo/bar")},
 						},
 					},
-					Manifest: &vdm.GoModuleManifest{
+					Manifest: &ves.GoModuleManifest{
 						Name:     "example.com/foo/bar",
 						Version:  s("v1.2.3"),
 						Packages: s("sha256:UNub1wOV86JWl0yt1GHvkF14UY1YNOf6qz/Hx3iLFko="),
@@ -445,7 +445,7 @@ func TestParentModules(t *testing.T) {
 func TestCloneStrings(t *testing.T) {
 	tests := []struct {
 		Name string
-		SS   []vdm.ParsedString
+		SS   []ves.ParsedString
 		Want []string
 	}{
 		{
@@ -455,8 +455,8 @@ func TestCloneStrings(t *testing.T) {
 		},
 		{
 			Name: "some",
-			SS: []vdm.ParsedString{
-				{Value: "foo", Pos: vdm.Pos{File: "foo.vdm", Line: 7}},
+			SS: []ves.ParsedString{
+				{Value: "foo", Pos: ves.Pos{File: "foo.vdm", Line: 7}},
 				{Value: "bar"},
 			},
 			Want: []string{

@@ -20,7 +20,7 @@ import (
 	"time"
 
 	"github.com/ProjectSerenity/vdm/internal/simplehttp"
-	"github.com/ProjectSerenity/vdm/internal/vdm"
+	"github.com/ProjectSerenity/vdm/internal/ves"
 
 	"golang.org/x/mod/module"
 	"golang.org/x/mod/semver"
@@ -51,7 +51,7 @@ func Main(ctx context.Context, w io.Writer, args []string) error {
 		flags.Usage()
 	}
 
-	return UpdateDependencies(ctx, w, vdm.DepsVDM)
+	return UpdateDependencies(ctx, w, ves.DepsVDM)
 }
 
 // UpdateDependencies parses the given set of
@@ -70,7 +70,7 @@ func UpdateDependencies(ctx context.Context, w io.Writer, name string) error {
 	// for updates, and writing out any changes
 	// made.
 
-	deps, err := vdm.ReadDeps(os.DirFS("."), vdm.DepsVDM)
+	deps, err := ves.ReadDeps(os.DirFS("."), ves.DepsVDM)
 	if err != nil {
 		return err
 	}

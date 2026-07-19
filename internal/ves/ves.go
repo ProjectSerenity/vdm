@@ -3,8 +3,8 @@
 // Use of this source code is governed by a BSD 3-clause
 // license that can be found in the LICENSE file.
 
-// Package vdm provides functionality for recording a dependency set.
-package vdm
+// Package ves provides functionality for recording a dependency set in the VDM Encoding Scheme.
+package ves
 
 import (
 	"cmp"
