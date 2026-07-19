@@ -31,6 +31,8 @@ func Vendor(fsys fs.FS) (actions []Action, err error) {
 		return nil, err
 	}
 
+	deps.Sort()
+
 	if len(deps.GoModules) == 0 {
 		actions = []Action{RemoveAll(ves.Vendor)}
 		return actions, nil
