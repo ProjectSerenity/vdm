@@ -12,6 +12,7 @@ import (
 	"io"
 	"io/fs"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 
@@ -115,11 +116,6 @@ func (c DownloadGoModule) Do(ctx context.Context, fsys fs.FS, w io.Writer) error
 
 	fmt.Fprintf(w, "Extracting Go module %s.\n", c.Manifest.Name)
 	err = gomodzip.Extract(c.Dir, dl, c.Module, c.Manifest)
-	if err != nil {
-		return err
-	}
-
-	c.Manifest.Vendored.Value, err = digest.Directory(fsys, filepath.FromSlash(c.Path))
 	if err != nil {
 		return err
 	}
@@ -304,6 +300,7 @@ func (c *GenerateGoPackageBUILD) String() string {
 // information necessary to avoid unnecessary future work,
 // writing it to the given path.
 type BuildCacheManifest struct {
+	Deps      *ves.Deps
 	Manifests *ves.Manifests
 	Path      string
 }
@@ -311,6 +308,26 @@ type BuildCacheManifest struct {
 var _ Action = BuildCacheManifest{}
 
 func (c BuildCacheManifest) Do(ctx context.Context, fsys fs.FS, w io.Writer) error {
+	if len(c.Deps.GoModules) != len(c.Manifests.GoModules) {
+		return fmt.Errorf("internal error: BuildCacheManifest found %d Go modules but %d Go module manifests", len(c.Deps.GoModules), len(c.Manifests.GoModules))
+	}
+
+	// Build the vendored digests now that we've
+	// finished writing everything else.
+	for i, mod := range c.Deps.GoModules {
+		manifest := c.Manifests.GoModules[i]
+		ignore := make([]string, len(mod.Packages))
+		for j, pkg := range mod.Packages {
+			ignore[j] = path.Join(ves.Vendor, pkg.Name.Value, ves.BuildBazel)
+		}
+
+		var err error
+		manifest.Vendored.Value, err = digest.Directory(fsys, path.Join(ves.Vendor, mod.Name), ignore...)
+		if err != nil {
+			return err
+		}
+	}
+
 	err := os.WriteFile(c.Path, c.Manifests.Encode(), 0644)
 	if err != nil {
 		return fmt.Errorf("failed to write cache manifest to %s: %v", c.Path, err)

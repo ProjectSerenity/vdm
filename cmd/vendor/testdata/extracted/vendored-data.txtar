@@ -1,0 +1,8 @@
+-- vendor/manifests.vdm --
+go-modules:
+	module "example.com/foo" v1.2.3
+		vendored: sha256:EAI5dCwcw2I9RwTLADGyhOiWp9apa6iSXF3bH+EM0Jk=
+	module "example.com/foo/bar" v1.2.3
+		vendored: sha256:6ycjqjnxCUAy2NBkAvmC2Gjyy+9DJTsDQxyhgfiUjiE=
+	module "rsc.io/diff" v1.2.3
+		vendored: sha256:LQjoHErpqhowZ2HdaZmwfORwBXrj3spMkOvCByUIEn4=

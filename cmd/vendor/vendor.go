@@ -111,7 +111,11 @@ func Vendor(fsys fs.FS) (actions []Action, err error) {
 		}
 	}
 
-	actions = append(actions, BuildCacheManifest{Manifests: manifests, Path: path.Join(ves.Vendor, ves.ManifestsVDM)})
+	actions = append(actions, BuildCacheManifest{
+		Deps:      deps,
+		Manifests: manifests,
+		Path:      path.Join(ves.Vendor, ves.ManifestsVDM),
+	})
 
 	return actions, nil
 }

@@ -1,0 +1,160 @@
+-- vendor/example.com/foo/foo.go --
+foo.go
+-- vendor/example.com/foo/bar/bar.go --
+bar.go
+-- vendor/rsc.io/diff/LICENSE --
+Copyright (c) 2009 The Go Authors. All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are
+met:
+
+   * Redistributions of source code must retain the above copyright
+notice, this list of conditions and the following disclaimer.
+   * Redistributions in binary form must reproduce the above
+copyright notice, this list of conditions and the following disclaimer
+in the documentation and/or other materials provided with the
+distribution.
+   * Neither the name of Google Inc. nor the names of its
+contributors may be used to endorse or promote products derived from
+this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-- vendor/rsc.io/diff/diff.go --
+// Copyright 2019 The Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+// Package diff provides basic text comparison (like Unix's diff(1)).
+package diff
+
+import (
+	"fmt"
+	"strings"
+)
+
+// Format returns a formatted diff of the two texts,
+// showing the entire text and the minimum line-level
+// additions and removals to turn text1 into text2.
+// (That is, lines only in text1 appear with a leading -,
+// and lines only in text2 appear with a leading +.)
+func Format(text1, text2 string) string {
+	if text1 != "" && !strings.HasSuffix(text1, "\n") {
+		text1 += "(missing final newline)"
+	}
+	lines1 := strings.Split(text1, "\n")
+	lines1 = lines1[:len(lines1)-1] // remove empty string after final line
+	if text2 != "" && !strings.HasSuffix(text2, "\n") {
+		text2 += "(missing final newline)"
+	}
+	lines2 := strings.Split(text2, "\n")
+	lines2 = lines2[:len(lines2)-1] // remove empty string after final line
+
+	// Naive dynamic programming algorithm for edit distance.
+	// https://en.wikipedia.org/wiki/Wagner–Fischer_algorithm
+	// dist[i][j] = edit distance between lines1[:len(lines1)-i] and lines2[:len(lines2)-j]
+	// (The reversed indices make following the minimum cost path
+	// visit lines in the same order as in the text.)
+	dist := make([][]int, len(lines1)+1)
+	for i := range dist {
+		dist[i] = make([]int, len(lines2)+1)
+		if i == 0 {
+			for j := range dist[0] {
+				dist[0][j] = j
+			}
+			continue
+		}
+		for j := range dist[i] {
+			if j == 0 {
+				dist[i][0] = i
+				continue
+			}
+			cost := dist[i][j-1] + 1
+			if cost > dist[i-1][j]+1 {
+				cost = dist[i-1][j] + 1
+			}
+			if lines1[len(lines1)-i] == lines2[len(lines2)-j] {
+				if cost > dist[i-1][j-1] {
+					cost = dist[i-1][j-1]
+				}
+			}
+			dist[i][j] = cost
+		}
+	}
+
+	var buf strings.Builder
+	i, j := len(lines1), len(lines2)
+	for i > 0 || j > 0 {
+		cost := dist[i][j]
+		if i > 0 && j > 0 && cost == dist[i-1][j-1] && lines1[len(lines1)-i] == lines2[len(lines2)-j] {
+			fmt.Fprintf(&buf, " %s\n", lines1[len(lines1)-i])
+			i--
+			j--
+		} else if i > 0 && cost == dist[i-1][j]+1 {
+			fmt.Fprintf(&buf, "-%s\n", lines1[len(lines1)-i])
+			i--
+		} else {
+			fmt.Fprintf(&buf, "+%s\n", lines2[len(lines2)-j])
+			j--
+		}
+	}
+	return buf.String()
+}
+-- vendor/rsc.io/diff/diff_test.go --
+// Copyright 2019 The Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+package diff
+
+import (
+	"strings"
+	"testing"
+)
+
+var formatTests = []struct {
+	text1 string
+	text2 string
+	diff  string
+}{
+	{"a b c", "a b d e f", "a b -c +d +e +f"},
+	{"", "a b c", "+a +b +c"},
+	{"a b c", "", "-a -b -c"},
+	{"a b c", "d e f", "-a -b -c +d +e +f"},
+	{"a b c d e f", "a b d e f", "a b -c d e f"},
+	{"a b c e f", "a b c d e f", "a b c +d e f"},
+}
+
+func TestFormat(t *testing.T) {
+	for _, tt := range formatTests {
+		// Turn spaces into \n.
+		text1 := strings.ReplaceAll(tt.text1, " ", "\n")
+		if text1 != "" {
+			text1 += "\n"
+		}
+		text2 := strings.ReplaceAll(tt.text2, " ", "\n")
+		if text2 != "" {
+			text2 += "\n"
+		}
+		out := Format(text1, text2)
+		// Cut final \n, cut spaces, turn remaining \n into spaces.
+		out = strings.ReplaceAll(strings.ReplaceAll(strings.TrimSuffix(out, "\n"), " ", ""), "\n", " ")
+		if out != tt.diff {
+			t.Errorf("diff(%q, %q) = %q, want %q", text1, text2, out, tt.diff)
+		}
+	}
+}
+-- vendor/rsc.io/diff/go.mod --
+module rsc.io/diff
+
+go 1.13

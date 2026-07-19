@@ -146,6 +146,25 @@ func TestVendor(t *testing.T) {
 				},
 				// Build cache manifest.
 				BuildCacheManifest{
+					Deps: &ves.Deps{
+						GoModules: []*ves.GoModule{
+							{
+								Name: "example.com/foo",
+								Version: ves.ParsedString{
+									Value: "v1.2.3",
+									Pos:   ves.Pos{File: "deps.vdm", Line: 2},
+								},
+								Packages: []*ves.GoPackage{
+									{
+										Name: ves.ParsedString{
+											Value: "example.com/foo",
+											Pos:   ves.Pos{File: "deps.vdm", Line: 4},
+										},
+									},
+								},
+							},
+						},
+					},
 					Manifests: &ves.Manifests{
 						GoModules: []*ves.GoModuleManifest{
 							{
@@ -210,6 +229,29 @@ func TestVendor(t *testing.T) {
 				},
 				// Build cache manifest.
 				BuildCacheManifest{
+					Deps: &ves.Deps{
+						GoModules: []*ves.GoModule{
+							{
+								Name: "example.com/foo",
+								Version: ves.ParsedString{
+									Value: "v1.2.3",
+									Pos:   ves.Pos{File: "deps.vdm", Line: 2},
+								},
+								Packages: []*ves.GoPackage{
+									{
+										Name: ves.ParsedString{
+											Value: "example.com/foo",
+											Pos:   ves.Pos{File: "deps.vdm", Line: 4},
+										},
+										BuildFile: ves.ParsedString{
+											Value: "bazel/example.com-foo.BUILD",
+											Pos:   ves.Pos{File: "deps.vdm", Line: 5},
+										},
+									},
+								},
+							},
+						},
+					},
 					Manifests: &ves.Manifests{
 						GoModules: []*ves.GoModuleManifest{
 							{

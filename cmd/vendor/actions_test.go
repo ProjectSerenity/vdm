@@ -265,7 +265,6 @@ func TestDownloadGoModule(t *testing.T) {
 				Name:     "rsc.io/diff",
 				Version:  ves.S("v0.0.0-20190621135850-fe3479844c3c"),
 				Download: ves.S("sha256:/WCDjRGIVDjKlhtSc1PEApp2fR58gfSVK62dr/yQNyQ="),
-				Vendored: ves.S("sha256:LQjoHErpqhowZ2HdaZmwfORwBXrj3spMkOvCByUIEn4="),
 			},
 			WantFS: vdmtest.TxtarFS(t, "testdata/extracted/rsc.io-diff.txtar"),
 			String: "download module rsc.io/diff to vendor/rsc.io/diff",
@@ -293,7 +292,6 @@ func TestDownloadGoModule(t *testing.T) {
 				Name:     "rsc.io/diff",
 				Version:  ves.S("v0.0.0-20190621135850-fe3479844c3c"),
 				Download: ves.S("sha256:/WCDjRGIVDjKlhtSc1PEApp2fR58gfSVK62dr/yQNyQ="),
-				Vendored: ves.S("sha256:LQjoHErpqhowZ2HdaZmwfORwBXrj3spMkOvCByUIEn4="),
 			},
 			WantFS: vdmtest.TxtarFS(t, "testdata/extracted/rsc.io-diff.txtar"),
 			String: "download module rsc.io/diff to vendor/rsc.io/diff",
@@ -693,6 +691,152 @@ func TestGenerateGoPackageBUILD(t *testing.T) {
 			err = vdmtest.DiffTextFilesystems(dirFS, test.Want, ves.Vendor)
 			if err != nil {
 				t.Fatalf("GenerateGoPackageBUILD(): contents mismatch: %v", err)
+			}
+		})
+	}
+}
+
+func TestBuildCacheManifest(t *testing.T) {
+	tests := []struct {
+		Name     string
+		FS       fs.FS
+		Action   *BuildCacheManifest
+		Want     fs.FS
+		String   string
+		Error    string
+		ErrorCmp func(string, string) bool
+	}{
+		{
+			Name: "invalid-module-manifest-mismatch",
+			FS:   vdmtest.TxtarFS(t, "testdata/actions/vendored-data.txtar"),
+			Action: &BuildCacheManifest{
+				Deps: &ves.Deps{
+					GoModules: []*ves.GoModule{
+						{
+							Name: "example.com/foo",
+						},
+						{
+							Name: "example.com/bar",
+						},
+						{
+							Name: "rsc.io/diff",
+						},
+					},
+				},
+				Manifests: &ves.Manifests{
+					GoModules: []*ves.GoModuleManifest{
+						{
+							Name: "example.com/foo",
+						},
+						{
+							Name: "example.com/bar",
+						},
+					},
+				},
+				Path: "vendor/manifests.vdm",
+			},
+			String: "generate cache manifest to vendor/manifests.vdm",
+			Error:  `internal error: BuildCacheManifest found 3 Go modules but 2 Go module manifests`,
+		},
+		{
+			Name: "valid-simple",
+			FS:   vdmtest.TxtarFS(t, "testdata/actions/vendored-data.txtar"),
+			Action: &BuildCacheManifest{
+				Deps: &ves.Deps{
+					GoModules: []*ves.GoModule{
+						{
+							Name:    "example.com/foo",
+							Version: ves.S("v1.2.3"),
+							Packages: []*ves.GoPackage{
+								{
+									Name: ves.S("example.com/foo"),
+								},
+							},
+						},
+						{
+							Name:    "example.com/foo/bar",
+							Version: ves.S("v1.2.3"),
+							Packages: []*ves.GoPackage{
+								{
+									Name: ves.S("example.com/foo/bar"),
+								},
+							},
+						},
+						{
+							Name:    "rsc.io/diff",
+							Version: ves.S("v1.2.3"),
+							Packages: []*ves.GoPackage{
+								{
+									Name: ves.S("rsc.io/diff"),
+								},
+							},
+						},
+					},
+				},
+				Manifests: &ves.Manifests{
+					GoModules: []*ves.GoModuleManifest{
+						{
+							Name:    "example.com/foo",
+							Version: ves.S("v1.2.3"),
+						},
+						{
+							Name:    "example.com/foo/bar",
+							Version: ves.S("v1.2.3"),
+						},
+						{
+							Name:    "rsc.io/diff",
+							Version: ves.S("v1.2.3"),
+						},
+					},
+				},
+				Path: "vendor/manifests.vdm",
+			},
+			String: "generate cache manifest to vendor/manifests.vdm",
+			Want:   vdmtest.TxtarFS(t, "testdata/extracted/vendored-data.txtar"),
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.Name, func(t *testing.T) {
+			// Test the String method.
+			if got := test.Action.String(); got != test.String {
+				t.Errorf("BuildCacheManifest.String():\nGot:  %q\nWant: %q", got, test.String)
+			}
+
+			// Test the action.
+			target := t.ArtifactDir()
+			dirFS := vdmtest.DirFS(t)
+			test.Action.Path = filepath.Join(target, filepath.FromSlash(test.Action.Path))
+			err := os.MkdirAll(filepath.Dir(test.Action.Path), 0o777)
+			if err != nil {
+				t.Fatalf("failed to create target directory: %v", err)
+			}
+
+			err = test.Action.Do(context.Background(), test.FS, io.Discard)
+			if test.Error != "" {
+				if err == nil {
+					t.Fatalf("BuildCacheManifest(): unexpected lack of error")
+				}
+
+				e := err.Error()
+				if test.ErrorCmp != nil && !test.ErrorCmp(e, test.Error) {
+					t.Fatalf("BuildCacheManifest(): got wrong error:\nGot:  %s\nWant: %s", e, test.Error)
+				} else if test.ErrorCmp == nil && e != test.Error {
+					t.Fatalf("BuildCacheManifest(): got wrong error:\nGot:  %s\nWant: %s", e, test.Error)
+				}
+
+				// All good.
+				return
+			}
+
+			if err != nil {
+				t.Fatalf("BuildCacheManifest(): got unexpected error: %v", err)
+			}
+
+			// Check the contents.
+			err = vdmtest.DiffTextFilesystems(dirFS, test.Want, ves.Vendor)
+			if err != nil {
+				t.Fatalf("BuildCacheManifest(): contents mismatch: %v", err)
 			}
 		})
 	}
