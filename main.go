@@ -33,32 +33,6 @@ func init() {
 	simplehttp.UserAgent = "Vendoring-Dependency-Manager/1 (github.com/ProjectSerenity/vdm)"
 }
 
-type Command struct {
-	Name        string
-	Description string
-	Func        func(ctx context.Context, w io.Writer, args []string) error
-}
-
-var (
-	commandsNames = make([]string, 0, 10)
-	commandsMap   = make(map[string]*Command)
-
-	program = filepath.Base(os.Args[0])
-)
-
-func RegisterCommand(name, description string, fun func(ctx context.Context, w io.Writer, args []string) error) {
-	if commandsMap[name] != nil {
-		panic("command " + name + " already registered")
-	}
-
-	if fun == nil {
-		panic("command " + name + " registered with nil implementation")
-	}
-
-	commandsNames = append(commandsNames, name)
-	commandsMap[name] = &Command{Name: name, Description: description, Func: fun}
-}
-
 func init() {
 	RegisterCommand("check", "Check managed dependencies for vulnerabilities and other issues.", check.Main)
 	RegisterCommand("format", "Format the given VDM dependency set file.", format.Main)
@@ -125,4 +99,30 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+}
+
+type Command struct {
+	Name        string
+	Description string
+	Func        func(ctx context.Context, w io.Writer, args []string) error
+}
+
+var (
+	commandsNames = make([]string, 0, 10)
+	commandsMap   = make(map[string]*Command)
+
+	program = filepath.Base(os.Args[0])
+)
+
+func RegisterCommand(name, description string, fun func(ctx context.Context, w io.Writer, args []string) error) {
+	if commandsMap[name] != nil {
+		panic("command " + name + " already registered")
+	}
+
+	if fun == nil {
+		panic("command " + name + " registered with nil implementation")
+	}
+
+	commandsNames = append(commandsNames, name)
+	commandsMap[name] = &Command{Name: name, Description: description, Func: fun}
 }
