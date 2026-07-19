@@ -123,7 +123,7 @@ func vendorGo(fsys fs.FS, actions []Action, deps *ves.Deps) ([]Action, *ves.Mani
 		manifests.GoModules[i] = &ves.GoModuleManifest{
 			Name:     mod.Name,
 			Version:  mod.Version,
-			Packages: ves.ParsedString{Value: mod.Directories()},
+			Packages: ves.S(mod.Directories()),
 		}
 	}
 

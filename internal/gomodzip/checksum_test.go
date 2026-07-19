@@ -37,7 +37,7 @@ func TestDownloadDigest(t *testing.T) {
 		{
 			Name: "pre-loaded",
 			Manifest: &ves.GoModuleManifest{
-				Download: s("sha256:checksum"),
+				Download: ves.S("sha256:checksum"),
 			},
 			Want: "sha256:checksum",
 		},
@@ -203,7 +203,7 @@ func TestDigester_FindChecksum(t *testing.T) {
 
 			manifest := &ves.GoModuleManifest{
 				Name:    test.ModuleName,
-				Version: ves.ParsedString{Value: test.ModuleVersion},
+				Version: ves.S(test.ModuleVersion),
 			}
 
 			d := new(digester)
@@ -325,7 +325,7 @@ func TestDigester_Digest(t *testing.T) {
 
 			manifest := &ves.GoModuleManifest{
 				Name:    test.ModuleName,
-				Version: ves.ParsedString{Value: test.ModuleVersion},
+				Version: ves.S(test.ModuleVersion),
 			}
 
 			if test.D == nil && test.MakeD != nil {

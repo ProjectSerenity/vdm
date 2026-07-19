@@ -19,8 +19,6 @@ import (
 	"github.com/google/go-cmp/cmp/cmpopts"
 )
 
-func s(str string) ves.ParsedString { return ves.ParsedString{Value: str} }
-
 func digestDirectory(t testing.TB, fsys fs.FS, dir string, ignore ...string) string {
 	got, err := digest.Directory(fsys, dir)
 	if err != nil {
@@ -130,7 +128,7 @@ func TestVendor(t *testing.T) {
 							Value: "v1.2.3",
 							Pos:   ves.Pos{File: "deps.vdm", Line: 2},
 						},
-						Packages: s("sha256:OWsM+RnT2U96NqEa73dOI5FvpDkJrP1sJYjlqKHUG6A="),
+						Packages: ves.S("sha256:OWsM+RnT2U96NqEa73dOI5FvpDkJrP1sJYjlqKHUG6A="),
 					},
 					ModuleProxy: "https://proxy.golang.org",
 					Dir:         "vendor",
@@ -156,7 +154,7 @@ func TestVendor(t *testing.T) {
 									Value: "v1.2.3",
 									Pos:   ves.Pos{File: "deps.vdm", Line: 2},
 								},
-								Packages: s("sha256:OWsM+RnT2U96NqEa73dOI5FvpDkJrP1sJYjlqKHUG6A="),
+								Packages: ves.S("sha256:OWsM+RnT2U96NqEa73dOI5FvpDkJrP1sJYjlqKHUG6A="),
 							},
 						},
 					},
@@ -200,7 +198,7 @@ func TestVendor(t *testing.T) {
 							Value: "v1.2.3",
 							Pos:   ves.Pos{File: "deps.vdm", Line: 2},
 						},
-						Packages: s("sha256:OWsM+RnT2U96NqEa73dOI5FvpDkJrP1sJYjlqKHUG6A="),
+						Packages: ves.S("sha256:OWsM+RnT2U96NqEa73dOI5FvpDkJrP1sJYjlqKHUG6A="),
 					},
 					ModuleProxy: "https://proxy.golang.org",
 					Dir:         "vendor",
@@ -220,7 +218,7 @@ func TestVendor(t *testing.T) {
 									Value: "v1.2.3",
 									Pos:   ves.Pos{File: "deps.vdm", Line: 2},
 								},
-								Packages: s("sha256:OWsM+RnT2U96NqEa73dOI5FvpDkJrP1sJYjlqKHUG6A="),
+								Packages: ves.S("sha256:OWsM+RnT2U96NqEa73dOI5FvpDkJrP1sJYjlqKHUG6A="),
 							},
 						},
 					},
@@ -290,7 +288,7 @@ func TestVendorGo(t *testing.T) {
 				GoModules: []*ves.GoModule{
 					{
 						Name:    "example.com/foo",
-						Version: ves.ParsedString{Value: ""},
+						Version: ves.S(""),
 					},
 				},
 			},
@@ -302,7 +300,7 @@ func TestVendorGo(t *testing.T) {
 				GoModules: []*ves.GoModule{
 					{
 						Name:    "example.com/foo",
-						Version: s("v1.2.3"),
+						Version: ves.S("v1.2.3"),
 					},
 				},
 			},
@@ -314,10 +312,10 @@ func TestVendorGo(t *testing.T) {
 				GoModules: []*ves.GoModule{
 					{
 						Name:    "example.com/foo",
-						Version: s("v1.2.3"),
+						Version: ves.S("v1.2.3"),
 						Packages: []*ves.GoPackage{
 							{
-								Name: ves.ParsedString{Value: ""},
+								Name: ves.S(""),
 							},
 						},
 					},
@@ -332,10 +330,10 @@ func TestVendorGo(t *testing.T) {
 				GoModules: []*ves.GoModule{
 					{
 						Name:    "example.com/foo",
-						Version: s("v1.2.3"),
+						Version: ves.S("v1.2.3"),
 						Packages: []*ves.GoPackage{
 							{
-								Name: s("example.com/foo"),
+								Name: ves.S("example.com/foo"),
 							},
 						},
 					},

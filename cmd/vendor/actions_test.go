@@ -141,17 +141,17 @@ func TestDownloadGoModule(t *testing.T) {
 			Action: &DownloadGoModule{
 				Module: &ves.GoModule{
 					Name:    "rsc.io/diff",
-					Version: s("v0.0.0-20190621135850-fe3479844c3c"),
+					Version: ves.S("v0.0.0-20190621135850-fe3479844c3c"),
 					Packages: []*ves.GoPackage{
 						{
-							Name: s("rsc.io/diff"),
+							Name: ves.S("rsc.io/diff"),
 						},
 					},
 				},
 				Manifest: &ves.GoModuleManifest{
 					Name:     "rsc.io/diff",
-					Version:  s("v0.0.0-20190621135850-fe3479844c3c"),
-					Download: s("sha256:/WCDjRGIVDjKlhtSc1PEApp2fR58gfSVK62dr/yQNyQ="),
+					Version:  ves.S("v0.0.0-20190621135850-fe3479844c3c"),
+					Download: ves.S("sha256:/WCDjRGIVDjKlhtSc1PEApp2fR58gfSVK62dr/yQNyQ="),
 				},
 				Path: "vendor/rsc.io/diff",
 			},
@@ -167,17 +167,17 @@ func TestDownloadGoModule(t *testing.T) {
 			Action: &DownloadGoModule{
 				Module: &ves.GoModule{
 					Name:    "rsc.io/diff",
-					Version: s("v0.0.0-20190621135850-fe3479844c3c"),
+					Version: ves.S("v0.0.0-20190621135850-fe3479844c3c"),
 					Packages: []*ves.GoPackage{
 						{
-							Name: s("rsc.io/diff"),
+							Name: ves.S("rsc.io/diff"),
 						},
 					},
 				},
 				Manifest: &ves.GoModuleManifest{
 					Name:     "rsc.io/diff",
-					Version:  s("v0.0.0-20190621135850-fe3479844c3c"),
-					Download: s("sha256:/WCDjRGIVDjKlhtSc1PEApp2fR58gfSVK62dr/yQNyQ="),
+					Version:  ves.S("v0.0.0-20190621135850-fe3479844c3c"),
+					Download: ves.S("sha256:/WCDjRGIVDjKlhtSc1PEApp2fR58gfSVK62dr/yQNyQ="),
 				},
 				Path: "vendor/rsc.io/diff",
 			},
@@ -205,21 +205,21 @@ func TestDownloadGoModule(t *testing.T) {
 			Action: &DownloadGoModule{
 				Module: &ves.GoModule{
 					Name:    "rsc.io/diff",
-					Version: s("v0.0.0-20190621135850-fe3479844c3c"),
+					Version: ves.S("v0.0.0-20190621135850-fe3479844c3c"),
 					Patches: []ves.ParsedString{
-						{Value: "patches/foo.patch"},
-						{Value: "patches/bar.patch"},
+						ves.S("patches/foo.patch"),
+						ves.S("patches/bar.patch"),
 					},
 					Packages: []*ves.GoPackage{
 						{
-							Name: s("rsc.io/diff"),
+							Name: ves.S("rsc.io/diff"),
 						},
 					},
 				},
 				Manifest: &ves.GoModuleManifest{
 					Name:     "rsc.io/diff",
-					Version:  s("v0.0.0-20190621135850-fe3479844c3c"),
-					Download: s("sha256:AB6TWADCiFzYx4nzfwjeNQBxOA+FM7yLQGFe0PKx38k="), // This is wrong.
+					Version:  ves.S("v0.0.0-20190621135850-fe3479844c3c"),
+					Download: ves.S("sha256:AB6TWADCiFzYx4nzfwjeNQBxOA+FM7yLQGFe0PKx38k="), // This is wrong.
 				},
 				Path: "vendor/rsc.io/diff",
 			},
@@ -247,25 +247,25 @@ func TestDownloadGoModule(t *testing.T) {
 			Action: &DownloadGoModule{
 				Module: &ves.GoModule{
 					Name:    "rsc.io/diff",
-					Version: s("v0.0.0-20190621135850-fe3479844c3c"),
+					Version: ves.S("v0.0.0-20190621135850-fe3479844c3c"),
 					Packages: []*ves.GoPackage{
 						{
-							Name: s("rsc.io/diff"),
+							Name: ves.S("rsc.io/diff"),
 						},
 					},
 				},
 				Manifest: &ves.GoModuleManifest{
 					Name:     "rsc.io/diff",
-					Version:  s("v0.0.0-20190621135850-fe3479844c3c"),
-					Download: s("sha256:/WCDjRGIVDjKlhtSc1PEApp2fR58gfSVK62dr/yQNyQ="),
+					Version:  ves.S("v0.0.0-20190621135850-fe3479844c3c"),
+					Download: ves.S("sha256:/WCDjRGIVDjKlhtSc1PEApp2fR58gfSVK62dr/yQNyQ="),
 				},
 				Path: "vendor/rsc.io/diff",
 			},
 			WantManifest: &ves.GoModuleManifest{
 				Name:     "rsc.io/diff",
-				Version:  s("v0.0.0-20190621135850-fe3479844c3c"),
-				Download: s("sha256:/WCDjRGIVDjKlhtSc1PEApp2fR58gfSVK62dr/yQNyQ="),
-				Vendored: s("sha256:LQjoHErpqhowZ2HdaZmwfORwBXrj3spMkOvCByUIEn4="),
+				Version:  ves.S("v0.0.0-20190621135850-fe3479844c3c"),
+				Download: ves.S("sha256:/WCDjRGIVDjKlhtSc1PEApp2fR58gfSVK62dr/yQNyQ="),
+				Vendored: ves.S("sha256:LQjoHErpqhowZ2HdaZmwfORwBXrj3spMkOvCByUIEn4="),
 			},
 			WantFS: vdmtest.TxtarFS(t, "testdata/extracted/rsc.io-diff.txtar"),
 			String: "download module rsc.io/diff to vendor/rsc.io/diff",
@@ -275,25 +275,25 @@ func TestDownloadGoModule(t *testing.T) {
 			Action: &DownloadGoModule{
 				Module: &ves.GoModule{
 					Name:    "rsc.io/diff",
-					Version: s("v0.0.0-20190621135850-fe3479844c3c"),
+					Version: ves.S("v0.0.0-20190621135850-fe3479844c3c"),
 					Packages: []*ves.GoPackage{
 						{
-							Name: s("rsc.io/diff"),
+							Name: ves.S("rsc.io/diff"),
 						},
 					},
 				},
 				Manifest: &ves.GoModuleManifest{
 					Name:     "rsc.io/diff",
-					Version:  s("v0.0.0-20190621135850-fe3479844c3c"),
-					Download: s("sha256:/WCDjRGIVDjKlhtSc1PEApp2fR58gfSVK62dr/yQNyQ="),
+					Version:  ves.S("v0.0.0-20190621135850-fe3479844c3c"),
+					Download: ves.S("sha256:/WCDjRGIVDjKlhtSc1PEApp2fR58gfSVK62dr/yQNyQ="),
 				},
 				Path: "vendor/rsc.io/diff",
 			},
 			WantManifest: &ves.GoModuleManifest{
 				Name:     "rsc.io/diff",
-				Version:  s("v0.0.0-20190621135850-fe3479844c3c"),
-				Download: s("sha256:/WCDjRGIVDjKlhtSc1PEApp2fR58gfSVK62dr/yQNyQ="),
-				Vendored: s("sha256:LQjoHErpqhowZ2HdaZmwfORwBXrj3spMkOvCByUIEn4="),
+				Version:  ves.S("v0.0.0-20190621135850-fe3479844c3c"),
+				Download: ves.S("sha256:/WCDjRGIVDjKlhtSc1PEApp2fR58gfSVK62dr/yQNyQ="),
+				Vendored: ves.S("sha256:LQjoHErpqhowZ2HdaZmwfORwBXrj3spMkOvCByUIEn4="),
 			},
 			WantFS: vdmtest.TxtarFS(t, "testdata/extracted/rsc.io-diff.txtar"),
 			String: "download module rsc.io/diff to vendor/rsc.io/diff",
@@ -536,7 +536,7 @@ func TestGenerateGoPackageBUILD(t *testing.T) {
 			FS:   vdmtest.TestFS(t, vdmtest.WithErrors("vendor/rsc.io/diff", "bad dir")),
 			Action: &GenerateGoPackageBUILD{
 				Package: &ves.GoPackage{
-					Name: s("rsc.io/diff"),
+					Name: ves.S("rsc.io/diff"),
 				},
 				Dir:  "vendor/rsc.io/diff",
 				Path: "vendor/rsc.io/diff/BUILD.bazel",
@@ -557,7 +557,7 @@ func TestGenerateGoPackageBUILD(t *testing.T) {
 			FS: vdmtest.TxtarFS(t, "testdata/actions/no-tests-package.txtar"),
 			Action: &GenerateGoPackageBUILD{
 				Package: &ves.GoPackage{
-					Name: s("example.com/foo"),
+					Name: ves.S("example.com/foo"),
 				},
 				Dir:  "vendor/example.com/foo",
 				Path: "vendor/example.com/foo/BUILD.bazel",
@@ -571,7 +571,7 @@ func TestGenerateGoPackageBUILD(t *testing.T) {
 			FS:   vdmtest.TxtarFS(t, "testdata/actions/no-tests-package.txtar"),
 			Action: &GenerateGoPackageBUILD{
 				Package: &ves.GoPackage{
-					Name: s("example.com/foo"),
+					Name: ves.S("example.com/foo"),
 				},
 				Dir:  "vendor/example.com/foo",
 				Path: "vendor/example.com/foo/BUILD.bazel",
@@ -592,7 +592,7 @@ func TestGenerateGoPackageBUILD(t *testing.T) {
 			FS: vdmtest.TxtarFS(t, "testdata/actions/complex-package.txtar"),
 			Action: &GenerateGoPackageBUILD{
 				Package: &ves.GoPackage{
-					Name: s("example.com/foo"),
+					Name: ves.S("example.com/foo"),
 				},
 				Dir:  "vendor/example.com/foo",
 				Path: "vendor/example.com/foo/BUILD.bazel",
@@ -605,39 +605,39 @@ func TestGenerateGoPackageBUILD(t *testing.T) {
 			FS:   vdmtest.TxtarFS(t, "testdata/actions/complex-binary.txtar"),
 			Action: &GenerateGoPackageBUILD{
 				Package: &ves.GoPackage{
-					Name: s("example.com/foo"),
+					Name: ves.S("example.com/foo"),
 					Deps: []ves.ParsedString{
-						s("rsc.io/diff"),
-						s("rsc.io/quote"),
+						ves.S("rsc.io/diff"),
+						ves.S("rsc.io/quote"),
 					},
 					Embed: []ves.ParsedString{
-						s("README.md"),
-						s("a.go"),
+						ves.S("README.md"),
+						ves.S("a.go"),
 					},
 					EmbedGlobs: []ves.ParsedString{
-						s("templates/**/*.tmpl"),
+						ves.S("templates/**/*.tmpl"),
 					},
 
-					Binary: ves.ParsedBool{Value: true},
+					Binary: ves.B(true),
 					BinaryDeps: []ves.ParsedString{
-						s("github.com/spf13/cobra"),
+						ves.S("github.com/spf13/cobra"),
 					},
 
-					TestSize: s("medium"),
+					TestSize: ves.S("medium"),
 					TestData: []ves.ParsedString{
-						s("README.md"),
+						ves.S("README.md"),
 					},
 					TestDataGlobs: []ves.ParsedString{
-						s("*_test.go"),
-						s("templates/**/*.tmpl"),
+						ves.S("*_test.go"),
+						ves.S("templates/**/*.tmpl"),
 					},
 					TestDeps: []ves.ParsedString{
-						s("github.com/google/go-cmp/cmp"),
-						s("github.com/google/go-cmp/cmp/cmpopts"),
+						ves.S("github.com/google/go-cmp/cmp"),
+						ves.S("github.com/google/go-cmp/cmp/cmpopts"),
 					},
 					TestEnv: map[string]ves.ParsedString{
-						"GOPATH": s("/home/test/go"),
-						"HOME":   s("/home/test"),
+						"GOPATH": ves.S("/home/test/go"),
+						"HOME":   ves.S("/home/test"),
 					},
 				},
 				Dir:  "vendor/example.com/foo",

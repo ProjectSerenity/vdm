@@ -33,7 +33,7 @@ func TestJSON(t *testing.T) {
 			In: struct {
 				Bool ParsedBool `json:"bool,omitzero"`
 			}{
-				Bool: ParsedBool{Value: true},
+				Bool: B(true),
 			},
 			Want: `{"bool":true}`,
 		},
@@ -42,7 +42,7 @@ func TestJSON(t *testing.T) {
 			In: struct {
 				Bool ParsedBool `json:"bool,omitzero"`
 			}{
-				Bool: ParsedBool{Value: false},
+				Bool: B(false),
 			},
 			Want: `{}`,
 		},
@@ -61,7 +61,7 @@ func TestJSON(t *testing.T) {
 			In: struct {
 				String ParsedString `json:"string,omitzero"`
 			}{
-				String: ParsedString{Value: "foo"},
+				String: S("foo"),
 			},
 			Want: `{"string":"foo"}`,
 		},
@@ -70,7 +70,7 @@ func TestJSON(t *testing.T) {
 			In: struct {
 				String ParsedString `json:"string,omitzero"`
 			}{
-				String: ParsedString{Value: ""},
+				String: S(""),
 			},
 			Want: `{}`,
 		},

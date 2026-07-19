@@ -75,7 +75,7 @@ func TestGoModule_Directories(t *testing.T) {
 				Name: "rsc.io/diff",
 				Packages: []*GoPackage{
 					{
-						Name: ParsedString{Value: "rsc.io/diff"},
+						Name: S("rsc.io/diff"),
 					},
 				},
 			},
@@ -87,14 +87,14 @@ func TestGoModule_Directories(t *testing.T) {
 				Name: "rsc.io/diff",
 				Packages: []*GoPackage{
 					{
-						Name: ParsedString{Value: "rsc.io/diff"},
+						Name: S("rsc.io/diff"),
 						Directories: []ParsedString{
 							{Value: "foo"},
 							{Value: "bar"},
 						},
 					},
 					{
-						Name: ParsedString{Value: "rsc.io/quote"},
+						Name: S("rsc.io/quote"),
 					},
 				},
 			},
@@ -129,7 +129,7 @@ func TestGoModule_directories(t *testing.T) {
 				Name: "rsc.io/diff",
 				Packages: []*GoPackage{
 					{
-						Name: ParsedString{Value: "rsc.io/diff"},
+						Name: S("rsc.io/diff"),
 					},
 				},
 			},
@@ -143,14 +143,14 @@ func TestGoModule_directories(t *testing.T) {
 				Name: "rsc.io/diff",
 				Packages: []*GoPackage{
 					{
-						Name: ParsedString{Value: "rsc.io/diff"},
+						Name: S("rsc.io/diff"),
 						Directories: []ParsedString{
 							{Value: "foo"},
 							{Value: "bar"},
 						},
 					},
 					{
-						Name: ParsedString{Value: "rsc.io/quote"},
+						Name: S("rsc.io/quote"),
 					},
 				},
 			},

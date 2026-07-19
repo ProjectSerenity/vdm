@@ -40,8 +40,8 @@ func TestDownload(t *testing.T) {
 			Path: filepath.Join(t.ArtifactDir(), "foo.zip"),
 			Manifest: &ves.GoModuleManifest{
 				Name:     "-!",
-				Version:  s("v1.2.3"),
-				Download: s("h1:checksum"),
+				Version:  ves.S("v1.2.3"),
+				Download: ves.S("h1:checksum"),
 			},
 			Error: `failed to download Go module -!: invalid module path: malformed module path "-!": leading dash`,
 		},
@@ -264,8 +264,8 @@ func TestDownloader_Download(t *testing.T) {
 
 			manifest := &ves.GoModuleManifest{
 				Name:     test.ModuleName,
-				Version:  ves.ParsedString{Value: test.ModuleVersion},
-				Download: ves.ParsedString{Value: test.Checksum},
+				Version:  ves.S(test.ModuleVersion),
+				Download: ves.S(test.Checksum),
 			}
 
 			err := test.DL.Download(test.Context, path, manifest)

@@ -57,6 +57,10 @@ type ParsedBool struct {
 	Comment string
 }
 
+// B returns a parsed bool with the given value,
+// no position, and no comment.
+func B(v bool) ParsedBool { return ParsedBool{Value: v} }
+
 // ParsedString contains a string, along with
 // its location and any comment.
 type ParsedString struct {
@@ -64,6 +68,10 @@ type ParsedString struct {
 	Pos     Pos
 	Comment string
 }
+
+// S returns a parsed string with the given value,
+// no position, and no comment.
+func S(v string) ParsedString { return ParsedString{Value: v} }
 
 // Deps describes a set of software dependencies.
 type Deps struct {

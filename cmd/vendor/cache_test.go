@@ -30,14 +30,14 @@ func TestStripCachedActions(t *testing.T) {
 				DownloadGoModule{
 					Module: &ves.GoModule{
 						Name:    "rsc.io/quote",
-						Version: s("v1.2.3"),
+						Version: ves.S("v1.2.3"),
 						Packages: []*ves.GoPackage{
-							{Name: s("rsc.io/quote")},
+							{Name: ves.S("rsc.io/quote")},
 						},
 					},
 					Manifest: &ves.GoModuleManifest{
 						Name:    "rsc.io/quote",
-						Version: s("v1.2.3"),
+						Version: ves.S("v1.2.3"),
 					},
 					Path: "vendor/rsc.io/quote",
 				},
@@ -46,14 +46,14 @@ func TestStripCachedActions(t *testing.T) {
 				DownloadGoModule{
 					Module: &ves.GoModule{
 						Name:    "rsc.io/quote",
-						Version: s("v1.2.3"),
+						Version: ves.S("v1.2.3"),
 						Packages: []*ves.GoPackage{
-							{Name: s("rsc.io/quote")},
+							{Name: ves.S("rsc.io/quote")},
 						},
 					},
 					Manifest: &ves.GoModuleManifest{
 						Name:    "rsc.io/quote",
-						Version: s("v1.2.3"),
+						Version: ves.S("v1.2.3"),
 					},
 					Path: "vendor/rsc.io/quote",
 				},
@@ -66,14 +66,14 @@ func TestStripCachedActions(t *testing.T) {
 				DownloadGoModule{
 					Module: &ves.GoModule{
 						Name:    "rsc.io/quote",
-						Version: s("v1.2.3"),
+						Version: ves.S("v1.2.3"),
 						Packages: []*ves.GoPackage{
-							{Name: s("rsc.io/quote")},
+							{Name: ves.S("rsc.io/quote")},
 						},
 					},
 					Manifest: &ves.GoModuleManifest{
 						Name:    "rsc.io/quote",
-						Version: s("v1.2.3"),
+						Version: ves.S("v1.2.3"),
 					},
 					Path: "vendor/rsc.io/quote",
 				},
@@ -82,14 +82,14 @@ func TestStripCachedActions(t *testing.T) {
 				DownloadGoModule{
 					Module: &ves.GoModule{
 						Name:    "rsc.io/quote",
-						Version: s("v1.2.3"),
+						Version: ves.S("v1.2.3"),
 						Packages: []*ves.GoPackage{
-							{Name: s("rsc.io/quote")},
+							{Name: ves.S("rsc.io/quote")},
 						},
 					},
 					Manifest: &ves.GoModuleManifest{
 						Name:    "rsc.io/quote",
-						Version: s("v1.2.3"),
+						Version: ves.S("v1.2.3"),
 					},
 					Path: "vendor/rsc.io/quote",
 				},
@@ -118,93 +118,93 @@ func TestStripCachedActions(t *testing.T) {
 					{
 						Module: &ves.GoModule{
 							Name:    "example.com/bar",
-							Version: s("v1.2.3"),
+							Version: ves.S("v1.2.3"),
 							Packages: []*ves.GoPackage{
-								{Name: s("example.com/bar")},
-								{Name: s("example.com/bar/baz")},
+								{Name: ves.S("example.com/bar")},
+								{Name: ves.S("example.com/bar/baz")},
 							},
 						},
 						Manifest: &ves.GoModuleManifest{
 							Name:     "example.com/bar",
-							Version:  s("v1.2.3"),
-							Packages: s("sha256:9nIFKNUR+Ycz3wTrCUEbPfQjw0s3D7nRvw/7N4bMRWc="),
+							Version:  ves.S("v1.2.3"),
+							Packages: ves.S("sha256:9nIFKNUR+Ycz3wTrCUEbPfQjw0s3D7nRvw/7N4bMRWc="),
 						},
 						Path: "vendor/example.com/bar",
 					},
 					{
 						Module: &ves.GoModule{
 							Name:    "golang.org/x/crypto",
-							Version: s("v1.2.3"),
+							Version: ves.S("v1.2.3"),
 							Packages: []*ves.GoPackage{
-								{Name: s("golang.org/x/crypto")},
+								{Name: ves.S("golang.org/x/crypto")},
 							},
 						},
 						Manifest: &ves.GoModuleManifest{
 							Name:    "golang.org/x/crypto",
-							Version: s("v1.2.3"),
+							Version: ves.S("v1.2.3"),
 						},
 						Path: "vendor/golang.org/x/crypto",
 					},
 					{
 						Module: &ves.GoModule{
 							Name:    "golang.org/x/mod",
-							Version: s("v1.2.3"),
+							Version: ves.S("v1.2.3"),
 							Packages: []*ves.GoPackage{
-								{Name: s("golang.org/x/mod/module")},
-								{Name: s("golang.org/x/mod/zip")},
+								{Name: ves.S("golang.org/x/mod/module")},
+								{Name: ves.S("golang.org/x/mod/zip")},
 							},
 						},
 						Manifest: &ves.GoModuleManifest{
 							Name:    "golang.org/x/mod",
-							Version: s("v1.2.3"),
+							Version: ves.S("v1.2.3"),
 						},
 						Path: "vendor/golang.org/x/mod",
 					},
 					{
 						Module: &ves.GoModule{
 							Name:    "rsc.io/diff",
-							Version: s("v1.2.3"),
+							Version: ves.S("v1.2.3"),
 							Packages: []*ves.GoPackage{
-								{Name: s("rsc.io/diff")},
+								{Name: ves.S("rsc.io/diff")},
 							},
 						},
 						Manifest: &ves.GoModuleManifest{
 							Name:    "rsc.io/diff",
-							Version: s("v1.2.3"),
+							Version: ves.S("v1.2.3"),
 						},
 						Path: "vendor/rsc.io/diff",
 					},
 					{
 						Module: &ves.GoModule{
 							Name:    "rsc.io/quote",
-							Version: s("v1.5.2"),
+							Version: ves.S("v1.5.2"),
 							Patches: []ves.ParsedString{
-								{Value: "patches/quote.patch"},
+								ves.S("patches/quote.patch"),
 							},
 							Packages: []*ves.GoPackage{
-								{Name: s("rsc.io/quote")},
+								{Name: ves.S("rsc.io/quote")},
 							},
 						},
 						Manifest: &ves.GoModuleManifest{
 							Name:    "rsc.io/quote",
-							Version: s("v1.5.2"),
+							Version: ves.S("v1.5.2"),
 						},
 						Path: "vendor/rsc.io/quote",
 					},
 					{
 						Module: &ves.GoModule{
 							Name:    "rsc.io/tmp",
-							Version: s("v0.0.0-20260706223531-5a501281bc9f"),
+							Version: ves.S("v0.0.0-20260706223531-5a501281bc9f"),
 							Patches: []ves.ParsedString{
-								{Value: "patches/foo.patch"},
+								ves.S("patches/foo.patch"),
 							},
 							Packages: []*ves.GoPackage{
-								{Name: s("rsc.io/tmp/patch")},
+								{Name: ves.S("rsc.io/tmp/patch")},
 							},
 						},
 						Manifest: &ves.GoModuleManifest{
 							Name:    "rsc.io/tmp",
-							Version: s("v0.0.0-20260706223531-5a501281bc9f"),
+							Version: ves.S("v0.0.0-20260706223531-5a501281bc9f"),
 						},
 						Path: "vendor/rsc.io/tmp",
 					},
@@ -234,59 +234,59 @@ func TestStripCachedActions(t *testing.T) {
 				DownloadGoModule{
 					Module: &ves.GoModule{
 						Name:    "example.com/bar",
-						Version: s("v1.2.3"),
+						Version: ves.S("v1.2.3"),
 						Packages: []*ves.GoPackage{
-							{Name: s("example.com/bar")},
-							{Name: s("example.com/bar/baz")},
+							{Name: ves.S("example.com/bar")},
+							{Name: ves.S("example.com/bar/baz")},
 						},
 					},
 					Manifest: &ves.GoModuleManifest{
 						Name:     "example.com/bar",
-						Version:  s("v1.2.3"),
-						Packages: s("sha256:9nIFKNUR+Ycz3wTrCUEbPfQjw0s3D7nRvw/7N4bMRWc="),
+						Version:  ves.S("v1.2.3"),
+						Packages: ves.S("sha256:9nIFKNUR+Ycz3wTrCUEbPfQjw0s3D7nRvw/7N4bMRWc="),
 					},
 					Path: "vendor/example.com/bar",
 				},
 				DownloadGoModule{
 					Module: &ves.GoModule{
 						Name:    "golang.org/x/crypto",
-						Version: s("v1.2.3"),
+						Version: ves.S("v1.2.3"),
 						Packages: []*ves.GoPackage{
-							{Name: s("golang.org/x/crypto")},
+							{Name: ves.S("golang.org/x/crypto")},
 						},
 					},
 					Manifest: &ves.GoModuleManifest{
 						Name:    "golang.org/x/crypto",
-						Version: s("v1.2.3"),
+						Version: ves.S("v1.2.3"),
 					},
 					Path: "vendor/golang.org/x/crypto",
 				},
 				DownloadGoModule{
 					Module: &ves.GoModule{
 						Name:    "golang.org/x/mod",
-						Version: s("v1.2.3"),
+						Version: ves.S("v1.2.3"),
 						Packages: []*ves.GoPackage{
-							{Name: s("golang.org/x/mod/module")},
-							{Name: s("golang.org/x/mod/zip")},
+							{Name: ves.S("golang.org/x/mod/module")},
+							{Name: ves.S("golang.org/x/mod/zip")},
 						},
 					},
 					Manifest: &ves.GoModuleManifest{
 						Name:    "golang.org/x/mod",
-						Version: s("v1.2.3"),
+						Version: ves.S("v1.2.3"),
 					},
 					Path: "vendor/golang.org/x/mod",
 				},
 				DownloadGoModule{
 					Module: &ves.GoModule{
 						Name:    "rsc.io/diff",
-						Version: s("v1.2.3"),
+						Version: ves.S("v1.2.3"),
 						Packages: []*ves.GoPackage{
-							{Name: s("rsc.io/diff")},
+							{Name: ves.S("rsc.io/diff")},
 						},
 					},
 					Manifest: &ves.GoModuleManifest{
 						Name:    "rsc.io/diff",
-						Version: s("v1.2.3"),
+						Version: ves.S("v1.2.3"),
 					},
 					Path: "vendor/rsc.io/diff",
 				},
@@ -294,17 +294,17 @@ func TestStripCachedActions(t *testing.T) {
 				DownloadGoModule{
 					Module: &ves.GoModule{
 						Name:    "rsc.io/tmp",
-						Version: s("v0.0.0-20260706223531-5a501281bc9f"),
+						Version: ves.S("v0.0.0-20260706223531-5a501281bc9f"),
 						Patches: []ves.ParsedString{
-							{Value: "patches/foo.patch"},
+							ves.S("patches/foo.patch"),
 						},
 						Packages: []*ves.GoPackage{
-							{Name: s("rsc.io/tmp/patch")},
+							{Name: ves.S("rsc.io/tmp/patch")},
 						},
 					},
 					Manifest: &ves.GoModuleManifest{
 						Name:    "rsc.io/tmp",
-						Version: s("v0.0.0-20260706223531-5a501281bc9f"),
+						Version: ves.S("v0.0.0-20260706223531-5a501281bc9f"),
 					},
 					Path: "vendor/rsc.io/tmp",
 				},
@@ -313,31 +313,31 @@ func TestStripCachedActions(t *testing.T) {
 						GoModules: []*ves.GoModuleManifest{
 							{
 								Name:     "example.com/bar",
-								Version:  s("v1.2.3"),
-								Packages: s("sha256:9nIFKNUR+Ycz3wTrCUEbPfQjw0s3D7nRvw/7N4bMRWc="),
+								Version:  ves.S("v1.2.3"),
+								Packages: ves.S("sha256:9nIFKNUR+Ycz3wTrCUEbPfQjw0s3D7nRvw/7N4bMRWc="),
 							},
 							{
 								Name:    "golang.org/x/crypto",
-								Version: s("v1.2.3"),
+								Version: ves.S("v1.2.3"),
 							},
 							{
 								Name:    "golang.org/x/mod",
-								Version: s("v1.2.3"),
+								Version: ves.S("v1.2.3"),
 							},
 							{
 								Name:    "rsc.io/diff",
-								Version: s("v1.2.3"),
+								Version: ves.S("v1.2.3"),
 							},
 							{
 								Name:     "rsc.io/quote",
-								Version:  s("v1.5.2"),
-								Download: s("sha256:w5fcysjrx7yqtD/aO+QwRjYZOKnaM9Uh2b40tElTs3Y="), // <- This is important. See the comment above for context.
-								Vendored: s("sha256:i5SdzwqJBHWVTijZj/xRa3bm8B332MO+Mb+pk+COe8g="), // <- This is important. See the comment above for context.
-								Patches:  s("sha256:65IDd8bxwMukByl+92FI0wlqz0M1WSMr633KW1xhbBA="), // <- This is important. See the comment above for context.
+								Version:  ves.S("v1.5.2"),
+								Download: ves.S("sha256:w5fcysjrx7yqtD/aO+QwRjYZOKnaM9Uh2b40tElTs3Y="), // <- This is important. See the comment above for context.
+								Vendored: ves.S("sha256:i5SdzwqJBHWVTijZj/xRa3bm8B332MO+Mb+pk+COe8g="), // <- This is important. See the comment above for context.
+								Patches:  ves.S("sha256:65IDd8bxwMukByl+92FI0wlqz0M1WSMr633KW1xhbBA="), // <- This is important. See the comment above for context.
 							},
 							{
 								Name:    "rsc.io/tmp",
-								Version: s("v0.0.0-20260706223531-5a501281bc9f"),
+								Version: ves.S("v0.0.0-20260706223531-5a501281bc9f"),
 							},
 						},
 					},
@@ -352,30 +352,30 @@ func TestStripCachedActions(t *testing.T) {
 				DownloadGoModule{
 					Module: &ves.GoModule{
 						Name:    "example.com/foo",
-						Version: s("v1.2.3"),
+						Version: ves.S("v1.2.3"),
 						Packages: []*ves.GoPackage{
-							{Name: s("example.com/foo")},
+							{Name: ves.S("example.com/foo")},
 						},
 					},
 					Manifest: &ves.GoModuleManifest{
 						Name:     "example.com/foo",
-						Version:  s("v1.2.3"),
-						Packages: s("sha256:OWsM+RnT2U96NqEa73dOI5FvpDkJrP1sJYjlqKHUG6A="),
+						Version:  ves.S("v1.2.3"),
+						Packages: ves.S("sha256:OWsM+RnT2U96NqEa73dOI5FvpDkJrP1sJYjlqKHUG6A="),
 					},
 					Path: "vendor/example.com/foo",
 				},
 				DownloadGoModule{
 					Module: &ves.GoModule{
 						Name:    "example.com/foo/bar",
-						Version: s("v1.2.3"),
+						Version: ves.S("v1.2.3"),
 						Packages: []*ves.GoPackage{
-							{Name: s("example.com/foo/bar")},
+							{Name: ves.S("example.com/foo/bar")},
 						},
 					},
 					Manifest: &ves.GoModuleManifest{
 						Name:     "example.com/foo/bar",
-						Version:  s("v1.2.3"),
-						Packages: s("sha256:UNub1wOV86JWl0yt1GHvkF14UY1YNOf6qz/Hx3iLFko="),
+						Version:  ves.S("v1.2.3"),
+						Packages: ves.S("sha256:UNub1wOV86JWl0yt1GHvkF14UY1YNOf6qz/Hx3iLFko="),
 					},
 					Path: "vendor/example.com/foo/bar",
 				},
@@ -384,30 +384,30 @@ func TestStripCachedActions(t *testing.T) {
 				DownloadGoModule{ // Keep because the packages digest doesn't match.
 					Module: &ves.GoModule{
 						Name:    "example.com/foo",
-						Version: s("v1.2.3"),
+						Version: ves.S("v1.2.3"),
 						Packages: []*ves.GoPackage{
-							{Name: s("example.com/foo")},
+							{Name: ves.S("example.com/foo")},
 						},
 					},
 					Manifest: &ves.GoModuleManifest{
 						Name:     "example.com/foo",
-						Version:  s("v1.2.3"),
-						Packages: s("sha256:OWsM+RnT2U96NqEa73dOI5FvpDkJrP1sJYjlqKHUG6A="),
+						Version:  ves.S("v1.2.3"),
+						Packages: ves.S("sha256:OWsM+RnT2U96NqEa73dOI5FvpDkJrP1sJYjlqKHUG6A="),
 					},
 					Path: "vendor/example.com/foo",
 				},
 				DownloadGoModule{ // Keep because the parent module will be deleted.
 					Module: &ves.GoModule{
 						Name:    "example.com/foo/bar",
-						Version: s("v1.2.3"),
+						Version: ves.S("v1.2.3"),
 						Packages: []*ves.GoPackage{
-							{Name: s("example.com/foo/bar")},
+							{Name: ves.S("example.com/foo/bar")},
 						},
 					},
 					Manifest: &ves.GoModuleManifest{
 						Name:     "example.com/foo/bar",
-						Version:  s("v1.2.3"),
-						Packages: s("sha256:UNub1wOV86JWl0yt1GHvkF14UY1YNOf6qz/Hx3iLFko="),
+						Version:  ves.S("v1.2.3"),
+						Packages: ves.S("sha256:UNub1wOV86JWl0yt1GHvkF14UY1YNOf6qz/Hx3iLFko="),
 					},
 					Path: "vendor/example.com/foo/bar",
 				},

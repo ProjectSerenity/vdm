@@ -64,7 +64,7 @@ func TestModuleCache_Path(t *testing.T) {
 			Name: "bad-module-name",
 			Manifest: &ves.GoModuleManifest{
 				Name:    "-.",
-				Version: s("v1.2.3"),
+				Version: ves.S("v1.2.3"),
 			},
 			Error: `malformed module path "-.": leading dash`,
 		},
@@ -72,7 +72,7 @@ func TestModuleCache_Path(t *testing.T) {
 			Name: "bad-module-version",
 			Manifest: &ves.GoModuleManifest{
 				Name:    "rsc.io/diff",
-				Version: s("v1!"),
+				Version: ves.S("v1!"),
 			},
 			Error: `version "v1!" invalid: disallowed version string`,
 		},
@@ -81,7 +81,7 @@ func TestModuleCache_Path(t *testing.T) {
 			Base: filepath.FromSlash("/home/user/go/pkg/mod"),
 			Manifest: &ves.GoModuleManifest{
 				Name:    "rsc.io/diff",
-				Version: s("v1.2.3"),
+				Version: ves.S("v1.2.3"),
 			},
 			Want: filepath.FromSlash("/home/user/go/pkg/mod/cache/download/rsc.io/diff/@v/v1.2.3.zip"),
 		},

@@ -2,11 +2,7 @@ package gomodzip
 
 import (
 	"testing"
-
-	"github.com/ProjectSerenity/vdm/internal/ves"
 )
-
-func s(str string) ves.ParsedString { return ves.ParsedString{Value: str} }
 
 func TestExtractChecksum(t *testing.T) {
 	tests := []struct {
