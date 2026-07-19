@@ -39,15 +39,15 @@ func TestExtract(t *testing.T) {
 			ZIP:  filepath.FromSlash("testdata/zips/golang.org/x/arch/@v/v0.13.0.zip"),
 			Module: &vdm.GoModule{
 				Name:    "golang.org/x/arch",
-				Version: vdm.ParsedString{Value: "v0.13.0"},
+				Version: s("v0.13.0"),
 				Packages: []*vdm.GoPackage{
-					{Name: vdm.ParsedString{Value: "golang.org/x/arch/x86/x86asm"}},
+					{Name: s("golang.org/x/arch/x86/x86asm")},
 				},
 			},
 			Manifest: &vdm.GoModuleManifest{
 				Name:     "golang.org/x/arch",
-				Version:  vdm.ParsedString{Value: "v0.13.0"},
-				Download: vdm.ParsedString{Value: "sha256:checksum"},
+				Version:  s("v0.13.0"),
+				Download: s("sha256:checksum"),
 			},
 			Error: `got checksum sha256:KCkqVVV1kGg0X87TFysjCJ8MxtZEIU4Ja/yXGeoECdA=, want sha256:checksum`,
 		},
@@ -56,15 +56,15 @@ func TestExtract(t *testing.T) {
 			ZIP:  filepath.FromSlash("testdata/zips/golang.org/x/arch/@v/v0.13.0.zip"),
 			Module: &vdm.GoModule{
 				Name:    "golang.org/x/arch",
-				Version: vdm.ParsedString{Value: "v0.13.0"},
+				Version: s("v0.13.0"),
 				Packages: []*vdm.GoPackage{
-					{Name: vdm.ParsedString{Value: "golang.org/x/arch/x86/x86asm"}},
+					{Name: s("golang.org/x/arch/x86/x86asm")},
 				},
 			},
 			Manifest: &vdm.GoModuleManifest{
 				Name:     "golang.org/x/arch",
-				Version:  vdm.ParsedString{Value: "v0.14.0"},
-				Download: vdm.ParsedString{Value: "sha256:KCkqVVV1kGg0X87TFysjCJ8MxtZEIU4Ja/yXGeoECdA="},
+				Version:  s("v0.14.0"),
+				Download: s("sha256:KCkqVVV1kGg0X87TFysjCJ8MxtZEIU4Ja/yXGeoECdA="),
 			},
 			Error: `path does not have prefix "golang.org/x/arch@v0.14.0/"`,
 		},
@@ -73,18 +73,18 @@ func TestExtract(t *testing.T) {
 			ZIP:  filepath.FromSlash("testdata/zips/golang.org/x/arch/@v/v0.13.0.zip"),
 			Module: &vdm.GoModule{
 				Name:    "golang.org/x/arch",
-				Version: vdm.ParsedString{Value: "v0.13.0"},
+				Version: s("v0.13.0"),
 				Patches: []vdm.ParsedString{
 					{Value: "testdata/nonexistant.patch"},
 				},
 				Packages: []*vdm.GoPackage{
-					{Name: vdm.ParsedString{Value: "golang.org/x/arch/x86/x86asm"}},
+					{Name: s("golang.org/x/arch/x86/x86asm")},
 				},
 			},
 			Manifest: &vdm.GoModuleManifest{
 				Name:     "golang.org/x/arch",
-				Version:  vdm.ParsedString{Value: "v0.13.0"},
-				Download: vdm.ParsedString{Value: "sha256:KCkqVVV1kGg0X87TFysjCJ8MxtZEIU4Ja/yXGeoECdA="},
+				Version:  s("v0.13.0"),
+				Download: s("sha256:KCkqVVV1kGg0X87TFysjCJ8MxtZEIU4Ja/yXGeoECdA="),
 			},
 			Error: `failed to open patch path "testdata/nonexistant.patch"`,
 		},
@@ -93,15 +93,15 @@ func TestExtract(t *testing.T) {
 			ZIP:  filepath.FromSlash("testdata/zips/golang.org/x/arch/@v/v0.13.0.zip"),
 			Module: &vdm.GoModule{
 				Name:    "golang.org/x/arch",
-				Version: vdm.ParsedString{Value: "v0.13.0"},
+				Version: s("v0.13.0"),
 				Packages: []*vdm.GoPackage{
-					{Name: vdm.ParsedString{Value: "golang.org/x/arch/x86/x86asm"}},
+					{Name: s("golang.org/x/arch/x86/x86asm")},
 				},
 			},
 			Manifest: &vdm.GoModuleManifest{
 				Name:     "golang.org/x/arch",
-				Version:  vdm.ParsedString{Value: "v0.13.0"},
-				Download: vdm.ParsedString{Value: "sha256:KCkqVVV1kGg0X87TFysjCJ8MxtZEIU4Ja/yXGeoECdA="},
+				Version:  s("v0.13.0"),
+				Download: s("sha256:KCkqVVV1kGg0X87TFysjCJ8MxtZEIU4Ja/yXGeoECdA="),
 			},
 			Want: filepath.FromSlash("testdata/zips/golang.org/x/arch/@v/v0.13.0-pruned.zip"),
 		},
@@ -110,18 +110,18 @@ func TestExtract(t *testing.T) {
 			ZIP:  filepath.FromSlash("testdata/zips/golang.org/x/arch/@v/v0.13.0.zip"),
 			Module: &vdm.GoModule{
 				Name:    "golang.org/x/arch",
-				Version: vdm.ParsedString{Value: "v0.13.0"},
+				Version: s("v0.13.0"),
 				Patches: []vdm.ParsedString{
 					{Value: "testdata/patching/golang.org_x_arch.patch"},
 				},
 				Packages: []*vdm.GoPackage{
-					{Name: vdm.ParsedString{Value: "golang.org/x/arch/x86/x86asm"}},
+					{Name: s("golang.org/x/arch/x86/x86asm")},
 				},
 			},
 			Manifest: &vdm.GoModuleManifest{
 				Name:     "golang.org/x/arch",
-				Version:  vdm.ParsedString{Value: "v0.13.0"},
-				Download: vdm.ParsedString{Value: "sha256:KCkqVVV1kGg0X87TFysjCJ8MxtZEIU4Ja/yXGeoECdA="},
+				Version:  s("v0.13.0"),
+				Download: s("sha256:KCkqVVV1kGg0X87TFysjCJ8MxtZEIU4Ja/yXGeoECdA="),
 			},
 			Want: filepath.FromSlash("testdata/zips/golang.org/x/arch/@v/v0.13.0-patched.zip"),
 		},
@@ -241,8 +241,8 @@ func TestExtractor_CompareChecksum(t *testing.T) {
 			Got:  "h1:asdf",
 			Manifest: &vdm.GoModuleManifest{
 				Name:     "rsc.io/diff",
-				Version:  vdm.ParsedString{Value: "v0.0.0-20190621135850-fe3479844c3c"},
-				Download: vdm.ParsedString{Value: "sha256:/WCDjRGIVDjKlhtSc1PEApp2fR58gfSVK62dr/yQNyQ="},
+				Version:  s("v0.0.0-20190621135850-fe3479844c3c"),
+				Download: s("sha256:/WCDjRGIVDjKlhtSc1PEApp2fR58gfSVK62dr/yQNyQ="),
 			},
 			Error: `failed to verify Go module rsc.io/diff: got checksum sha256:asdf, want sha256:/WCDjRGIVDjKlhtSc1PEApp2fR58gfSVK62dr/yQNyQ=`,
 		},
@@ -251,8 +251,8 @@ func TestExtractor_CompareChecksum(t *testing.T) {
 			Got:  "h1:/WCDjRGIVDjKlhtSc1PEApp2fR58gfSVK62dr/yQNyQ=",
 			Manifest: &vdm.GoModuleManifest{
 				Name:     "rsc.io/diff",
-				Version:  vdm.ParsedString{Value: "v0.0.0-20190621135850-fe3479844c3c"},
-				Download: vdm.ParsedString{Value: "sha256:/WCDjRGIVDjKlhtSc1PEApp2fR58gfSVK62dr/yQNyQ="},
+				Version:  s("v0.0.0-20190621135850-fe3479844c3c"),
+				Download: s("sha256:/WCDjRGIVDjKlhtSc1PEApp2fR58gfSVK62dr/yQNyQ="),
 			},
 		},
 	}
@@ -294,8 +294,8 @@ func TestExtractor_VerifyChecksum(t *testing.T) {
 			Path: filepath.FromSlash("testdata/nonexistant.zip"),
 			Manifest: &vdm.GoModuleManifest{
 				Name:     "rsc.io/diff",
-				Version:  vdm.ParsedString{Value: "v0.0.0-20190621135850-fe3479844c3c"},
-				Download: vdm.ParsedString{Value: "sha256:/WCDjRGIVDjKlhtSc1PEApp2fR58gfSVK62dr/yQNyQ="},
+				Version:  s("v0.0.0-20190621135850-fe3479844c3c"),
+				Download: s("sha256:/WCDjRGIVDjKlhtSc1PEApp2fR58gfSVK62dr/yQNyQ="),
 			},
 			Error: `failed to verify Go module rsc.io/diff: open testdata/nonexistant.zip: no such file or directory`,
 		},
@@ -304,8 +304,8 @@ func TestExtractor_VerifyChecksum(t *testing.T) {
 			Path: filepath.FromSlash("testdata/zips/rsc.io/diff/@v/v0.0.0-20190621135850-fe3479844c3c.zip"),
 			Manifest: &vdm.GoModuleManifest{
 				Name:     "rsc.io/diff",
-				Version:  vdm.ParsedString{Value: "v0.0.0-20190621135850-fe3479844c3c"},
-				Download: vdm.ParsedString{Value: "sha256:/WCDjRGIVDjKlhtSc1PEApp2fR58gfSVK62dr/yQNyQ="},
+				Version:  s("v0.0.0-20190621135850-fe3479844c3c"),
+				Download: s("sha256:/WCDjRGIVDjKlhtSc1PEApp2fR58gfSVK62dr/yQNyQ="),
 			},
 		},
 	}
@@ -349,7 +349,7 @@ func TestExtractor_Extract(t *testing.T) {
 			Path: filepath.FromSlash("testdata/nonexistant.zip"),
 			Manifest: &vdm.GoModuleManifest{
 				Name:    "rsc.io/diff",
-				Version: vdm.ParsedString{Value: "v0.0.0-20190621135850-fe3479844c3c"},
+				Version: s("v0.0.0-20190621135850-fe3479844c3c"),
 			},
 			Error: `failed to unzip Go module rsc.io/diff: unzip testdata/nonexistant.zip: open testdata/nonexistant.zip: no such file or directory`,
 		},
@@ -359,7 +359,7 @@ func TestExtractor_Extract(t *testing.T) {
 			Path: filepath.FromSlash("testdata/zips/rsc.io/diff/@v/v0.0.0-20190621135850-fe3479844c3c.zip"),
 			Manifest: &vdm.GoModuleManifest{
 				Name:    "rsc.io/diff",
-				Version: vdm.ParsedString{Value: "v0.0.0-20190621135850-fe3479844c3c"},
+				Version: s("v0.0.0-20190621135850-fe3479844c3c"),
 			},
 		},
 	}
@@ -424,7 +424,7 @@ func TestExtractor_IdentifyDeletions(t *testing.T) {
 			FS:   vdmtest.TestFS(t, vdmtest.WithErrors("rsc.io/diff", "file does not exist")),
 			Module: &vdm.GoModule{
 				Name:    "rsc.io/diff",
-				Version: vdm.ParsedString{Value: "v1.2.3"},
+				Version: s("v1.2.3"),
 			},
 			Error: `failed to identify unused Go packages to delete in rsc.io/diff: file does not exist`,
 		},
@@ -433,10 +433,10 @@ func TestExtractor_IdentifyDeletions(t *testing.T) {
 			FS:   vdmtest.TxtarFS(t, "testdata/pruning/complex.txtar"),
 			Module: &vdm.GoModule{
 				Name:    "rsc.io/diff",
-				Version: vdm.ParsedString{Value: "v1.2.3"},
+				Version: s("v1.2.3"),
 				Packages: []*vdm.GoPackage{
-					{Name: vdm.ParsedString{Value: "rsc.io/diff"}},
-					{Name: vdm.ParsedString{Value: "rsc.io/diff/deeply/nested/pkg"}},
+					{Name: s("rsc.io/diff")},
+					{Name: s("rsc.io/diff/deeply/nested/pkg")},
 				},
 			},
 			Want: []string{
@@ -450,11 +450,11 @@ func TestExtractor_IdentifyDeletions(t *testing.T) {
 			FS:   vdmtest.TxtarFS(t, "testdata/pruning/complex.txtar"),
 			Module: &vdm.GoModule{
 				Name:    "rsc.io/diff",
-				Version: vdm.ParsedString{Value: "v1.2.3"},
+				Version: s("v1.2.3"),
 				Packages: []*vdm.GoPackage{
-					{Name: vdm.ParsedString{Value: "rsc.io/diff"}},
+					{Name: s("rsc.io/diff")},
 					{
-						Name: vdm.ParsedString{Value: "rsc.io/diff/deeply/nested/pkg"},
+						Name: s("rsc.io/diff/deeply/nested/pkg"),
 						Directories: []vdm.ParsedString{
 							{Value: "nonexistant"},
 						},
@@ -512,7 +512,7 @@ func TestExtractor_ExtractAndPrune(t *testing.T) {
 			Path: filepath.FromSlash("testdata/nonexistant.zip"),
 			Manifest: &vdm.GoModuleManifest{
 				Name:    "rsc.io/diff",
-				Version: vdm.ParsedString{Value: "v0.0.0-20190621135850-fe3479844c3c"},
+				Version: s("v0.0.0-20190621135850-fe3479844c3c"),
 			},
 			Error: `failed to unzip Go module rsc.io/diff: unzip testdata/nonexistant.zip: open testdata/nonexistant.zip: no such file or directory`,
 		},
@@ -521,14 +521,14 @@ func TestExtractor_ExtractAndPrune(t *testing.T) {
 			Path: filepath.FromSlash("testdata/zips/golang.org/x/arch/@v/v0.13.0.zip"),
 			Module: &vdm.GoModule{
 				Name:    "golang.org/x/arch",
-				Version: vdm.ParsedString{Value: "v0.13.0"},
+				Version: s("v0.13.0"),
 				Packages: []*vdm.GoPackage{
-					{Name: vdm.ParsedString{Value: "golang.org/x/arch/x86/x86asm"}},
+					{Name: s("golang.org/x/arch/x86/x86asm")},
 				},
 			},
 			Manifest: &vdm.GoModuleManifest{
 				Name:    "golang.org/x/arch",
-				Version: vdm.ParsedString{Value: "v0.13.0"},
+				Version: s("v0.13.0"),
 			},
 			Want: filepath.FromSlash("testdata/zips/golang.org/x/arch/@v/v0.13.0-pruned.zip"),
 		},
@@ -670,14 +670,14 @@ func TestExtractor_PatchWithBinary(t *testing.T) {
 			ZIP:  filepath.FromSlash("testdata/zips/golang.org/x/arch/@v/v0.13.0.zip"),
 			Module: &vdm.GoModule{
 				Name:    "golang.org/x/arch",
-				Version: vdm.ParsedString{Value: "v0.13.0"},
+				Version: s("v0.13.0"),
 				Packages: []*vdm.GoPackage{
-					{Name: vdm.ParsedString{Value: "golang.org/x/arch/x86/x86asm"}},
+					{Name: s("golang.org/x/arch/x86/x86asm")},
 				},
 			},
 			Manifest: &vdm.GoModuleManifest{
 				Name:    "golang.org/x/arch",
-				Version: vdm.ParsedString{Value: "v0.13.0"},
+				Version: s("v0.13.0"),
 			},
 			FS:      os.DirFS("testdata"),
 			Patches: []string{"patching/golang.org_x_arch.patch"},
@@ -936,7 +936,7 @@ func TestExtractor_PatchWithPackage(t *testing.T) {
 			ZIP:  filepath.FromSlash("testdata/zips/example.com/foo/@v/v1.2.3.zip"),
 			Manifest: &vdm.GoModuleManifest{
 				Name:    "example.com/foo",
-				Version: vdm.ParsedString{Value: "v1.2.3"},
+				Version: s("v1.2.3"),
 			},
 			FS:      os.DirFS("testdata"),
 			Patches: []string{"patching/remove1.patch"},
@@ -947,7 +947,7 @@ func TestExtractor_PatchWithPackage(t *testing.T) {
 			ZIP:  filepath.FromSlash("testdata/zips/example.com/foo/@v/v1.2.3.zip"),
 			Manifest: &vdm.GoModuleManifest{
 				Name:    "example.com/foo",
-				Version: vdm.ParsedString{Value: "v1.2.3"},
+				Version: s("v1.2.3"),
 			},
 			FS:      os.DirFS("testdata"),
 			Patches: []string{"patching/constructed.patch"},
@@ -1035,14 +1035,14 @@ func TestExtractor_ApplyPatches(t *testing.T) {
 			ZIP:  filepath.FromSlash("testdata/zips/golang.org/x/arch/@v/v0.13.0.zip"),
 			Module: &vdm.GoModule{
 				Name:    "golang.org/x/arch",
-				Version: vdm.ParsedString{Value: "v0.13.0"},
+				Version: s("v0.13.0"),
 				Packages: []*vdm.GoPackage{
-					{Name: vdm.ParsedString{Value: "golang.org/x/arch/x86/x86asm"}},
+					{Name: s("golang.org/x/arch/x86/x86asm")},
 				},
 			},
 			Manifest: &vdm.GoModuleManifest{
 				Name:    "golang.org/x/arch",
-				Version: vdm.ParsedString{Value: "v0.13.0"},
+				Version: s("v0.13.0"),
 			},
 			FS:      os.DirFS("testdata"),
 			Patches: []string{"patching/golang.org_x_arch.patch"},
@@ -1133,14 +1133,14 @@ func BenchmarkExtractor_ApplyPatches(b *testing.B) {
 			ZIP:  filepath.FromSlash("testdata/zips/golang.org/x/arch/@v/v0.13.0.zip"),
 			Module: &vdm.GoModule{
 				Name:    "golang.org/x/arch",
-				Version: vdm.ParsedString{Value: "v0.13.0"},
+				Version: s("v0.13.0"),
 				Packages: []*vdm.GoPackage{
-					{Name: vdm.ParsedString{Value: "golang.org/x/arch/x86/x86asm"}},
+					{Name: s("golang.org/x/arch/x86/x86asm")},
 				},
 			},
 			Manifest: &vdm.GoModuleManifest{
 				Name:    "golang.org/x/arch",
-				Version: vdm.ParsedString{Value: "v0.13.0"},
+				Version: s("v0.13.0"),
 			},
 			FS:      os.DirFS("testdata"),
 			Patches: []string{"patching/golang.org_x_arch.patch"},

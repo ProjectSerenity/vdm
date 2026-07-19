@@ -46,8 +46,8 @@ func TestDownload(t *testing.T) {
 			Path: filepath.Join(t.ArtifactDir(), "foo.zip"),
 			Manifest: &vdm.GoModuleManifest{
 				Name:     "-!",
-				Version:  vdm.ParsedString{Value: "v1.2.3"},
-				Download: vdm.ParsedString{Value: "h1:checksum"},
+				Version:  s("v1.2.3"),
+				Download: s("h1:checksum"),
 			},
 			Error: `failed to download Go module -!: invalid module path: malformed module path "-!": leading dash`,
 		},
