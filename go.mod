@@ -3,7 +3,6 @@ module github.com/ProjectSerenity/vdm
 go 1.25.5
 
 require (
-	github.com/bazelbuild/buildtools v0.0.0-20260622120422-77b9b380c0a4
 	github.com/google/go-cmp v0.7.0
 	github.com/google/osv-scanner v1.9.2
 	golang.org/x/mod v0.37.0
