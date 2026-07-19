@@ -1,0 +1,62 @@
+-- deps.vdm --
+go-modules:
+	module "example.com/bar" v1.2.3
+		packages:
+			package "example.com/bar"
+			package "example.com/bar/baz"
+	module "golang.org/x/crypto" v1.2.3
+		packages:
+			package "golang.org/x/crypto"
+	module "golang.org/x/mod" v1.2.3
+		packages:
+			package "golang.org/x/mod/module"
+			package "golang.org/x/mod/zip"
+	module "rsc.io/diff" v1.2.3
+		packages:
+			package "rsc.io/diff"
+	module "rsc.io/quote" v1.5.2
+		patches:
+			"patches/quote.patch"
+		packages:
+			package "rsc.io/quote"
+	module "rsc.io/tmp" v0.0.0-20260706223531-5a501281bc9f
+		patches:
+			"patches/foo.patch"
+		packages:
+			package "rsc.io/tmp/patch"
+
+-- patches/quote.patch --
+diff a/quote.go b/quote.go
+
+-- vendor/manifests.vdm --
+go-modules:
+	module "example.com/bar" v1.2.3
+		packages: sha256:3skQxVRCqO04idsFM77CqfcyPON5YYWxVPLiKcRNuNE=
+		vendored: sha256:janpaV+guNU1mvW6k/LOgJsr0Evnt6kl635Bgzbh+V0=
+	module "golang.org/x/crypto" v1.2.3  // No contents on disk.
+		vendored: sha256:deadbeef
+	module "golang.org/x/mod" v1.0.0  // Deliberately wrong version.
+		vendored: sha256:alogtoFaSkTQ6FRKJdoNIZIZ/wkCqfd2fcP6XEvjfLM=
+	module "rsc.io/diff" v1.2.3
+		vendored: sha256:deadbeef  // Deliberately wrong hash.
+	module "rsc.io/quote" v1.5.2
+		download: sha256:w5fcysjrx7yqtD/aO+QwRjYZOKnaM9Uh2b40tElTs3Y=
+		vendored: sha256:i5SdzwqJBHWVTijZj/xRa3bm8B332MO+Mb+pk+COe8g=
+		patches:  sha256:65IDd8bxwMukByl+92FI0wlqz0M1WSMr633KW1xhbBA=
+	module "rsc.io/tmp" v0.0.0-20260706223531-5a501281bc9f
+		vendored: sha256:bSTLfCf5UE9sQi+ggT+acJkgm4uue3Gpmn9yW5hqJyo=
+
+-- vendor/example.com/foo/foo.go --
+module example.com/foo, package example.com/foo, file foo.go
+
+-- vendor/example.com/bar/bar.go --
+module example.com/bar, package example.com/bar, file bar.go
+
+-- vendor/rsc.io/diff/diff.go --
+module rsc.io/diff, package rsc.io/diff, file diff.go
+
+-- vendor/rsc.io/quote/quote.go --
+module rsc.io/quote, package rsc.io/quote, file quote.go
+
+-- vendor/rsc.io/tmp/patch/patch.go --
+module rsc.io/patch, package rsc.io/patch, file patch.go

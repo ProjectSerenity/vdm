@@ -1,0 +1,12 @@
+-- deps.vdm --
+go-modules:
+	module "example.com/foo" v1.2.3
+		packages:
+			package "example.com/foo"
+				build-file: "bazel/example.com-foo.BUILD"
+-- bazel/example.com-foo.BUILD --
+-- vendor/a/a.txt --
+-- vendor/b.txt --
+-- vendor/c.txt --
+-- vendor/example.com/foo/go.mod --
+-- vendor/manifests.vdm --

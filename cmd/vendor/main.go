@@ -1,9 +1,9 @@
-// Copyright 2023 The Firefly Authors.
+// Copyright 2026 The Firefly Authors.
 //
 // Use of this source code is governed by a BSD 3-clause
 // license that can be found in the LICENSE file.
 
-// Command vendor uses package vendeps to vendor external dependencies into the repository.
+// Package vendor fetches the dependency set and stores it in the repository's vendor directory.
 package vendor
 
 import (
@@ -13,8 +13,6 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-
-	"github.com/ProjectSerenity/vdm/internal/vendeps"
 )
 
 var program = filepath.Base(os.Args[0])
@@ -22,9 +20,8 @@ var program = filepath.Base(os.Args[0])
 func Main(ctx context.Context, w io.Writer, args []string) error {
 	flags := flag.NewFlagSet("vendor", flag.ExitOnError)
 
-	var help, noCache, dryRun, bzlmod bool
+	var help, noCache, dryRun bool
 	flags.BoolVar(&help, "h", false, "Show this message and exit.")
-	flags.BoolVar(&bzlmod, "bzlmod", true, "Use module names as used with bzlmod (eg rules_go, rather than io_bazel_rules_go)")
 	flags.BoolVar(&noCache, "no-cache", false, "Ignore any locally cached dependency data.")
 	flags.BoolVar(&dryRun, "dry-run", false, "Print the set of actions that would be performed, without performing them.")
 	flags.Usage = func() {
@@ -42,13 +39,13 @@ func Main(ctx context.Context, w io.Writer, args []string) error {
 
 	// Start by parsing the dependency manifest.
 	fsys := os.DirFS(".")
-	actions, err := Vendor(fsys, bzlmod)
+	actions, err := Vendor(fsys)
 	if err != nil {
 		return fmt.Errorf("failed to load dependency manifest: %v", err)
 	}
 
 	if !noCache {
-		actions = vendeps.StripCachedActions(fsys, actions)
+		actions = StripCachedActions(fsys, actions)
 	}
 
 	// Perform/print the actions.
@@ -56,7 +53,7 @@ func Main(ctx context.Context, w io.Writer, args []string) error {
 		if dryRun {
 			fmt.Println(action)
 		} else {
-			err = action.Do(fsys)
+			err = action.Do(ctx, fsys, w)
 			if err != nil {
 				return err
 			}

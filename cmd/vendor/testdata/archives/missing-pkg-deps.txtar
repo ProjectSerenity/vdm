@@ -1,0 +1,7 @@
+-- deps.vdm --
+go-modules:
+	module "example.com/foo" v1.2.3
+		packages:
+			package "example.com/foo"
+				deps:
+					"example.com/bar"

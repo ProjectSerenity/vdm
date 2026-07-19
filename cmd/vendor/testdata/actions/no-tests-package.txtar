@@ -1,0 +1,8 @@
+-- vendor/example.com/foo/a.go --
+This is a Go file we include.
+-- vendor/example.com/foo/bar/bar.go --
+This is a Go file we ignore.
+-- vendor/example.com/foo/c.s --
+This is an assembly file we include.
+-- vendor/example.com/foo/d.go --
+This is another Go file we include.

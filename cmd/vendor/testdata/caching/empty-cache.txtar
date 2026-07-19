@@ -1,0 +1,7 @@
+-- deps.vdm --
+go-modules:
+	module "rsc.io/quote" v1.2.3
+		packages:
+			package "rsc.io/quote"
+
+-- vendor/manifests.vdm --

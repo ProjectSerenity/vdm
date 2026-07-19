@@ -1,0 +1,23 @@
+-- deps.vdm --
+go-modules:
+	module "example.com/foo" v1.2.3
+		packages:
+			package "example.com/foo"
+	module "example.com/foo/bar" v1.2.3
+		packages:
+			package "example.com/foo/bar"
+
+-- vendor/manifests.vdm --
+go-modules:
+	module "example.com/foo" v1.2.3
+		packages: sha256:7yu/kK6AotQ6IIP3Din9p5I4oUTqWvYw3JJkYpj4kzI=  // Deliberately wrong.
+		vendored: sha256:7yu/kK6AotQ6IIP3Din9p5I4oUTqWvYw3JJkYpj4kzI=
+	module "example.com/foo/bar" v1.2.3
+		packages: sha256:UNub1wOV86JWl0yt1GHvkF14UY1YNOf6qz/Hx3iLFko=
+		vendored: sha256:rLP/87wh3ZXxVbGKxudTSJ9wzNjOrei3imYO69SXQdg=
+
+-- vendor/example.com/foo/foo.go --
+module example.com/foo, package example.com/foo, file foo.go
+
+-- vendor/example.com/foo/bar/bar.go --
+module example.com/foo/bar, package example.com/foo/bar, file bar.go

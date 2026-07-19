@@ -1,4 +1,4 @@
-// Copyright 2023 The Firefly Authors.
+// Copyright 2026 The Firefly Authors.
 //
 // Use of this source code is governed by a BSD 3-clause
 // license that can be found in the LICENSE file.
@@ -11,53 +11,47 @@ import (
 	"fmt"
 	"io/fs"
 	"path"
-	"sort"
+	"slices"
 	"strings"
 
-	"github.com/ProjectSerenity/vdm/internal/starlark"
-	"github.com/ProjectSerenity/vdm/internal/vendeps"
+	"github.com/ProjectSerenity/vdm/internal/gomodzip"
+	"github.com/ProjectSerenity/vdm/internal/vdm"
 )
 
 // Vendor takes a filesystem, parses the set of software
-// dependencies in deps.bzl, then produces the sequence of
-// actions necessary to vendor those dependencies into the
+// dependencies in deps.vdm, then produces the sequence of
+// actions necessary to save those dependencies into the
 // vendor directory.
 //
 // Note that Vendor does not perform any of these actions;
 // it only reads data from fsys.
-func Vendor(fsys fs.FS, bzlmod bool) (actions []vendeps.Action, err error) {
-	data, err := fs.ReadFile(fsys, vendeps.DepsBzl)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read %s: %v", vendeps.DepsBzl, err)
-	}
-
-	var deps vendeps.Deps
-	err = starlark.Unmarshal(vendeps.DepsBzl, data, &deps)
+func Vendor(fsys fs.FS) (actions []Action, err error) {
+	deps, err := vdm.ReadDeps(fsys, vdm.DepsVDM)
 	if err != nil {
 		return nil, err
 	}
 
-	if len(deps.Go) == 0 {
-		actions = []vendeps.Action{vendeps.RemoveAll(vendeps.Vendor)}
+	if len(deps.GoModules) == 0 {
+		actions = []Action{RemoveAll(vdm.Vendor)}
 		return actions, nil
 	}
 
 	// Check that the dependency graph is complete. Start
-	// by making a mapping for modules to make them easier
+	// by making a mapping for packages to make them easier
 	// to look up.
-	packages := make(map[string]*vendeps.GoPackage)
-	for _, module := range deps.Go {
+	packages := make(map[string]*vdm.GoPackage)
+	for _, module := range deps.GoModules {
 		for _, pkg := range module.Packages {
-			packages[pkg.Name] = pkg
+			packages[pkg.Name.Value] = pkg
 		}
 	}
 
 	var missingDeps bytes.Buffer
-	for _, module := range deps.Go {
+	for _, module := range deps.GoModules {
 		for _, pkg := range module.Packages {
 			for _, dep := range pkg.Deps {
-				if packages[dep] == nil {
-					fmt.Fprintf(&missingDeps, "Go package %s depends on %s, which is not specified.\n", pkg.Name, dep)
+				if packages[dep.Value] == nil {
+					fmt.Fprintf(&missingDeps, "Go package %s depends on %s, which is not specified.\n", pkg.Name.Value, dep.Value)
 				}
 			}
 		}
@@ -69,13 +63,13 @@ func Vendor(fsys fs.FS, bzlmod bool) (actions []vendeps.Action, err error) {
 
 	// Start by checking whether the vendor folder exists.
 	// If it does, we will need to check the cache later.
-	info, err := fs.Stat(fsys, vendeps.Vendor)
+	info, err := fs.Stat(fsys, vdm.Vendor)
 	if err != nil && !errors.Is(err, fs.ErrNotExist) {
-		return nil, fmt.Errorf("failed to stat %q: %v", vendeps.Vendor, err)
+		return nil, fmt.Errorf("failed to stat %q: %v", vdm.Vendor, err)
 	}
 
 	if info != nil && !info.IsDir() {
-		return nil, fmt.Errorf("failed to vendor dependencies: %q exists and is not a directory", vendeps.Vendor)
+		return nil, fmt.Errorf("failed to vendor dependencies: %q exists and is not a directory", vdm.Vendor)
 	}
 
 	// We proceed on the basis that the vendor directory
@@ -83,21 +77,21 @@ func Vendor(fsys fs.FS, bzlmod bool) (actions []vendeps.Action, err error) {
 	// that exist but wouldn't be created if we were to
 	// start from scratch. These actions are never affected
 	// by the cache.
-	entries, err := fs.ReadDir(fsys, vendeps.Vendor)
+	entries, err := fs.ReadDir(fsys, vdm.Vendor)
 	if err != nil && !errors.Is(err, fs.ErrNotExist) {
-		return nil, fmt.Errorf("failed to read files in %q: %v", vendeps.Vendor, err)
+		return nil, fmt.Errorf("failed to read files in %q: %v", vdm.Vendor, err)
 	}
 
 	for _, entry := range entries {
 		name := entry.Name()
-		full := path.Join(vendeps.Vendor, name)
+		full := path.Join(vdm.Vendor, name)
 		switch name {
-		case vendeps.ManifestBzl:
+		case vdm.ManifestsVDM:
 			// Never remove the cache manifest.
 		default:
 			if !entry.IsDir() {
 				// Remove loose files.
-				actions = append(actions, vendeps.RemoveAll(full))
+				actions = append(actions, RemoveAll(full))
 			}
 		}
 	}
@@ -107,40 +101,53 @@ func Vendor(fsys fs.FS, bzlmod bool) (actions []vendeps.Action, err error) {
 	// fully replaced. The caching layer may later strip
 	// some of these actions out if it can prove that
 	// they are unnecessary.
-	if len(deps.Go) > 0 {
-		actions, err = vendorGo(fsys, actions, deps.Go, bzlmod)
+	var manifests *vdm.Manifests
+	if len(deps.GoModules) > 0 {
+		actions, manifests, err = vendorGo(fsys, actions, deps)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	actions = append(actions, BuildCacheManifest{Deps: &deps, Path: path.Join(vendeps.Vendor, vendeps.ManifestBzl)})
+	actions = append(actions, BuildCacheManifest{Manifests: manifests, Path: path.Join(vdm.Vendor, vdm.ManifestsVDM)})
 
 	return actions, nil
 }
 
-func vendorGo(fsys fs.FS, actions []vendeps.Action, modules []*vendeps.GoModule, bzlmod bool) ([]vendeps.Action, error) {
+func vendorGo(fsys fs.FS, actions []Action, deps *vdm.Deps) ([]Action, *vdm.Manifests, error) {
+	manifests := &vdm.Manifests{
+		GoModules: make([]*vdm.GoModuleManifest, len(deps.GoModules)),
+	}
+
+	for i, mod := range deps.GoModules {
+		manifests.GoModules[i] = &vdm.GoModuleManifest{
+			Name:     mod.Name,
+			Version:  mod.Version,
+			Packages: vdm.ParsedString{Value: mod.Directories()},
+		}
+	}
+
 	// Sanity-check each module and make
 	// a mapping of module names to modules
 	// to simplify looking up module paths.
-	modulePaths := make(map[string]*vendeps.GoModule)
-	for i, module := range modules {
+	modulePaths := make(map[string]*vdm.GoModule)
+	for i, module := range deps.GoModules {
 		modulePaths[module.Name] = module
 		if module.Name == "" {
-			return nil, fmt.Errorf("Go module %d has no name", i)
+			return nil, nil, fmt.Errorf("Go module %d has no name", i)
 		}
 
-		if module.Version == "" {
-			return nil, fmt.Errorf("Go module %s has no version", module.Name)
+		if module.Version.Value == "" {
+			return nil, nil, fmt.Errorf("Go module %s has no version", module.Name)
 		}
 
 		if len(module.Packages) == 0 {
-			return nil, fmt.Errorf("Go module %s has no packages", module.Name)
+			return nil, nil, fmt.Errorf("Go module %s has no packages", module.Name)
 		}
 
 		for i, pkg := range module.Packages {
-			if pkg.Name == "" {
-				return nil, fmt.Errorf("Go module %s has package %d with no import path", module.Name, i)
+			if pkg.Name.Value == "" {
+				return nil, nil, fmt.Errorf("Go module %s has package %d with no import path", module.Name, i)
 			}
 		}
 	}
@@ -155,7 +162,7 @@ func vendorGo(fsys fs.FS, actions []vendeps.Action, modules []*vendeps.GoModule,
 	// First, we collect the set of all file paths
 	// under that segment of the file tree.
 	filepaths := make(map[string]bool)
-	err := fs.WalkDir(fsys, vendeps.Vendor, func(name string, d fs.DirEntry, err error) error {
+	err := fs.WalkDir(fsys, vdm.Vendor, func(name string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
@@ -164,7 +171,7 @@ func vendorGo(fsys fs.FS, actions []vendeps.Action, modules []*vendeps.GoModule,
 			// Don't delete folders containing a module
 			// we're including, as we may want to retain
 			// it as a cache.
-			if modulePaths[strings.TrimPrefix(name, vendeps.Vendor+"/")] != nil {
+			if modulePaths[strings.TrimPrefix(name, vdm.Vendor+"/")] != nil {
 				return fs.SkipDir
 			}
 
@@ -174,14 +181,14 @@ func vendorGo(fsys fs.FS, actions []vendeps.Action, modules []*vendeps.GoModule,
 		return nil
 	})
 	if err != nil && !errors.Is(err, fs.ErrNotExist) {
-		return nil, fmt.Errorf("failed to walk %s: %v", vendeps.Vendor, err)
+		return nil, nil, fmt.Errorf("failed to walk %s: %v", vdm.Vendor, err)
 	}
 
 	// Now, we eliminate any filepaths that are
 	// a parent directory of, a module we'll be
 	// creating.
-	for _, module := range modules {
-		modname := path.Join(vendeps.Vendor, module.Name)
+	for _, module := range deps.GoModules {
+		modname := path.Join(vdm.Vendor, module.Name)
 		for filepath := range filepaths {
 			if strings.HasPrefix(modname, filepath+"/") {
 				delete(filepaths, filepath)
@@ -201,34 +208,37 @@ func vendorGo(fsys fs.FS, actions []vendeps.Action, modules []*vendeps.GoModule,
 		}
 	}
 
-	sort.Strings(sortedFilepaths)
+	slices.Sort(sortedFilepaths)
 
 	for _, filepath := range sortedFilepaths {
-		actions = append(actions, vendeps.RemoveAll(filepath))
+		actions = append(actions, RemoveAll(filepath))
 	}
 
 	// Now, we download each module, which will include
 	// deleting any contents previously there. The
 	// cache may strip out the download action if it
 	// can prove that the right data is already there.
-	for _, module := range modules {
-		full := path.Join(vendeps.Vendor, module.Name)
-		actions = append(actions, vendeps.DownloadGoModule{Module: module, Path: full})
-		for _, pkg := range module.Packages {
-			pkg.Bzlmod = bzlmod
-			full = path.Join(vendeps.Vendor, pkg.Name)
-			if pkg.BuildFile != "" {
-				actions = append(actions, vendeps.CopyBUILD{Source: pkg.BuildFile, Path: path.Join(full, vendeps.BuildBazel)})
-			} else {
-				actions = append(actions, GenerateGoPackageBUILD{Package: pkg, Path: path.Join(full, vendeps.BuildBazel)})
-			}
-		}
+	cache := gomodzip.ModuleCacheFromEnv()
+	for i, module := range deps.GoModules {
+		full := path.Join(vdm.Vendor, module.Name)
+		actions = append(actions, DownloadGoModule{
+			Cache:       cache,
+			Module:      module,
+			Manifest:    manifests.GoModules[i],
+			ModuleProxy: gomodzip.ModuleProxy,
+			Dir:         vdm.Vendor,
+			Path:        full,
+		})
 
-		for _, files := range module.Directories {
-			full = path.Join(vendeps.Vendor, files.Name)
-			actions = append(actions, GenerateTextFilesBUILD{Files: files, Path: path.Join(full, vendeps.BuildBazel)})
+		for _, pkg := range module.Packages {
+			full = path.Join(vdm.Vendor, pkg.Name.Value)
+			if pkg.BuildFile.Value != "" {
+				actions = append(actions, CopyBUILD{Source: pkg.BuildFile.Value, Path: path.Join(full, vdm.BuildBazel)})
+			} else {
+				actions = append(actions, &GenerateGoPackageBUILD{Package: pkg, Dir: full, Path: path.Join(full, vdm.BuildBazel)})
+			}
 		}
 	}
 
-	return actions, nil
+	return actions, manifests, nil
 }
