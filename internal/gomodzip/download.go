@@ -11,14 +11,11 @@ import (
 	"io"
 	"net/http"
 	"os"
-	"path/filepath"
-	"strings"
 
 	"github.com/ProjectSerenity/vdm/internal/simplehttp"
 	"github.com/ProjectSerenity/vdm/internal/vdm"
 
 	"golang.org/x/mod/module"
-	"golang.org/x/mod/sumdb"
 )
 
 // Download fetches the given module's zip file and
@@ -29,13 +26,6 @@ import (
 // module proxy. In most cases, this will be the
 // string [ModuleProxy].
 //
-// Download then fetches the zip file's checksum.
-//
-// Download checks the [module cache] for an existing
-// checksum. If one is not available, it fetches the
-// checksum from the the Go sum database. The cheksum
-// is then recorded in the manifest.
-//
 // The download directory containing path must already
 // exist.
 //
@@ -43,7 +33,6 @@ import (
 func Download(ctx context.Context, proxy, path string, manifest *vdm.GoModuleManifest) error {
 	dl := &downloader{
 		logWriter:  os.Stdout,
-		gopath:     os.Getenv("GOPATH"),
 		gomodproxy: proxy,
 	}
 
@@ -52,88 +41,7 @@ func Download(ctx context.Context, proxy, path string, manifest *vdm.GoModuleMan
 
 type downloader struct {
 	logWriter  io.Writer
-	gopath     string
 	gomodproxy string
-	sumdb      *sumdb.Client
-	sumdbOps   sumdb.ClientOps
-}
-
-func (dl *downloader) GOPATH() string {
-	if dl.gopath == "" {
-		home, _ := os.UserHomeDir()
-		dl.gopath = filepath.Join(home, "go")
-	}
-
-	return dl.gopath
-}
-
-func (dl *downloader) ChecksumClient() *sumdb.Client {
-	if dl.sumdb == nil {
-		if dl.sumdbOps == nil {
-			dl.sumdbOps = clientOps(dl.logWriter, dl.GOPATH())
-		}
-
-		dl.sumdb = sumdb.NewClient(dl.sumdbOps)
-	}
-
-	return dl.sumdb
-}
-
-func (dl *downloader) FindChecksum(path string, manifest *vdm.GoModuleManifest, lines []string) error {
-	// Find the line consisting of "importpath version checksum".
-	for _, line := range lines {
-		parts := strings.Fields(line)
-		if len(parts) == 3 && parts[0] == manifest.Name && parts[1] == manifest.Version.Value {
-			manifest.Download.Value = parts[2]
-			break
-		}
-	}
-
-	if manifest.Download.Value == "" {
-		content := strings.Join(lines, "\n  ")
-		return fmt.Errorf("failed to get checksum for %s %s: no checksum in response:\n  %s", manifest.Name, manifest.Version.Value, content)
-	}
-
-	var err error
-	orig := manifest.Download.Value
-	manifest.Download.Value, err = extractChecksum(manifest.Download.Value)
-	if err != nil {
-		return err
-	}
-
-	err = os.WriteFile(path+"hash", []byte(orig), 0o644)
-	if err != nil {
-		return fmt.Errorf("failed to save checksum to module cache: %v", err)
-	}
-
-	return nil
-}
-
-func (dl *downloader) Checksum(path string, manifest *vdm.GoModuleManifest) error {
-	// This is generally used in testing.
-	if manifest.Download.Value != "" {
-		return nil
-	}
-
-	// Try the module cache first.
-	sumData, _ := os.ReadFile(path + "hash")
-	if len(sumData) > 0 {
-		var err error
-		manifest.Download.Value, err = extractChecksum(string(sumData))
-		if err != nil {
-			return err
-		}
-
-		return nil
-	}
-
-	// Fall back to the checksum database.
-	lines, err := dl.ChecksumClient().Lookup(manifest.Name, manifest.Version.Value)
-	if err != nil {
-		return fmt.Errorf("failed to get checksum for %s: %v", manifest.Name, err)
-	}
-
-	return dl.FindChecksum(path, manifest, lines)
 }
 
 func (dl *downloader) WriteFile(w io.WriteCloser, r io.ReadCloser, name string) error {
@@ -157,12 +65,6 @@ func (dl *downloader) WriteFile(w io.WriteCloser, r io.ReadCloser, name string) 
 }
 
 func (dl *downloader) Download(ctx context.Context, path string, manifest *vdm.GoModuleManifest) error {
-	// Start by determining the checksum.
-	err := dl.Checksum(path, manifest)
-	if err != nil {
-		return err
-	}
-
 	// Determine the request path.
 	escaped, err := module.EscapePath(manifest.Name)
 	if err != nil {
