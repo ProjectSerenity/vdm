@@ -17,6 +17,7 @@ import (
 	"sort"
 
 	"github.com/ProjectSerenity/vdm/cmd/check"
+	"github.com/ProjectSerenity/vdm/cmd/fix"
 	"github.com/ProjectSerenity/vdm/cmd/format"
 	"github.com/ProjectSerenity/vdm/cmd/json"
 	"github.com/ProjectSerenity/vdm/cmd/stats"
@@ -35,6 +36,7 @@ func init() {
 
 func init() {
 	RegisterCommand("check", "Check managed dependencies for vulnerabilities and other issues.", check.Main)
+	RegisterCommand("fix", "Identify and resolve issues in the dependency set (experimental).", fix.Main)
 	RegisterCommand("format", "Format the given VDM dependency set file.", format.Main)
 	RegisterCommand("json", "Print the current dependency set in JSON format.", json.Main)
 	RegisterCommand("stats", "Print statistical data about current dependency set.", stats.Main)
