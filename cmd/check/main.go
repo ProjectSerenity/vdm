@@ -45,6 +45,12 @@ func Main(ctx context.Context, w io.Writer, args []string) error {
 		flags.Usage()
 	}
 
+	fsys := os.DirFS(".")
+	deps, err := ves.ReadDeps(fsys, ves.DepsVDM)
+	if err != nil {
+		return err
+	}
+
 	roots := flags.Args()
 	if len(roots) == 0 {
 		// Default to all child directories except
@@ -67,10 +73,18 @@ func Main(ctx context.Context, w io.Writer, args []string) error {
 
 			roots = append(roots, fmt.Sprintf("//%s/...", name))
 		}
+
+		// Add binary packages.
+		for _, mod := range deps.GoModules {
+			for _, pkg := range mod.Packages {
+				if pkg.Binary.Value {
+					roots = append(roots, fmt.Sprintf("//vendor/%s", pkg.Name.Value))
+				}
+			}
+		}
 	}
 
-	fsys := os.DirFS(".")
-	return CheckDependencies(fsys, roots)
+	return CheckDependencies(fsys, deps, roots)
 }
 
 // CheckDependencies assesses the dependency set for
@@ -78,12 +92,7 @@ func Main(ctx context.Context, w io.Writer, args []string) error {
 //
 // The given roots are used as Bazel path selectors
 // for packages that are checked for dependencies.
-func CheckDependencies(fsys fs.FS, roots []string) error {
-	deps, err := ves.ReadDeps(fsys, ves.DepsVDM)
-	if err != nil {
-		return err
-	}
-
+func CheckDependencies(fsys fs.FS, deps *ves.Deps, roots []string) error {
 	if len(deps.GoModules) == 0 {
 		return nil
 	}
@@ -137,7 +146,7 @@ func CheckDependencies(fsys fs.FS, roots []string) error {
 	cmd := exec.Command("bazel", args...)
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
-	err = cmd.Run()
+	err := cmd.Run()
 	if err != nil {
 		os.Stderr.Write(stderr.Bytes())
 		return err
